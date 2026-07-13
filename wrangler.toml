@@ -11,7 +11,7 @@ run_worker_first = true
 [[d1_databases]]
 binding = "DB"
 database_name = "matri-db"
-database_id = "REPLACE_WITH_YOUR_D1_ID"
+database_id = "ccc687b0-4397-4a16-9795-04a0ad162a8c"
 
 [[r2_buckets]]
 binding = "PHOTOS"
