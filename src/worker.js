@@ -3,12 +3,10 @@ import * as rsvpModule from '../functions/api/rsvp.js'
 import * as giftsModule from '../functions/api/gifts.js'
 import * as giftsReserve from '../functions/api/gifts/reserve.js'
 import * as contentModule from '../functions/api/content.js'
-import * as imagesModule from '../functions/api/images/handler.js'
 import * as adminInvitations from '../functions/api/admin/invitations.js'
 import * as adminRsvp from '../functions/api/admin/rsvp.js'
 import * as adminGifts from '../functions/api/admin/gifts.js'
 import * as adminContent from '../functions/api/admin/content.js'
-import * as adminUpload from '../functions/api/admin/upload.js'
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -55,10 +53,6 @@ export default {
         response = await dispatch(giftsReserve, method, request, env)
       } else if (path === '/api/content') {
         response = await dispatch(contentModule, method, request, env)
-      } else if (path.startsWith('/api/images/')) {
-        const imagePath = path.slice('/api/images/'.length)
-        const params = { path: imagePath.split('/').filter(Boolean) }
-        response = await dispatch(imagesModule, method, request, env, params)
       } else if (path === '/api/admin/invitations') {
         response = await dispatch(adminInvitations, method, request, env)
       } else if (path === '/api/admin/rsvp') {
@@ -67,8 +61,6 @@ export default {
         response = await dispatch(adminGifts, method, request, env)
       } else if (path === '/api/admin/content') {
         response = await dispatch(adminContent, method, request, env)
-      } else if (path === '/api/admin/upload') {
-        response = await dispatch(adminUpload, method, request, env)
       } else {
         response = new Response(JSON.stringify({ error: 'Not found' }), {
           status: 404,

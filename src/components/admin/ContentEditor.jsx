@@ -102,50 +102,50 @@ function TextField({ fieldKey, label, type, value, onSave, token }) {
 }
 
 function ImageField({ fieldKey, label, currentUrl, onSave, token }) {
-  const [uploading, setUploading] = useState(false)
-  const [preview, setPreview] = useState(currentUrl)
+  const [val, setVal] = useState(currentUrl || '')
+  const [saved, setSaved] = useState(false)
+  const [saving, setSaving] = useState(false)
 
-  useEffect(() => { setPreview(currentUrl) }, [currentUrl])
+  useEffect(() => { setVal(currentUrl || '') }, [currentUrl])
 
-  async function handleFile(e) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setUploading(true)
+  async function save() {
+    setSaving(true)
     try {
-      const fd = new FormData()
-      fd.append('file', file)
-      const uploadRes = await fetch('/api/admin/upload', {
-        method: 'POST',
-        headers: { 'X-Invite-Token': token },
-        body: fd,
-      })
-      if (!uploadRes.ok) throw new Error('Upload failed')
-      const { url } = await uploadRes.json()
-
       await fetch('/api/admin/content', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'X-Invite-Token': token },
-        body: JSON.stringify({ key: fieldKey, value: url }),
+        body: JSON.stringify({ key: fieldKey, value: val }),
       })
-      setPreview(url)
-      onSave(fieldKey, url)
-    } catch {
-      alert('Error al subir la imagen. Intenta de nuevo.')
+      onSave(fieldKey, val)
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2500)
     } finally {
-      setUploading(false)
+      setSaving(false)
     }
   }
 
   return (
     <div className="content-field">
-      <label className="form-label">{label}</label>
-      {preview && (
-        <img src={preview} className="upload-preview" alt={label} />
-      )}
-      <label className="upload-area">
-        <input type="file" accept="image/*" onChange={handleFile} style={{ display: 'none' }} />
-        {uploading ? 'Subiendo imagen...' : preview ? 'Cambiar imagen' : '+ Subir imagen'}
-      </label>
+      <label className="form-label">{label} — URL de imagen</label>
+      {val && <img src={val} className="upload-preview" alt={label} onError={e => e.target.style.display='none'} />}
+      <div className="content-field-row">
+        <input
+          className="input"
+          type="url"
+          placeholder="https://..."
+          value={val}
+          onChange={e => setVal(e.target.value)}
+        />
+        <button
+          className="btn btn-secondary save-btn-inline"
+          onClick={save}
+          disabled={saving || val === (currentUrl || '')}
+        >
+          {saving ? '...' : 'Guardar'}
+        </button>
+      </div>
+      {saved && <span className="saved-indicator">✓ Guardado</span>}
+      <span style={{ fontSize: '0.7rem', opacity: 0.5 }}>Pega una URL pública (Google Photos, Dropbox, etc.)</span>
     </div>
   )
 }
