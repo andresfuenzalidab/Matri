@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { AppProvider } from './context/AppContext'
 import Nav from './components/Nav'
+import WelcomeModal from './components/WelcomeModal'
 import Home from './components/sections/Home'
-import OurStory from './components/sections/OurStory'
 import WeddingInfo from './components/sections/WeddingInfo'
+import OurStory from './components/sections/OurStory'
 import RSVP from './components/sections/RSVP'
 import Gifts from './components/sections/Gifts'
 import AdminPanel from './components/admin/AdminPanel'
@@ -23,13 +24,11 @@ export default function App() {
   const [rsvp, setRsvp] = useState(null)
   const [giftReservation, setGiftReservation] = useState(null)
   const [adminOpen, setAdminOpen] = useState(false)
+  const [welcomed, setWelcomed] = useState(() => sessionStorage.getItem('welcomed') === '1')
   const token = getToken()
 
   useEffect(() => {
-    if (!token) {
-      setStatus('invalid')
-      return
-    }
+    if (!token) { setStatus('invalid'); return }
     fetch('/api/validate', { headers: { 'X-Invite-Token': token } })
       .then(r => r.json())
       .then(data => {
@@ -45,12 +44,13 @@ export default function App() {
       .catch(() => setStatus('invalid'))
   }, [token])
 
+  function handleWelcomed() {
+    sessionStorage.setItem('welcomed', '1')
+    setWelcomed(true)
+  }
+
   if (status === 'loading') {
-    return (
-      <div className="loading">
-        <span>Cargando...</span>
-      </div>
-    )
+    return <div className="loading"><span>Cargando...</span></div>
   }
 
   if (status === 'invalid') {
@@ -64,30 +64,29 @@ export default function App() {
   }
 
   return (
-    <AppProvider
-      token={token}
-      guest={guest}
-      rsvp={rsvp}
-      giftReservation={giftReservation}
-    >
-      <Nav />
-      <main>
-        <Home />
-        <OurStory />
-        <WeddingInfo />
-        <RSVP initialRsvp={rsvp} />
-        <Gifts initialReservation={giftReservation} />
-      </main>
-      {guest?.isAdmin && (
-        <>
-          <div className="admin-fab">
-            <button className="btn btn-primary" onClick={() => setAdminOpen(true)}>
-              ⚙ Admin
-            </button>
-          </div>
-          {adminOpen && <AdminPanel onClose={() => setAdminOpen(false)} />}
-        </>
+    <AppProvider token={token} guest={guest} rsvp={rsvp} giftReservation={giftReservation}>
+      {!welcomed && (
+        <WelcomeModal guest={guest} onEnter={handleWelcomed} />
       )}
+
+      <div style={{ opacity: welcomed ? 1 : 0, transition: 'opacity 0.4s ease', pointerEvents: welcomed ? 'auto' : 'none' }}>
+        <Nav />
+        <main>
+          <Home />
+          <WeddingInfo />
+          <OurStory />
+          <RSVP initialRsvp={rsvp} />
+          <Gifts initialReservation={giftReservation} />
+        </main>
+        {guest?.isAdmin && (
+          <>
+            <div className="admin-fab">
+              <button className="btn btn-primary" onClick={() => setAdminOpen(true)}>⚙ Admin</button>
+            </div>
+            {adminOpen && <AdminPanel onClose={() => setAdminOpen(false)} />}
+          </>
+        )}
+      </div>
     </AppProvider>
   )
 }

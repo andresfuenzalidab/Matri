@@ -12,7 +12,7 @@ export async function onRequestGet({ request, env }) {
       'SELECT attending, num_guests, message FROM rsvp_responses WHERE invitation_id = ?'
     ).bind(inv.id).first(),
     env.DB.prepare(
-      'SELECT gift_id, confirmed_payment FROM gift_reservations WHERE invitation_id = ?'
+      'SELECT gift_id, confirmed_payment, congratulations_message FROM gift_reservations WHERE invitation_id = ?'
     ).bind(inv.id).first(),
   ])
 
@@ -23,6 +23,8 @@ export async function onRequestGet({ request, env }) {
       name: inv.name,
       email: inv.email,
       isAdmin: Boolean(inv.is_admin),
+      welcomeMessage: inv.welcome_message || null,
+      maxAdditionalGuests: inv.max_additional_guests ?? null,
     },
     rsvp: rsvpRow
       ? {
@@ -35,6 +37,7 @@ export async function onRequestGet({ request, env }) {
       ? {
           giftId: reservationRow.gift_id,
           confirmedPayment: Boolean(reservationRow.confirmed_payment),
+          congratulationsMessage: reservationRow.congratulations_message || null,
         }
       : null,
   })

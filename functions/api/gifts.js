@@ -9,8 +9,11 @@ export async function onRequestGet({ request, env }) {
       g.id AS gift_id,
       g.name AS gift_name,
       g.price,
+      g.description,
+      g.image_url AS gift_image,
       t.id AS trip_id,
       t.name AS trip_name,
+      t.image_url AS trip_image,
       t.order_idx AS trip_order,
       g.order_idx AS gift_order,
       gr.invitation_id AS reserved_by_id
@@ -21,31 +24,30 @@ export async function onRequestGet({ request, env }) {
     ORDER BY t.order_idx, g.order_idx
   `).all()
 
-  // Group by trip
   const tripMap = new Map()
   for (const row of rows.results) {
     if (!tripMap.has(row.trip_id)) {
       tripMap.set(row.trip_id, {
         id: row.trip_id,
         name: row.trip_name,
+        imageUrl: row.trip_image || '',
         order: row.trip_order,
         gifts: [],
       })
     }
-
     let status = 'available'
     if (row.reserved_by_id !== null) {
       status = row.reserved_by_id === inv.id ? 'reserved-by-you' : 'reserved'
     }
-
     tripMap.get(row.trip_id).gifts.push({
       id: row.gift_id,
       name: row.gift_name,
       price: row.price,
+      description: row.description || '',
+      imageUrl: row.gift_image || '',
       status,
     })
   }
 
-  const trips = Array.from(tripMap.values()).sort((a, b) => a.order - b.order)
-  return json(trips)
+  return json(Array.from(tripMap.values()).sort((a, b) => a.order - b.order))
 }

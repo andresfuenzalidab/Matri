@@ -1,3 +1,5 @@
+import { normalizeImageUrl } from '../utils/imageUrl.js'
+
 const CameraIcon = ({ size = 32 }) => (
   <svg
     width={size} height={size} viewBox="0 0 24 24"
@@ -11,11 +13,12 @@ const CameraIcon = ({ size = 32 }) => (
 )
 
 export default function PhotoPlaceholder({ size = 'md', label, url, alt = '' }) {
-  if (url) {
+  const resolvedUrl = normalizeImageUrl(url)
+  if (resolvedUrl) {
     const isCircle = size === 'sm'
     return (
       <img
-        src={url}
+        src={resolvedUrl}
         alt={alt || label || ''}
         style={{
           width: isCircle ? 130 : '100%',

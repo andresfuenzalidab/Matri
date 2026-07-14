@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useApp } from '../../context/AppContext'
+import { normalizeImageUrl } from '../../utils/imageUrl.js'
 
 const SECTIONS = [
   {
@@ -110,13 +111,15 @@ function ImageField({ fieldKey, label, currentUrl, onSave, token }) {
 
   async function save() {
     setSaving(true)
+    const normalized = normalizeImageUrl(val.trim())
+    setVal(normalized)
     try {
       await fetch('/api/admin/content', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'X-Invite-Token': token },
-        body: JSON.stringify({ key: fieldKey, value: val }),
+        body: JSON.stringify({ key: fieldKey, value: normalized }),
       })
-      onSave(fieldKey, val)
+      onSave(fieldKey, normalized)
       setSaved(true)
       setTimeout(() => setSaved(false), 2500)
     } finally {
@@ -124,28 +127,29 @@ function ImageField({ fieldKey, label, currentUrl, onSave, token }) {
     }
   }
 
+  const preview = normalizeImageUrl(val)
   return (
     <div className="content-field">
       <label className="form-label">{label} — URL de imagen</label>
-      {val && <img src={val} className="upload-preview" alt={label} onError={e => e.target.style.display='none'} />}
+      {preview && <img src={preview} className="upload-preview" alt={label} onError={e => e.target.style.display='none'} />}
       <div className="content-field-row">
         <input
           className="input"
-          type="url"
-          placeholder="https://..."
+          type="text"
+          placeholder="https:// o link de Google Drive"
           value={val}
           onChange={e => setVal(e.target.value)}
         />
         <button
           className="btn btn-secondary save-btn-inline"
           onClick={save}
-          disabled={saving || val === (currentUrl || '')}
+          disabled={saving || val.trim() === (currentUrl || '')}
         >
           {saving ? '...' : 'Guardar'}
         </button>
       </div>
       {saved && <span className="saved-indicator">✓ Guardado</span>}
-      <span style={{ fontSize: '0.7rem', opacity: 0.5 }}>Pega una URL pública (Google Photos, Dropbox, etc.)</span>
+      <span style={{ fontSize: '0.7rem', opacity: 0.5 }}>Acepta URLs directas o links de Google Drive</span>
     </div>
   )
 }

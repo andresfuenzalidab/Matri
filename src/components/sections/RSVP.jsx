@@ -54,6 +54,15 @@ export default function RSVP({ initialRsvp }) {
               ? `¡Nos alegra saber que estarás con nosotros!${companions > 0 ? ` Esperamos a ${companions + 1} personas de tu parte.` : ''} Te esperamos el 6 de noviembre en Altos del Paico.`
               : 'Lamentamos que no puedas acompañarnos. Te tendremos en el corazón ese día especial.'}
           </p>
+          {rsvp.attending ? (
+            <button
+              className="btn btn-secondary"
+              style={{ marginTop: '1rem' }}
+              onClick={() => document.getElementById('regalos')?.scrollIntoView({ behavior: 'smooth' })}
+            >
+              Ver lista de regalos →
+            </button>
+          ) : null}
         </div>
       </section>
     )

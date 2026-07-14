@@ -24,13 +24,29 @@ export async function onRequestPost({ request, env }) {
     if (!body?.name?.trim()) return err('El nombre es requerido.')
 
     const token = crypto.randomUUID()
-    const { name, email = '', isAdmin = false } = body
+    const { name, email = '', isAdmin = false, welcomeMessage = '', maxAdditionalGuests = null } = body
 
     const result = await env.DB.prepare(
-      'INSERT INTO invitations (token, name, email, is_admin) VALUES (?, ?, ?, ?) RETURNING *'
-    ).bind(token, name.trim(), email.trim() || null, isAdmin ? 1 : 0).first()
+      'INSERT INTO invitations (token, name, email, is_admin, welcome_message, max_additional_guests) VALUES (?, ?, ?, ?, ?, ?) RETURNING *'
+    ).bind(token, name.trim(), email.trim() || null, isAdmin ? 1 : 0, welcomeMessage.trim() || null, maxAdditionalGuests ?? null).first()
 
     return json(result, 201)
+  } catch (e) {
+    return handleAuthError(e) || err('Error interno.', 500)
+  }
+}
+
+export async function onRequestPut({ request, env }) {
+  try {
+    await requireAdmin(request, env)
+    const body = await request.json().catch(() => null)
+    if (!body?.id) return err('ID requerido.')
+
+    await env.DB.prepare(
+      'UPDATE invitations SET welcome_message = ?, max_additional_guests = ? WHERE id = ?'
+    ).bind(body.welcomeMessage?.trim() || null, body.maxAdditionalGuests ?? null, body.id).run()
+
+    return json({ success: true })
   } catch (e) {
     return handleAuthError(e) || err('Error interno.', 500)
   }

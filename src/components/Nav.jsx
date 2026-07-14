@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react'
 
 const LINKS = [
   { id: 'inicio', label: 'Inicio' },
+  { id: 'boda', label: 'Detalles' },
   { id: 'historia', label: 'Nuestra Historia' },
-  { id: 'boda', label: 'La Boda' },
   { id: 'rsvp', label: 'RSVP' },
   { id: 'regalos', label: 'Regalos' },
 ]
@@ -35,14 +35,9 @@ export default function Nav() {
   return (
     <nav className="app-nav">
       <div className="nav-inner">
-        <a
-          href="#inicio"
-          className="nav-brand"
-          onClick={e => handleLinkClick(e, 'inicio')}
-        >
+        <a href="#inicio" className="nav-brand" onClick={e => handleLinkClick(e, 'inicio')}>
           A & C
         </a>
-
         <ul className={`nav-links ${menuOpen ? 'open' : ''}`}>
           {LINKS.map(({ id, label }) => (
             <li key={id}>
@@ -56,12 +51,10 @@ export default function Nav() {
             </li>
           ))}
         </ul>
-
         <button
           className="nav-hamburger"
           onClick={() => setMenuOpen(o => !o)}
           aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'}
-          aria-expanded={menuOpen}
         >
           {menuOpen ? '✕' : '☰'}
         </button>

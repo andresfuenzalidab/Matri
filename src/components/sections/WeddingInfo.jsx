@@ -1,21 +1,31 @@
+import { useState, useEffect } from 'react'
 import { useApp } from '../../context/AppContext'
+import { normalizeImageUrl } from '../../utils/imageUrl.js'
 
 const MapPinIcon = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
-    aria-hidden="true"
-  >
+    stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
     <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
     <circle cx="12" cy="10" r="3" />
   </svg>
 )
 
 export default function WeddingInfo() {
-  const { get } = useApp()
+  const { get, token } = useApp()
+  const [venuePhotos, setVenuePhotos] = useState([])
+
+  useEffect(() => {
+    fetch('/api/venue-photos', { headers: { 'X-Invite-Token': token } })
+      .then(r => r.json())
+      .then(data => setVenuePhotos(data))
+      .catch(() => {})
+  }, [token])
+
+  const mapsUrl = get('venue_maps_url')
 
   return (
     <section id="boda" className="section">
-      <h2 className="section-title">La Boda</h2>
+      <h2 className="section-title">Detalles de la Boda</h2>
       <p className="section-subtitle">{get('hero_date', '6 de noviembre de 2026')}</p>
 
       <div className="wedding-cards">
@@ -36,13 +46,40 @@ export default function WeddingInfo() {
           <MapPinIcon />
           <h3>{get('venue_name', 'Altos del Paico')}</h3>
         </div>
-        {get('venue_address') && (
-          <p className="venue-address">{get('venue_address')}</p>
-        )}
-        {get('venue_description') && (
-          <p className="venue-description">{get('venue_description')}</p>
+        {get('venue_address') && <p className="venue-address">{get('venue_address')}</p>}
+        {get('venue_description') && <p className="venue-description">{get('venue_description')}</p>}
+        {mapsUrl && (
+          <a
+            href={mapsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-secondary"
+            style={{ alignSelf: 'flex-start', marginTop: '0.5rem' }}
+          >
+            Ver en Google Maps →
+          </a>
         )}
       </div>
+
+      {venuePhotos.length > 0 && (
+        <div style={{ marginTop: '2rem' }}>
+          <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.3rem', fontWeight: 600, marginBottom: '1rem' }}>
+            El lugar
+          </h3>
+          <div className="venue-collage">
+            {venuePhotos.map(photo => (
+              <div key={photo.id} className="venue-collage-item">
+                <img
+                  src={normalizeImageUrl(photo.image_url)}
+                  alt={photo.caption || 'Foto del lugar'}
+                  onError={e => e.target.parentElement.style.display = 'none'}
+                />
+                {photo.caption && <span className="venue-collage-caption">{photo.caption}</span>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </section>
   )
 }

@@ -12,7 +12,15 @@ export default function InvitationsManager() {
   const [newName, setNewName] = useState('')
   const [newEmail, setNewEmail] = useState('')
   const [newIsAdmin, setNewIsAdmin] = useState(false)
+  const [newWelcomeMsg, setNewWelcomeMsg] = useState('')
+  const [newMaxGuests, setNewMaxGuests] = useState('')
   const [creating, setCreating] = useState(false)
+
+  // Inline edit
+  const [editId, setEditId] = useState(null)
+  const [editWelcomeMsg, setEditWelcomeMsg] = useState('')
+  const [editMaxGuests, setEditMaxGuests] = useState('')
+  const [editSaving, setEditSaving] = useState(false)
 
   // Copy feedback
   const [copiedId, setCopiedId] = useState(null)
@@ -42,12 +50,19 @@ export default function InvitationsManager() {
       const res = await fetch('/api/admin/invitations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Invite-Token': token },
-        body: JSON.stringify({ name: newName.trim(), email: newEmail.trim(), isAdmin: newIsAdmin }),
+        body: JSON.stringify({
+          name: newName.trim(),
+          email: newEmail.trim(),
+          isAdmin: newIsAdmin,
+          welcomeMessage: newWelcomeMsg.trim(),
+          maxAdditionalGuests: newMaxGuests !== '' ? Number(newMaxGuests) : null,
+        }),
       })
       if (res.ok) {
         const inv = await res.json()
         setInvitations(prev => [inv, ...prev])
-        setNewName(''); setNewEmail(''); setNewIsAdmin(false); setShowCreate(false)
+        setNewName(''); setNewEmail(''); setNewIsAdmin(false)
+        setNewWelcomeMsg(''); setNewMaxGuests(''); setShowCreate(false)
       } else {
         const d = await res.json().catch(() => ({}))
         setError(d.error || 'Error al crear invitación.')
@@ -78,6 +93,40 @@ export default function InvitationsManager() {
       setCopiedId(inv.id)
       setTimeout(() => setCopiedId(null), 2000)
     })
+  }
+
+  function startEdit(inv) {
+    setEditId(inv.id)
+    setEditWelcomeMsg(inv.welcome_message || '')
+    setEditMaxGuests(inv.max_additional_guests != null ? String(inv.max_additional_guests) : '')
+  }
+
+  async function saveEdit(id) {
+    setEditSaving(true)
+    try {
+      const res = await fetch('/api/admin/invitations', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'X-Invite-Token': token },
+        body: JSON.stringify({
+          id,
+          welcomeMessage: editWelcomeMsg.trim(),
+          maxAdditionalGuests: editMaxGuests !== '' ? Number(editMaxGuests) : null,
+        }),
+      })
+      if (res.ok) {
+        setInvitations(prev => prev.map(i => i.id === id
+          ? { ...i, welcome_message: editWelcomeMsg.trim() || null, max_additional_guests: editMaxGuests !== '' ? Number(editMaxGuests) : null }
+          : i
+        ))
+        setEditId(null)
+      } else {
+        setError('Error al guardar.')
+      }
+    } catch {
+      setError('Error de conexión.')
+    } finally {
+      setEditSaving(false)
+    }
   }
 
   const total = invitations.length
@@ -122,6 +171,29 @@ export default function InvitationsManager() {
               <input type="checkbox" checked={newIsAdmin} onChange={e => setNewIsAdmin(e.target.checked)} />
               Admin
             </label>
+          </div>
+          <div style={{ marginTop: '0.75rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <div style={{ flex: 1, minWidth: 200 }}>
+              <label className="form-label">Mensaje de bienvenida personalizado (opcional)</label>
+              <textarea
+                className="input" rows={2}
+                placeholder="ej. ¡Familia querida! Les esperamos con mucho amor..."
+                value={newWelcomeMsg}
+                onChange={e => setNewWelcomeMsg(e.target.value)}
+              />
+            </div>
+            <div style={{ minWidth: 140 }}>
+              <label className="form-label">Máx. acompañantes (opcional)</label>
+              <input
+                className="input" type="number" min="0" max="20"
+                placeholder="Sin límite"
+                value={newMaxGuests}
+                onChange={e => setNewMaxGuests(e.target.value)}
+                style={{ width: '100%' }}
+              />
+            </div>
+          </div>
+          <div style={{ marginTop: '0.75rem' }}>
             <button className="btn btn-primary" type="submit" disabled={creating || !newName.trim()}>
               {creating ? 'Creando...' : 'Crear'}
             </button>
@@ -142,50 +214,94 @@ export default function InvitationsManager() {
                 <th>Email</th>
                 <th>Tipo</th>
                 <th>RSVP</th>
+                <th>Personalización</th>
                 <th>Enlace</th>
                 <th></th>
               </tr>
             </thead>
             <tbody>
               {invitations.map(inv => (
-                <tr key={inv.id}>
-                  <td><strong>{inv.name}</strong></td>
-                  <td style={{ opacity: 0.7 }}>{inv.email || '—'}</td>
-                  <td>
-                    {inv.is_admin
-                      ? <span className="tag tag-accent">Admin</span>
-                      : <span className="tag tag-neutral">Invitado</span>}
-                  </td>
-                  <td>
-                    {inv.attending === null || inv.attending === undefined
-                      ? <span style={{ opacity: 0.4 }}>Sin respuesta</span>
-                      : inv.attending
-                        ? <span className="tag tag-accent">Asiste ({inv.num_guests})</span>
-                        : <span className="tag tag-neutral">No asiste</span>}
-                  </td>
-                  <td>
-                    <div className="token-cell">
-                      <span className="token-badge">{inv.token}</span>
+                <>
+                  <tr key={inv.id}>
+                    <td><strong>{inv.name}</strong></td>
+                    <td style={{ opacity: 0.7 }}>{inv.email || '—'}</td>
+                    <td>
+                      {inv.is_admin
+                        ? <span className="tag tag-accent">Admin</span>
+                        : <span className="tag tag-neutral">Invitado</span>}
+                    </td>
+                    <td>
+                      {inv.attending === null || inv.attending === undefined
+                        ? <span style={{ opacity: 0.4 }}>Sin respuesta</span>
+                        : inv.attending
+                          ? <span className="tag tag-accent">Asiste ({inv.num_guests})</span>
+                          : <span className="tag tag-neutral">No asiste</span>}
+                    </td>
+                    <td>
+                      {editId === inv.id ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', minWidth: 220 }}>
+                          <textarea
+                            className="input" rows={2} style={{ fontSize: '0.8rem' }}
+                            placeholder="Mensaje de bienvenida..."
+                            value={editWelcomeMsg}
+                            onChange={e => setEditWelcomeMsg(e.target.value)}
+                          />
+                          <input
+                            className="input" type="number" min="0" max="20"
+                            placeholder="Máx. acompañantes (vacío = sin límite)"
+                            style={{ fontSize: '0.8rem' }}
+                            value={editMaxGuests}
+                            onChange={e => setEditMaxGuests(e.target.value)}
+                          />
+                          <div style={{ display: 'flex', gap: '0.3rem' }}>
+                            <button className="btn btn-primary" style={{ fontSize: '0.75rem', padding: '3px 8px' }} onClick={() => saveEdit(inv.id)} disabled={editSaving}>
+                              {editSaving ? '...' : 'Guardar'}
+                            </button>
+                            <button className="btn btn-ghost" style={{ fontSize: '0.75rem', padding: '3px 8px' }} onClick={() => setEditId(null)}>
+                              Cancelar
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          <span style={{ fontSize: '0.75rem', opacity: inv.welcome_message ? 1 : 0.35 }}>
+                            {inv.welcome_message ? '✓ Personalizada' : 'Estándar'}
+                            {inv.max_additional_guests != null ? ` · máx ${inv.max_additional_guests}` : ''}
+                          </span>
+                          <button
+                            className="btn btn-ghost"
+                            style={{ fontSize: '0.7rem', padding: '2px 6px' }}
+                            onClick={() => startEdit(inv)}
+                          >
+                            Editar
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                    <td>
+                      <div className="token-cell">
+                        <span className="token-badge">{inv.token}</span>
+                        <button
+                          className="btn btn-ghost"
+                          style={{ fontSize: '0.75rem', padding: '2px 6px' }}
+                          onClick={() => copyLink(inv)}
+                          title="Copiar enlace"
+                        >
+                          {copiedId === inv.id ? '✓' : 'Copiar'}
+                        </button>
+                      </div>
+                    </td>
+                    <td>
                       <button
                         className="btn btn-ghost"
-                        style={{ fontSize: '0.75rem', padding: '2px 6px' }}
-                        onClick={() => copyLink(inv)}
-                        title="Copiar enlace"
+                        style={{ color: '#c0392b', fontSize: '0.75rem' }}
+                        onClick={() => handleDelete(inv.id)}
                       >
-                        {copiedId === inv.id ? '✓' : 'Copiar'}
+                        Eliminar
                       </button>
-                    </div>
-                  </td>
-                  <td>
-                    <button
-                      className="btn btn-ghost"
-                      style={{ color: '#c0392b', fontSize: '0.75rem' }}
-                      onClick={() => handleDelete(inv.id)}
-                    >
-                      Eliminar
-                    </button>
-                  </td>
-                </tr>
+                    </td>
+                  </tr>
+                </>
               ))}
             </tbody>
           </table>

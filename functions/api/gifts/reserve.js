@@ -4,7 +4,6 @@ export async function onRequestPost({ request, env }) {
   try {
     const inv = await requireInvitation(request, env)
 
-    // One gift per person
     const existing = await env.DB.prepare(
       'SELECT id FROM gift_reservations WHERE invitation_id = ?'
     ).bind(inv.id).first()
@@ -16,9 +15,8 @@ export async function onRequestPost({ request, env }) {
     const body = await request.json().catch(() => null)
     if (!body?.giftId) return err('Datos inválidos.')
 
-    const { giftId, guestName, confirmedPayment = 0 } = body
+    const { giftId, guestName, confirmedPayment = 0, congratulationsMessage = '' } = body
 
-    // Check gift exists and is not taken
     const giftRow = await env.DB.prepare(
       'SELECT id FROM gifts WHERE id = ? AND active = 1'
     ).bind(giftId).first()
@@ -34,8 +32,8 @@ export async function onRequestPost({ request, env }) {
     }
 
     await env.DB.prepare(
-      'INSERT INTO gift_reservations (gift_id, invitation_id, guest_name, confirmed_payment) VALUES (?, ?, ?, ?)'
-    ).bind(giftId, inv.id, guestName || inv.name, confirmedPayment ? 1 : 0).run()
+      'INSERT INTO gift_reservations (gift_id, invitation_id, guest_name, confirmed_payment, congratulations_message) VALUES (?, ?, ?, ?, ?)'
+    ).bind(giftId, inv.id, guestName || inv.name, confirmedPayment ? 1 : 0, congratulationsMessage || '').run()
 
     return json({ success: true })
   } catch (e) {
