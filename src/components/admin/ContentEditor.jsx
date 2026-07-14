@@ -55,6 +55,12 @@ const SECTIONS = [
       { key: 'bank_email', label: 'Email', type: 'text' },
     ],
   },
+  {
+    label: 'Música de fondo',
+    fields: [
+      { key: 'music_url', label: 'URL del archivo de música (MP3 directo)', type: 'text' },
+    ],
+  },
 ]
 
 function TextField({ fieldKey, label, type, value, onSave, token }) {

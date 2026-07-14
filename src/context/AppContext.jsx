@@ -1,10 +1,19 @@
-import { createContext, useContext, useState, useCallback } from 'react'
+import { createContext, useContext, useState, useCallback, useEffect } from 'react'
 
 const AppContext = createContext(null)
 
 export function AppProvider({ children, token, guest, rsvp, giftReservation }) {
   const [content, setContent] = useState({})
   const [contentLoaded, setContentLoaded] = useState(false)
+
+  // Auto-load content on mount so all sections (music, venue, etc.) work immediately
+  useEffect(() => {
+    if (!token || contentLoaded) return
+    fetch('/api/content', { headers: { 'X-Invite-Token': token } })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) { setContent(data); setContentLoaded(true) } })
+      .catch(() => {})
+  }, [token]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadContent = useCallback(async () => {
     if (contentLoaded) return

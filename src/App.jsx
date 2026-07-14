@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { AppProvider } from './context/AppContext'
 import Nav from './components/Nav'
 import WelcomeModal from './components/WelcomeModal'
+import MusicPlayer from './components/MusicPlayer'
 import Home from './components/sections/Home'
 import WeddingInfo from './components/sections/WeddingInfo'
 import OurStory from './components/sections/OurStory'
@@ -86,6 +87,7 @@ export default function App() {
             {adminOpen && <AdminPanel onClose={() => setAdminOpen(false)} />}
           </>
         )}
+        <MusicPlayer welcomed={welcomed} />
       </div>
     </AppProvider>
   )
