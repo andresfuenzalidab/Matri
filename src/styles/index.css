@@ -646,6 +646,8 @@ textarea.input { min-height: 90px; resize: vertical; }
 }
 .music-player-btn:hover { background: var(--color-accent); color: white; transform: scale(1.08); }
 .music-player-btn.playing { background: var(--color-accent); color: white; }
+.music-player-btn.error { border-color: var(--color-neutral-400); opacity: 0.4; cursor: default; }
+.music-player-btn.error:hover { background: var(--color-bg); color: var(--color-accent); transform: none; }
 
 /* ── Invitation success modal ── */
 .inv-success-overlay {
