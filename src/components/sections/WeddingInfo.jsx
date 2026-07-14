@@ -32,21 +32,21 @@ export default function WeddingInfo() {
       <div className="wedding-cards">
         {!isPartyOnly && (
           <div className="card wedding-event-card">
-            <div className="wedding-event-type">Ceremonia</div>
+            <div className="wedding-event-type">Hora de citación</div>
             <div className="wedding-event-time">{get('ceremony_time', '17:00')} hrs</div>
             <div className="wedding-event-name">{get('venue_name', 'Altos del Paico')}</div>
           </div>
         )}
+        {isPartyOnly && (
         <div className="card wedding-event-card">
-          <div className="wedding-event-type">{isPartyOnly ? 'Celebración' : 'Fiesta'}</div>
+          <div className="wedding-event-type">Hora de citación</div>
           <div className="wedding-event-time">{get('reception_time', '19:30')} hrs</div>
           <div className="wedding-event-name">{get('venue_name', 'Altos del Paico')}</div>
-          {isPartyOnly && (
             <div style={{ fontSize: '0.78rem', opacity: 0.65, marginTop: '0.4rem', lineHeight: 1.5 }}>
               Los invitamos a celebrar con nosotros en la fiesta
             </div>
-          )}
         </div>
+        )}
       </div>
 
       <div className="card venue-card">
