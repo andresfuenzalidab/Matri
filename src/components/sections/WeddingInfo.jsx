@@ -26,8 +26,8 @@ export default function WeddingInfo() {
 
   return (
     <section id="boda" className="section">
-      <h2 className="section-title">Detalles de la Boda</h2>
-      <p className="section-subtitle">{get('hero_date', '6 de noviembre de 2026')}</p>
+      <h2 className="section-title">Detalles del matrimonio</h2>
+      <p className="section-subtitle">{get('hero_date', 'Viernes 6 de noviembre de 2026')}</p>
 
       <div className="wedding-cards">
         {!isPartyOnly && (

@@ -12,6 +12,8 @@ import * as adminContent from '../functions/api/admin/content.js'
 import * as adminStory from '../functions/api/admin/story.js'
 import * as adminVenuePhotos from '../functions/api/admin/venue-photos.js'
 import * as adminTrips from '../functions/api/admin/trips.js'
+import * as storyPhotosModule from '../functions/api/story-photos.js'
+import * as adminStoryPhotos from '../functions/api/admin/story-photos.js'
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -76,6 +78,10 @@ export default {
         response = await dispatch(adminVenuePhotos, method, request, env)
       } else if (path === '/api/admin/trips') {
         response = await dispatch(adminTrips, method, request, env)
+      } else if (path === '/api/story-photos') {
+        response = await dispatch(storyPhotosModule, method, request, env)
+      } else if (path === '/api/admin/story-photos') {
+        response = await dispatch(adminStoryPhotos, method, request, env)
       } else {
         response = new Response(JSON.stringify({ error: 'Not found' }), {
           status: 404,

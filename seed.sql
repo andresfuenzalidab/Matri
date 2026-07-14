@@ -30,7 +30,7 @@ INSERT OR IGNORE INTO gifts (id, trip_id, name, price, order_idx) VALUES
 INSERT OR IGNORE INTO site_content (key, value) VALUES
   ('hero_title', 'Andrés & Catalina'),
   ('hero_subtitle', 'Nos casamos'),
-  ('hero_date', '6 de noviembre de 2026'),
+  ('hero_date', 'viernes 6 de noviembre de 2026'),
   ('hero_location', 'Altos del Paico'),
   ('hero_image', ''),
   ('story_how_we_met', 'Todo comenzó en una tarde de otoño, cuando el destino quiso que nuestros caminos se cruzaran. Desde ese primer momento, supimos que algo especial había comenzado. Lo que empezó como una amistad fue creciendo, conversación a conversación, hasta convertirse en el amor más grande de nuestras vidas. Cada momento compartido nos fue acercando más, tejiendo una historia que hoy celebramos con quienes más amamos.'),

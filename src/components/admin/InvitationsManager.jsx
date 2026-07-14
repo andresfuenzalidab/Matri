@@ -16,6 +16,7 @@ export default function InvitationsManager() {
   const [newWelcomeMsg, setNewWelcomeMsg] = useState('')
   const [newMaxGuests, setNewMaxGuests] = useState('')
   const [newInvType, setNewInvType] = useState('all_in')
+  const [newNotes, setNewNotes] = useState('')
   const [creating, setCreating] = useState(false)
 
   // Success state after creating an invitation
@@ -26,6 +27,7 @@ export default function InvitationsManager() {
   const [editWelcomeMsg, setEditWelcomeMsg] = useState('')
   const [editMaxGuests, setEditMaxGuests] = useState('')
   const [editInvType, setEditInvType] = useState('all_in')
+  const [editNotes, setEditNotes] = useState('')
   const [editSaving, setEditSaving] = useState(false)
 
   const [copiedId, setCopiedId] = useState(null)
@@ -57,6 +59,7 @@ export default function InvitationsManager() {
           welcomeMessage: newWelcomeMsg.trim(),
           maxAdditionalGuests: newMaxGuests !== '' ? Number(newMaxGuests) : null,
           invitationType: newInvType,
+          notes: newNotes.trim(),
         }),
       })
       if (res.ok) {
@@ -64,7 +67,7 @@ export default function InvitationsManager() {
         setInvitations(prev => [inv, ...prev])
         setCreatedInv({ ...inv, welcome_message: newWelcomeMsg.trim() || null })
         setNewName(''); setNewEmail(''); setNewIsAdmin(false)
-        setNewWelcomeMsg(''); setNewMaxGuests(''); setNewInvType('all_in'); setShowCreate(false)
+        setNewWelcomeMsg(''); setNewMaxGuests(''); setNewInvType('all_in'); setNewNotes(''); setShowCreate(false)
       } else {
         const d = await res.json().catch(() => ({}))
         setError(d.error || 'Error al crear invitación.')
@@ -100,6 +103,7 @@ export default function InvitationsManager() {
     setEditWelcomeMsg(inv.welcome_message || '')
     setEditMaxGuests(inv.max_additional_guests != null ? String(inv.max_additional_guests) : '')
     setEditInvType(inv.invitation_type || 'all_in')
+    setEditNotes(inv.notes || '')
   }
 
   async function saveEdit(id) {
@@ -113,11 +117,12 @@ export default function InvitationsManager() {
           welcomeMessage: editWelcomeMsg.trim(),
           maxAdditionalGuests: editMaxGuests !== '' ? Number(editMaxGuests) : null,
           invitationType: editInvType,
+          notes: editNotes.trim(),
         }),
       })
       if (res.ok) {
         setInvitations(prev => prev.map(i => i.id === id
-          ? { ...i, welcome_message: editWelcomeMsg.trim() || null, max_additional_guests: editMaxGuests !== '' ? Number(editMaxGuests) : null, invitation_type: editInvType }
+          ? { ...i, welcome_message: editWelcomeMsg.trim() || null, max_additional_guests: editMaxGuests !== '' ? Number(editMaxGuests) : null, invitation_type: editInvType, notes: editNotes.trim() || null }
           : i
         ))
         setEditId(null)
@@ -243,6 +248,15 @@ export default function InvitationsManager() {
               </label>
             </div>
           </div>
+          <div style={{ marginTop: '0.5rem' }}>
+            <label className="form-label">Nota interna (solo visible en admin)</label>
+            <input
+              className="input"
+              placeholder="ej. Amigos del novio - lado Fuenzalida"
+              value={newNotes}
+              onChange={e => setNewNotes(e.target.value)}
+            />
+          </div>
           <div style={{ marginTop: '0.75rem' }}>
             <button className="btn btn-primary" type="submit" disabled={creating || !newName.trim()}>
               {creating ? 'Creando...' : 'Crear y ver enlace'}
@@ -302,6 +316,13 @@ export default function InvitationsManager() {
                           value={editMaxGuests}
                           onChange={e => setEditMaxGuests(e.target.value)}
                         />
+                        <input
+                          className="input"
+                          placeholder="Nota interna (ej. Amigos novio - Fuenzalida)"
+                          style={{ fontSize: '0.8rem' }}
+                          value={editNotes}
+                          onChange={e => setEditNotes(e.target.value)}
+                        />
                             <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.25rem' }}>
                             <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.78rem', cursor: 'pointer' }}>
                               <input type="radio" name={`invType_${inv.id}`} value="all_in" checked={editInvType === 'all_in'} onChange={() => setEditInvType('all_in')} />
@@ -336,6 +357,9 @@ export default function InvitationsManager() {
                         </div>
                         {inv.welcome_message && (
                           <span style={{ fontSize: '0.72rem', opacity: 0.55 }}>✓ Mensaje personalizado</span>
+                        )}
+                        {inv.notes && (
+                          <span style={{ fontSize: '0.72rem', opacity: 0.65, fontStyle: 'italic', display: 'block' }}>{inv.notes}</span>
                         )}
                       </div>
                     )}

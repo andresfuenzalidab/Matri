@@ -37,7 +37,7 @@ const SECTIONS = [
     ],
   },
   {
-    label: 'La Boda',
+    label: 'El Matrimonio',
     fields: [
       { key: 'ceremony_time', label: 'Hora ceremonia', type: 'text' },
       { key: 'reception_time', label: 'Hora recepción / fiesta', type: 'text' },

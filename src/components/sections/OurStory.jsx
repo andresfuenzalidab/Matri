@@ -1,17 +1,23 @@
 import { useState, useEffect } from 'react'
 import { useApp } from '../../context/AppContext'
 import PhotoPlaceholder from '../PhotoPlaceholder'
+import StoryCarousel from '../StoryCarousel'
 
 export default function OurStory() {
   const { token, get } = useApp()
   const [sections, setSections] = useState([])
+  const [photos, setPhotos] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/story', { headers: { 'X-Invite-Token': token } })
-      .then(r => r.json())
-      .then(data => { setSections(data); setLoading(false) })
-      .catch(() => setLoading(false))
+    Promise.all([
+      fetch('/api/story', { headers: { 'X-Invite-Token': token } }).then(r => r.json()),
+      fetch('/api/story-photos', { headers: { 'X-Invite-Token': token } }).then(r => r.json()).catch(() => []),
+    ]).then(([story, storyPhotos]) => {
+      setSections(story)
+      setPhotos(storyPhotos || [])
+      setLoading(false)
+    }).catch(() => setLoading(false))
   }, [token])
 
   if (loading) return (
@@ -46,6 +52,12 @@ export default function OurStory() {
         <p className="text-muted" style={{ textAlign: 'center', padding: '3rem 0' }}>
           La historia se está escribiendo...
         </p>
+      )}
+
+      {photos.length > 0 && (
+        <div style={{ marginTop: '3rem' }}>
+          <StoryCarousel photos={photos} />
+        </div>
       )}
     </section>
   )

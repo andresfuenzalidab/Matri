@@ -4,6 +4,7 @@ import RSVPDashboard from './RSVPDashboard'
 import GiftsDashboard from './GiftsDashboard'
 import ContentEditor from './ContentEditor'
 import StoryManager from './StoryManager'
+import StoryPhotosManager from './StoryPhotosManager'
 import VenuePhotosManager from './VenuePhotosManager'
 
 const TABS = [
@@ -11,6 +12,7 @@ const TABS = [
   { id: 'rsvp', label: 'RSVP' },
   { id: 'gifts', label: 'Regalos' },
   { id: 'story', label: 'Historia' },
+  { id: 'story-photos', label: 'Carrusel' },
   { id: 'venue', label: 'Lugar' },
   { id: 'content', label: 'Contenido' },
 ]
@@ -51,6 +53,7 @@ export default function AdminPanel({ onClose }) {
           {tab === 'rsvp' && <RSVPDashboard />}
           {tab === 'gifts' && <GiftsDashboard />}
           {tab === 'story' && <StoryManager />}
+          {tab === 'story-photos' && <StoryPhotosManager />}
           {tab === 'venue' && <VenuePhotosManager />}
           {tab === 'content' && <ContentEditor />}
         </div>

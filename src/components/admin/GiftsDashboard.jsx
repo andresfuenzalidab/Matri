@@ -181,7 +181,10 @@ export default function GiftsDashboard() {
   }
 
   async function deleteGift(gift, tripId) {
-    if (!window.confirm(`¿Eliminar "${gift.name}"?`)) return
+    const msg = gift.reservation_id
+      ? `"${gift.name}" ya fue reservado por ${gift.guest_name || 'un invitado'}.\n\n¿Eliminar de todas formas? Esto también cancelará su reserva.`
+      : `¿Eliminar "${gift.name}"?`
+    if (!window.confirm(msg)) return
     try {
       const res = await fetch(`/api/admin/gifts?id=${gift.id}`, {
         method: 'DELETE', headers: { 'X-Invite-Token': token },
@@ -388,9 +391,7 @@ export default function GiftsDashboard() {
                         >
                           Editar
                         </button>
-                        {!gift.reservation_id && (
-                          <button className="btn btn-ghost" style={{ color: '#c0392b', fontSize: '0.72rem' }} onClick={() => deleteGift(gift, trip.id)}>Eliminar</button>
-                        )}
+                        <button className="btn btn-ghost" style={{ color: '#c0392b', fontSize: '0.72rem' }} onClick={() => deleteGift(gift, trip.id)}>Eliminar</button>
                       </div>
                     </div>
                   )}

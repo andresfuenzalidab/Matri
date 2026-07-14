@@ -8,7 +8,7 @@ export function downloadInvitationPDF(inv, content = {}) {
   const isPartyOnly = (inv.invitation_type || 'all_in') === 'party_only'
 
   const coupleNames = content.hero_title || 'Andrés & Catalina'
-  const weddingDate = content.hero_date || '6 de noviembre de 2026'
+  const weddingDate = content.hero_date || 'Viernes 6 de noviembre de 2026'
   const venueName = content.venue_name || 'Altos del Paico'
   const venueAddress = content.venue_address || ''
   const ceremonyTime = content.ceremony_time || '17:00'
@@ -16,8 +16,8 @@ export function downloadInvitationPDF(inv, content = {}) {
   const heroImage = normalizeImageUrl(content.hero_image || '')
 
   const timingLine = isPartyOnly
-    ? `Fiesta: ${receptionTime} hrs`
-    : `Ceremonia: ${ceremonyTime} hrs &nbsp;·&nbsp; Recepción: ${receptionTime} hrs`
+    ? `Citación a fiesta: ${receptionTime} hrs`
+    : `Citación a ceremonia: ${ceremonyTime} hrs &nbsp;·&nbsp; Recepción: ${receptionTime} hrs`
 
   const html = `<!DOCTYPE html>
 <html lang="es">
@@ -123,7 +123,7 @@ body{font-family:'Lora',Georgia,serif;color:#2d2520}
   </div>` : ''}
 
   <div class="content">
-    <p class="label-top">Invitación de Boda</p>
+    <p class="label-top">Invitación de Matrimonio</p>
     <div class="monogram">${coupleNames}</div>
     <div class="ornament">✦ ✦ ✦</div>
 

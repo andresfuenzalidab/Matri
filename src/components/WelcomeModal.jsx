@@ -41,7 +41,7 @@ export default function WelcomeModal({ guest, onEnter }) {
           fontSize: '0.7rem', letterSpacing: '0.2em', textTransform: 'uppercase',
           color: 'var(--color-accent)', marginBottom: '1.5rem',
         }}>
-          6 de noviembre de 2026
+          Viernes 6 de noviembre de 2026
         </p>
 
         {message ? (

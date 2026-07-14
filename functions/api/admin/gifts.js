@@ -96,11 +96,8 @@ export async function onRequestDelete({ request, env }) {
     const id = url.searchParams.get('id')
     if (!id) return err('ID requerido.')
 
-    const reserved = await env.DB.prepare(
-      'SELECT id FROM gift_reservations WHERE gift_id = ? LIMIT 1'
-    ).bind(id).first()
-    if (reserved) return err('Este regalo ya fue reservado y no puede eliminarse.', 409)
-
+    // Remove reservation first (cascade), then soft-delete the gift
+    await env.DB.prepare('DELETE FROM gift_reservations WHERE gift_id = ?').bind(id).run()
     await env.DB.prepare('UPDATE gifts SET active = 0 WHERE id = ?').bind(id).run()
     return json({ success: true })
   } catch (e) {

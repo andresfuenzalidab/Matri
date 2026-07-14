@@ -1,22 +1,24 @@
 /* Design system — tokens and component classes from the original Classical system */
 
 :root {
-  --color-bg: #f3f2f2;
-  --color-surface: #eae9e9;
-  --color-text: #201f1d;
+  --color-bg: #f6ede0;
+  --color-surface: #ede3d2;
+  --color-text: #2c3828;
   --color-accent: #b68235;
   --color-accent-2: #ac803e;
-  --color-divider: color-mix(in srgb, #201f1d 16%, transparent);
+  --color-rose: #b87a6a;
+  --color-sage: #6a8c65;
+  --color-divider: color-mix(in srgb, #2c3828 16%, transparent);
 
-  --color-neutral-100: #f8f4f4;
-  --color-neutral-200: #eae7e7;
-  --color-neutral-300: #d7d3d3;
-  --color-neutral-400: #bab6b6;
-  --color-neutral-500: #9b9797;
-  --color-neutral-600: #7d7979;
-  --color-neutral-700: #605d5d;
-  --color-neutral-800: #444141;
-  --color-neutral-900: #2d2b2b;
+  --color-neutral-100: #f5ece0;
+  --color-neutral-200: #e8ddd0;
+  --color-neutral-300: #d4c8b8;
+  --color-neutral-400: #b8a898;
+  --color-neutral-500: #9a8a7a;
+  --color-neutral-600: #7c6c5c;
+  --color-neutral-700: #5e504a;
+  --color-neutral-800: #42393a;
+  --color-neutral-900: #2c2828;
 
   --color-accent-100: #fff3e4;
   --color-accent-200: #ffe3bf;
@@ -88,8 +90,8 @@ img { display: block; max-width: 100%; }
 
 /* ── Rules ── */
 .hr {
-  height: 1px; border: 0; margin: var(--space-8) 0;
-  background: var(--color-divider);
+  border: 0; margin: var(--space-8) 0; height: 1px;
+  background: linear-gradient(to right, transparent, color-mix(in srgb, var(--color-accent) 50%, transparent) 20%, color-mix(in srgb, var(--color-accent) 50%, transparent) 80%, transparent);
 }
 
 /* ── Buttons ── */
@@ -411,7 +413,7 @@ textarea.input { min-height: 90px; resize: vertical; }
 /* ── RSVP ── */
 .rsvp-container { max-width: 540px; }
 .rsvp-guest-name {
-  background: white; padding: 0.6rem 0.8rem;
+  background: var(--color-neutral-100); padding: 0.6rem 0.8rem;
   border: 1px solid var(--color-divider); border-radius: var(--radius-md);
   font-size: 14px; opacity: 0.8;
 }
@@ -487,7 +489,7 @@ textarea.input { min-height: 90px; resize: vertical; }
 }
 .gift-modal-price { color: var(--color-accent); margin-bottom: 1rem; }
 .bank-details {
-  background: white; border-radius: var(--radius-md);
+  background: var(--color-neutral-100); border-radius: var(--radius-md);
   padding: 1.1rem 1.25rem; margin: 1rem 0;
   display: flex; flex-direction: column; gap: 0.6rem;
 }
@@ -552,7 +554,7 @@ textarea.input { min-height: 90px; resize: vertical; }
 /* Stats */
 .stats-row { display: flex; gap: 1rem; margin-bottom: 1.75rem; flex-wrap: wrap; }
 .stat-card {
-  background: white; border-radius: var(--radius-md);
+  background: var(--color-neutral-100); border-radius: var(--radius-md);
   padding: 0.9rem 1.25rem; text-align: center; min-width: 110px;
   border: 1px solid var(--color-divider);
 }
@@ -582,7 +584,7 @@ textarea.input { min-height: 90px; resize: vertical; }
 
 /* Create invitation form */
 .create-form {
-  background: white; border: 1px solid var(--color-divider);
+  background: var(--color-neutral-100); border: 1px solid var(--color-divider);
   border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.5rem;
 }
 .create-form-title {
@@ -730,4 +732,68 @@ textarea.input { min-height: 90px; resize: vertical; }
   position: absolute; bottom: 0; left: 0; right: 0;
   background: linear-gradient(transparent, rgba(0,0,0,0.55));
   color: white; font-size: 0.75rem; padding: 0.5rem 0.6rem 0.4rem;
+}
+
+/* ── Section title botanical ornament ── */
+.section-title::after {
+  content: '';
+  display: block;
+  width: 52px; height: 2px;
+  background: linear-gradient(to right, var(--color-accent), color-mix(in srgb, var(--color-accent) 30%, transparent));
+  margin-top: 0.6rem;
+  border-radius: 1px;
+}
+
+/* ── Story Carousel ── */
+.story-carousel {
+  position: relative;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--color-neutral-200);
+  aspect-ratio: 16/9;
+  box-shadow: var(--shadow-md);
+}
+.story-carousel-img-wrap {
+  width: 100%; height: 100%;
+  transition: opacity 0.28s ease;
+}
+.story-carousel-img-wrap.fading { opacity: 0; }
+.story-carousel-img-wrap img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+}
+.story-carousel-caption {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: linear-gradient(transparent, rgba(44,40,40,0.7));
+  color: rgba(255,255,255,0.92);
+  font-size: 0.8rem; padding: 1.5rem 1rem 0.7rem;
+  font-style: italic; text-align: center;
+}
+.story-carousel-arrow {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  background: rgba(246,237,224,0.7); border: none;
+  color: var(--color-text); font-size: 1.8rem; line-height: 1;
+  width: 38px; height: 38px; border-radius: 50%;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s;
+  backdrop-filter: blur(4px);
+  z-index: 2;
+}
+.story-carousel-arrow:hover { background: rgba(246,237,224,0.95); }
+.story-carousel-arrow.left { left: 10px; }
+.story-carousel-arrow.right { right: 10px; }
+.story-carousel-dots {
+  position: absolute; bottom: 10px; left: 0; right: 0;
+  display: flex; justify-content: center; gap: 6px; z-index: 2;
+}
+.story-carousel-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: rgba(255,255,255,0.5); border: none; cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+  padding: 0;
+}
+.story-carousel-dot.active {
+  background: white; transform: scale(1.25);
 }
