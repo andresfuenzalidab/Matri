@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { AppProvider } from './context/AppContext'
 import Nav from './components/Nav'
 import WelcomeModal from './components/WelcomeModal'
@@ -8,6 +8,7 @@ import WeddingInfo from './components/sections/WeddingInfo'
 import OurStory from './components/sections/OurStory'
 import RSVP from './components/sections/RSVP'
 import Gifts from './components/sections/Gifts'
+import Contact from './components/sections/Contact'
 import AdminPanel from './components/admin/AdminPanel'
 
 function getToken() {
@@ -26,6 +27,7 @@ export default function App() {
   const [giftReservation, setGiftReservation] = useState(null)
   const [adminOpen, setAdminOpen] = useState(false)
   const [welcomed, setWelcomed] = useState(() => sessionStorage.getItem('welcomed') === '1')
+  const musicPlayerRef = useRef(null)
   const token = getToken()
 
   useEffect(() => {
@@ -48,6 +50,8 @@ export default function App() {
   function handleWelcomed() {
     sessionStorage.setItem('welcomed', '1')
     setWelcomed(true)
+    // Call play synchronously within the user gesture — this is the reliable autoplay path
+    musicPlayerRef.current?.tryPlay()
   }
 
   if (status === 'loading') {
@@ -78,6 +82,7 @@ export default function App() {
           <OurStory />
           <RSVP initialRsvp={rsvp} />
           <Gifts initialReservation={giftReservation} />
+          <Contact />
         </main>
         {guest?.isAdmin && (
           <>
@@ -87,7 +92,7 @@ export default function App() {
             {adminOpen && <AdminPanel onClose={() => setAdminOpen(false)} />}
           </>
         )}
-        <MusicPlayer welcomed={welcomed} />
+        <MusicPlayer welcomed={welcomed} playerRef={musicPlayerRef} />
       </div>
     </AppProvider>
   )

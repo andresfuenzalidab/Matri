@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useApp } from '../context/AppContext'
 import { normalizeAudioUrl } from '../utils/imageUrl.js'
 
-export default function MusicPlayer({ welcomed }) {
+export default function MusicPlayer({ welcomed, playerRef }) {
   const { get } = useApp()
   const audioRef = useRef(null)
   const [playing, setPlaying] = useState(false)
@@ -37,17 +37,29 @@ export default function MusicPlayer({ welcomed }) {
     }
   }, [musicUrl])
 
-  // Try autoplay once welcomed + audio is ready
+  // Expose tryPlay so App.jsx can call it synchronously inside a user gesture
+  useEffect(() => {
+    if (!playerRef) return
+    playerRef.current = {
+      tryPlay() {
+        if (hasTriedAutoplay.current || sessionStorage.getItem('musicPaused') === '1') return
+        hasTriedAutoplay.current = true
+        audioRef.current?.play()
+          .then(() => setPlaying(true))
+          .catch(() => {})
+      }
+    }
+  }, [playerRef])
+
+  // Fallback: try autoplay when both welcomed + ready (catches the case where audio loads
+  // after the welcome click — may be blocked by browser if no gesture is active)
   useEffect(() => {
     if (!welcomed || !ready || hasTriedAutoplay.current) return
     hasTriedAutoplay.current = true
-    const wasPaused = sessionStorage.getItem('musicPaused') === '1'
-    if (!wasPaused) {
+    if (sessionStorage.getItem('musicPaused') !== '1') {
       audioRef.current?.play()
         .then(() => setPlaying(true))
-        .catch(() => {
-          // Autoplay blocked — button will be visible for manual start
-        })
+        .catch(() => {})
     }
   }, [welcomed, ready])
 

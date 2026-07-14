@@ -82,6 +82,15 @@ const SECTIONS = [
       { key: 'music_url', label: 'URL del archivo de música (MP3 directo)', type: 'text' },
     ],
   },
+  {
+    label: 'Contacto — ¿Dudas?',
+    fields: [
+      { key: 'contact_groom_phone', label: 'Teléfono novio (ej. +56912345678)', type: 'text' },
+      { key: 'contact_groom_label', label: 'Etiqueta botón novio', type: 'text' },
+      { key: 'contact_bride_phone', label: 'Teléfono novia (ej. +56987654321)', type: 'text' },
+      { key: 'contact_bride_label', label: 'Etiqueta botón novia', type: 'text' },
+    ],
+  },
 ]
 
 function TextField({ fieldKey, label, type, value, onSave, token }) {
