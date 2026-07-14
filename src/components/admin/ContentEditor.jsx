@@ -40,10 +40,31 @@ const SECTIONS = [
     label: 'La Boda',
     fields: [
       { key: 'ceremony_time', label: 'Hora ceremonia', type: 'text' },
-      { key: 'reception_time', label: 'Hora recepción', type: 'text' },
+      { key: 'reception_time', label: 'Hora recepción / fiesta', type: 'text' },
       { key: 'venue_name', label: 'Nombre del lugar', type: 'text' },
       { key: 'venue_address', label: 'Dirección', type: 'text' },
       { key: 'venue_description', label: 'Descripción del lugar', type: 'textarea' },
+      { key: 'venue_maps_url', label: 'Link de Google Maps', type: 'text' },
+    ],
+  },
+  {
+    label: 'Nuestra Historia',
+    fields: [
+      { key: 'story_subtitle', label: 'Subtítulo de la sección', type: 'text' },
+    ],
+  },
+  {
+    label: 'Regalos — Encabezado',
+    fields: [
+      { key: 'gifts_section_label', label: 'Etiqueta pequeña (ej. "Luna de Miel")', type: 'text' },
+      { key: 'gifts_section_title', label: 'Título principal', type: 'text' },
+      { key: 'gifts_intro', label: 'Párrafo introductorio', type: 'textarea' },
+    ],
+  },
+  {
+    label: 'Configuración del sitio',
+    fields: [
+      { key: 'site_url', label: 'URL base del sitio (para enlaces en invitaciones y PDFs)', type: 'text' },
     ],
   },
   {

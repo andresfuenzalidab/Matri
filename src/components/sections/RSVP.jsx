@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { useApp } from '../../context/AppContext'
 
 export default function RSVP({ initialRsvp }) {
-  const { token, guest } = useApp()
+  const { token, guest, get } = useApp()
+  const isPartyOnly = guest?.invitationType === 'party_only'
   const [rsvp, setRsvp] = useState(initialRsvp)
   const [attending, setAttending] = useState('1')
   const [numGuests, setNumGuests] = useState(1)
@@ -51,7 +52,9 @@ export default function RSVP({ initialRsvp }) {
           <h2>Gracias, {guest?.name}</h2>
           <p>
             {rsvp.attending
-              ? `¡Nos alegra saber que estarás con nosotros!${companions > 0 ? ` Esperamos a ${companions + 1} personas de tu parte.` : ''} Te esperamos el 6 de noviembre en Altos del Paico.`
+              ? isPartyOnly
+                ? `¡Nos alegra que puedas celebrar con nosotros!${companions > 0 ? ` Esperamos a ${companions + 1} personas de tu parte.` : ''} Los esperamos a partir de las ${get('reception_time', '19:30')} en ${get('venue_name', 'Altos del Paico')}.`
+                : `¡Nos alegra saber que estarás con nosotros!${companions > 0 ? ` Esperamos a ${companions + 1} personas de tu parte.` : ''} Te esperamos a las ${get('ceremony_time', '17:00')} en ${get('venue_name', 'Altos del Paico')}.`
               : 'Lamentamos que no puedas acompañarnos. Te tendremos en el corazón ese día especial.'}
           </p>
           {rsvp.attending ? (
@@ -72,7 +75,9 @@ export default function RSVP({ initialRsvp }) {
     <section id="rsvp" className="section">
       <h2 className="section-title">RSVP</h2>
       <p className="section-subtitle">
-        Confírmanos tu asistencia antes del 15 de octubre de 2026.
+        {isPartyOnly
+          ? `Confírmanos si podrás celebrar con nosotros — te esperamos en la fiesta a las ${get('reception_time', '19:30')}.`
+          : 'Confírmanos tu asistencia antes del 15 de octubre de 2026.'}
       </p>
 
       <form className="rsvp-container" onSubmit={handleSubmit} noValidate>

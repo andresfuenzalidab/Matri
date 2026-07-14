@@ -11,7 +11,7 @@ const MapPinIcon = () => (
 )
 
 export default function WeddingInfo() {
-  const { get, token } = useApp()
+  const { get, token, guest } = useApp()
   const [venuePhotos, setVenuePhotos] = useState([])
 
   useEffect(() => {
@@ -22,6 +22,7 @@ export default function WeddingInfo() {
   }, [token])
 
   const mapsUrl = get('venue_maps_url')
+  const isPartyOnly = guest?.invitationType === 'party_only'
 
   return (
     <section id="boda" className="section">
@@ -29,15 +30,22 @@ export default function WeddingInfo() {
       <p className="section-subtitle">{get('hero_date', '6 de noviembre de 2026')}</p>
 
       <div className="wedding-cards">
+        {!isPartyOnly && (
+          <div className="card wedding-event-card">
+            <div className="wedding-event-type">Ceremonia</div>
+            <div className="wedding-event-time">{get('ceremony_time', '17:00')} hrs</div>
+            <div className="wedding-event-name">{get('venue_name', 'Altos del Paico')}</div>
+          </div>
+        )}
         <div className="card wedding-event-card">
-          <div className="wedding-event-type">Ceremonia</div>
-          <div className="wedding-event-time">{get('ceremony_time', '17:00')}</div>
+          <div className="wedding-event-type">{isPartyOnly ? 'Celebración' : 'Recepción'}</div>
+          <div className="wedding-event-time">{get('reception_time', '19:30')} hrs</div>
           <div className="wedding-event-name">{get('venue_name', 'Altos del Paico')}</div>
-        </div>
-        <div className="card wedding-event-card">
-          <div className="wedding-event-type">Recepción</div>
-          <div className="wedding-event-time">{get('reception_time', '19:30')}</div>
-          <div className="wedding-event-name">{get('venue_name', 'Altos del Paico')}</div>
+          {isPartyOnly && (
+            <div style={{ fontSize: '0.78rem', opacity: 0.65, marginTop: '0.4rem', lineHeight: 1.5 }}>
+              Los invitamos a celebrar con nosotros en la fiesta
+            </div>
+          )}
         </div>
       </div>
 
@@ -54,9 +62,12 @@ export default function WeddingInfo() {
             target="_blank"
             rel="noopener noreferrer"
             className="btn btn-secondary"
-            style={{ alignSelf: 'flex-start', marginTop: '0.5rem' }}
+            style={{ alignSelf: 'flex-start', marginTop: '0.75rem' }}
           >
-            Ver en Google Maps →
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: 6, verticalAlign: 'middle' }}>
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+            </svg>
+            Ver en Google Maps
           </a>
         )}
       </div>

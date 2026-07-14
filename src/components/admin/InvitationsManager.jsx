@@ -15,6 +15,7 @@ export default function InvitationsManager() {
   const [newIsAdmin, setNewIsAdmin] = useState(false)
   const [newWelcomeMsg, setNewWelcomeMsg] = useState('')
   const [newMaxGuests, setNewMaxGuests] = useState('')
+  const [newInvType, setNewInvType] = useState('all_in')
   const [creating, setCreating] = useState(false)
 
   // Success state after creating an invitation
@@ -24,6 +25,7 @@ export default function InvitationsManager() {
   const [editId, setEditId] = useState(null)
   const [editWelcomeMsg, setEditWelcomeMsg] = useState('')
   const [editMaxGuests, setEditMaxGuests] = useState('')
+  const [editInvType, setEditInvType] = useState('all_in')
   const [editSaving, setEditSaving] = useState(false)
 
   const [copiedId, setCopiedId] = useState(null)
@@ -54,6 +56,7 @@ export default function InvitationsManager() {
           isAdmin: newIsAdmin,
           welcomeMessage: newWelcomeMsg.trim(),
           maxAdditionalGuests: newMaxGuests !== '' ? Number(newMaxGuests) : null,
+          invitationType: newInvType,
         }),
       })
       if (res.ok) {
@@ -61,7 +64,7 @@ export default function InvitationsManager() {
         setInvitations(prev => [inv, ...prev])
         setCreatedInv({ ...inv, welcome_message: newWelcomeMsg.trim() || null })
         setNewName(''); setNewEmail(''); setNewIsAdmin(false)
-        setNewWelcomeMsg(''); setNewMaxGuests(''); setShowCreate(false)
+        setNewWelcomeMsg(''); setNewMaxGuests(''); setNewInvType('all_in'); setShowCreate(false)
       } else {
         const d = await res.json().catch(() => ({}))
         setError(d.error || 'Error al crear invitación.')
@@ -81,7 +84,8 @@ export default function InvitationsManager() {
   }
 
   function getLink(inv) {
-    return `${window.location.origin}/?token=${inv.token}`
+    const base = (content.site_url || '').trim() || window.location.origin
+    return `${base}/?token=${inv.token}`
   }
 
   function copyLink(inv) {
@@ -95,6 +99,7 @@ export default function InvitationsManager() {
     setEditId(inv.id)
     setEditWelcomeMsg(inv.welcome_message || '')
     setEditMaxGuests(inv.max_additional_guests != null ? String(inv.max_additional_guests) : '')
+    setEditInvType(inv.invitation_type || 'all_in')
   }
 
   async function saveEdit(id) {
@@ -107,11 +112,12 @@ export default function InvitationsManager() {
           id,
           welcomeMessage: editWelcomeMsg.trim(),
           maxAdditionalGuests: editMaxGuests !== '' ? Number(editMaxGuests) : null,
+          invitationType: editInvType,
         }),
       })
       if (res.ok) {
         setInvitations(prev => prev.map(i => i.id === id
-          ? { ...i, welcome_message: editWelcomeMsg.trim() || null, max_additional_guests: editMaxGuests !== '' ? Number(editMaxGuests) : null }
+          ? { ...i, welcome_message: editWelcomeMsg.trim() || null, max_additional_guests: editMaxGuests !== '' ? Number(editMaxGuests) : null, invitation_type: editInvType }
           : i
         ))
         setEditId(null)
@@ -224,6 +230,19 @@ export default function InvitationsManager() {
               />
             </div>
           </div>
+          <div style={{ marginTop: '0.5rem' }}>
+            <label className="form-label">Tipo de invitación</label>
+            <div style={{ display: 'flex', gap: '1rem', marginTop: '0.3rem' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', fontSize: '0.875rem' }}>
+                <input type="radio" name="newInvType" value="all_in" checked={newInvType === 'all_in'} onChange={() => setNewInvType('all_in')} />
+                Completa (ceremonia + fiesta)
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', fontSize: '0.875rem' }}>
+                <input type="radio" name="newInvType" value="party_only" checked={newInvType === 'party_only'} onChange={() => setNewInvType('party_only')} />
+                Solo fiesta
+              </label>
+            </div>
+          </div>
           <div style={{ marginTop: '0.75rem' }}>
             <button className="btn btn-primary" type="submit" disabled={creating || !newName.trim()}>
               {creating ? 'Creando...' : 'Crear y ver enlace'}
@@ -283,7 +302,17 @@ export default function InvitationsManager() {
                           value={editMaxGuests}
                           onChange={e => setEditMaxGuests(e.target.value)}
                         />
-                        <div style={{ display: 'flex', gap: '0.3rem' }}>
+                            <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.25rem' }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.78rem', cursor: 'pointer' }}>
+                              <input type="radio" name={`invType_${inv.id}`} value="all_in" checked={editInvType === 'all_in'} onChange={() => setEditInvType('all_in')} />
+                              Completa
+                            </label>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.78rem', cursor: 'pointer' }}>
+                              <input type="radio" name={`invType_${inv.id}`} value="party_only" checked={editInvType === 'party_only'} onChange={() => setEditInvType('party_only')} />
+                              Solo fiesta
+                            </label>
+                          </div>
+                          <div style={{ display: 'flex', gap: '0.3rem', marginTop: '0.25rem' }}>
                           <button className="btn btn-primary" style={{ fontSize: '0.75rem', padding: '3px 8px' }} onClick={() => saveEdit(inv.id)} disabled={editSaving}>
                             {editSaving ? '...' : 'Guardar'}
                           </button>
@@ -293,14 +322,21 @@ export default function InvitationsManager() {
                         </div>
                       </div>
                     ) : (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                        <span style={{ fontSize: '0.75rem', opacity: inv.welcome_message ? 1 : 0.35 }}>
-                          {inv.welcome_message ? '✓ Personalizada' : 'Estándar'}
-                          {inv.max_additional_guests != null ? ` · máx ${inv.max_additional_guests}` : ''}
-                        </span>
-                        <button className="btn btn-ghost" style={{ fontSize: '0.7rem', padding: '2px 6px' }} onClick={() => startEdit(inv)}>
-                          Editar
-                        </button>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          <span className={`tag ${inv.invitation_type === 'party_only' ? 'tag-neutral' : 'tag-accent'}`} style={{ fontSize: '0.65rem' }}>
+                            {inv.invitation_type === 'party_only' ? 'Solo fiesta' : 'Completa'}
+                          </span>
+                          {inv.max_additional_guests != null && (
+                            <span style={{ fontSize: '0.72rem', opacity: 0.55 }}>máx {inv.max_additional_guests}</span>
+                          )}
+                          <button className="btn btn-ghost" style={{ fontSize: '0.7rem', padding: '2px 6px' }} onClick={() => startEdit(inv)}>
+                            Editar
+                          </button>
+                        </div>
+                        {inv.welcome_message && (
+                          <span style={{ fontSize: '0.72rem', opacity: 0.55 }}>✓ Mensaje personalizado</span>
+                        )}
                       </div>
                     )}
                   </td>

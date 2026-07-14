@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useApp } from '../context/AppContext'
+import { normalizeAudioUrl } from '../utils/imageUrl.js'
 
 export default function MusicPlayer({ welcomed }) {
   const { get } = useApp()
@@ -7,7 +8,7 @@ export default function MusicPlayer({ welcomed }) {
   const [playing, setPlaying] = useState(false)
   const [ready, setReady] = useState(false)
   const hasTriedAutoplay = useRef(false)
-  const musicUrl = get('music_url')
+  const musicUrl = normalizeAudioUrl(get('music_url'))
 
   useEffect(() => {
     if (!musicUrl) return

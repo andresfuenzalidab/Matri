@@ -9,7 +9,7 @@ function formatCLP(n) {
 }
 
 export default function Gifts({ initialReservation }) {
-  const { token, get } = useApp()
+  const { token, get, guest } = useApp()
   const [trips, setTrips] = useState([])
   const [loading, setLoading] = useState(true)
   const [cartGift, setCartGift] = useState(null)
@@ -49,10 +49,13 @@ export default function Gifts({ initialReservation }) {
 
   return (
     <section id="regalos" className="section">
-      <h2 className="section-title">Lista de Regalos</h2>
-      <p className="section-subtitle">
-        {get('gifts_intro', 'El mejor regalo es tu presencia. Pero si deseas hacernos un obsequio, aquí van algunas ideas para nuestra luna de miel.')}
-      </p>
+      <div className="gifts-hero">
+        <p className="gifts-hero-label">{get('gifts_section_label', 'Luna de Miel')}</p>
+        <h2 className="gifts-hero-title">{get('gifts_section_title', 'Regala un pedacito de nuestro viaje')}</h2>
+        <p className="gifts-hero-intro">
+          {get('gifts_intro', 'El mejor regalo es tu presencia. Pero si deseas hacernos un obsequio, aquí van algunas ideas para nuestra luna de miel.')}
+        </p>
+      </div>
 
       {myGift && (
         <div className="card gifts-already-reserved">

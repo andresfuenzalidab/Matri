@@ -3,7 +3,7 @@ import { useApp } from '../../context/AppContext'
 import PhotoPlaceholder from '../PhotoPlaceholder'
 
 export default function OurStory() {
-  const { token } = useApp()
+  const { token, get } = useApp()
   const [sections, setSections] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -23,7 +23,7 @@ export default function OurStory() {
   return (
     <section id="historia" className="section">
       <h2 className="section-title">Nuestra Historia</h2>
-      <p className="section-subtitle">El camino que nos trajo hasta aquí</p>
+      <p className="section-subtitle">{get('story_subtitle', 'El camino que nos trajo hasta aquí.')}</p>
       <hr className="hr" />
 
       {sections.map((sec, i) => (

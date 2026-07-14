@@ -25,6 +25,7 @@ export async function onRequestGet({ request, env }) {
       isAdmin: Boolean(inv.is_admin),
       welcomeMessage: inv.welcome_message || null,
       maxAdditionalGuests: inv.max_additional_guests ?? null,
+      invitationType: inv.invitation_type || 'all_in',
     },
     rsvp: rsvpRow
       ? {
