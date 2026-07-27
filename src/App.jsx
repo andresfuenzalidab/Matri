@@ -6,6 +6,7 @@ import WelcomeModal from './components/WelcomeModal'
 import MusicPlayer from './components/MusicPlayer'
 import BackgroundVideoOverlay from './components/BackgroundVideoOverlay'
 import Home from './components/sections/Home'
+import CountdownSection from './components/sections/CountdownSection'
 import WeddingInfo from './components/sections/WeddingInfo'
 import OurStory from './components/sections/OurStory'
 import RSVP from './components/sections/RSVP'
@@ -45,6 +46,7 @@ function MainApp({ token, guest, rsvp, giftReservations }) {
         <Nav />
         <main>
           <Home />
+          <CountdownSection />
           <WeddingInfo />
           <OurStory />
           <RSVP initialRsvp={rsvp} />

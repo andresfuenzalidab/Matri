@@ -67,7 +67,7 @@ export default function RSVP({ initialRsvp }) {
   if (rsvp) {
     const companions = rsvp.numGuests > 1 ? rsvp.numGuests - 1 : 0
     return (
-      <section id="rsvp" className="section">
+      <section id="rsvp" className="section-compact">
         <div className="rsvp-submitted">
           <div className="rsvp-check">{rsvp.attending ? '♡' : '✦'}</div>
           <h2>Gracias, {guest?.name}</h2>

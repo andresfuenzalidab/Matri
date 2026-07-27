@@ -94,7 +94,7 @@ export default function Gifts({ initialReservations }) {
   const displayName = guest?.nickname || guest?.name
 
   return (
-    <section id="regalos" className="section">
+    <section id="regalos" className={myGifts.length > 0 ? 'section-compact' : 'section'}>
       <div className="gifts-hero reveal-on-scroll">
         <p className="gifts-hero-label">{get('gifts_section_label', 'Luna de Miel')}</p>
         <h2 className="gifts-hero-title">{get('gifts_section_title', 'Regala un pedacito de nuestro viaje')}</h2>
@@ -214,9 +214,9 @@ export default function Gifts({ initialReservations }) {
           <div className="gift-cart-info">
             <span className="gift-cart-label">Tu selección</span>
             <span className="gift-cart-name">
-              {cartItems.length === 1
-                ? cartItems[0].gift.name
-                : `${cartItems.length} regalos seleccionados`}
+              {cartItems.map(({ gift, quantity }) =>
+                quantity > 1 ? `${gift.name} ×${quantity}` : gift.name
+              ).join(', ')}
             </span>
             {cartTotal > 0 && (
               <span className="gift-cart-price">{formatCLP(cartTotal)}</span>

@@ -1,0 +1,50 @@
+import { useState, useEffect } from 'react'
+import { useApp } from '../../context/AppContext'
+
+const WEDDING_MS = new Date('2026-11-06T17:00:00-03:00').getTime()
+
+function useCountdown(targetMs) {
+  const [diff, setDiff] = useState(() => Math.max(0, targetMs - Date.now()))
+  useEffect(() => {
+    const id = setInterval(() => setDiff(Math.max(0, targetMs - Date.now())), 1000)
+    return () => clearInterval(id)
+  }, [targetMs])
+  const totalSeconds = Math.floor(diff / 1000)
+  return {
+    days: Math.floor(totalSeconds / 86400),
+    hours: Math.floor((totalSeconds % 86400) / 3600),
+    minutes: Math.floor((totalSeconds % 3600) / 60),
+    seconds: totalSeconds % 60,
+  }
+}
+
+export default function CountdownSection() {
+  const { get } = useApp()
+  const { days, hours, minutes, seconds } = useCountdown(WEDDING_MS)
+  const videoUrl = get('background_video_url') || '/mascotas.webm'
+
+  return (
+    <div className="countdown-section">
+      <video
+        autoPlay muted loop playsInline
+        className="countdown-section-video"
+        src={videoUrl}
+      />
+      <div className="countdown-section-content">
+        <div className="countdown" aria-label="Cuenta regresiva">
+          {[
+            ['días', days],
+            ['horas', hours],
+            ['min', minutes],
+            ['seg', seconds],
+          ].map(([label, val]) => (
+            <div key={label} className="countdown-unit">
+              <span className="countdown-number">{String(val).padStart(2, '0')}</span>
+              <span className="countdown-label">{label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
