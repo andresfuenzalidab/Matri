@@ -41,6 +41,7 @@ export default function Home() {
             autoPlay muted loop playsInline
             className="hero-video"
             src={heroVideo}
+            // autoPlay works here because the user already clicked Entrar (user gesture)
           />
           <div className="hero-video-overlay" />
         </div>
