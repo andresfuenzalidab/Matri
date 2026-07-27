@@ -32,12 +32,14 @@ export default function Home() {
         </div>
       )}
 
-      <div className={`hero-content fade-in-up ${heroVideo ? 'hero-content-over-video' : ''}`}>
-        <div className="hero-subtitle">{get('hero_subtitle', 'Nos casamos')}</div>
-        <h1 className="hero-title">{get('hero_title', 'Andrés & Catalina')}</h1>
-        <div className="hero-date">{get('hero_date', 'Viernes 6 de noviembre de 2026')}</div>
-        <div className="hero-location">{get('hero_location', 'Altos del Paico')}</div>
-      </div>
+      {!heroVideo && (
+        <div className="hero-content fade-in-up">
+          <div className="hero-subtitle">{get('hero_subtitle', 'Nos casamos')}</div>
+          <h1 className="hero-title">{get('hero_title', 'Andrés & Catalina')}</h1>
+          <div className="hero-date">{get('hero_date', 'Viernes 6 de noviembre de 2026')}</div>
+          <div className="hero-location">{get('hero_location', 'Altos del Paico')}</div>
+        </div>
+      )}
     </section>
   )
 }
