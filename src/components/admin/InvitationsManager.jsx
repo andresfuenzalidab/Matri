@@ -94,6 +94,26 @@ export default function InvitationsManager() {
     } catch { setError('Error al eliminar.') }
   }
 
+  async function handleResetRsvp(id) {
+    if (!window.confirm('¿Borrar la respuesta RSVP de esta invitación?')) return
+    try {
+      const res = await fetch(`/api/admin/reset-rsvp?id=${id}`, {
+        method: 'DELETE', headers: { 'X-Invite-Token': token }
+      })
+      if (res.ok) setInvitations(prev => prev.map(i => i.id === id ? { ...i, attending: null, num_guests: null, companion_name: null } : i))
+    } catch { setError('Error al resetear RSVP.') }
+  }
+
+  async function handleResetGifts(id) {
+    if (!window.confirm('¿Borrar las reservas de regalo de esta invitación?')) return
+    try {
+      const res = await fetch(`/api/admin/reset-gifts?id=${id}`, {
+        method: 'DELETE', headers: { 'X-Invite-Token': token }
+      })
+      if (res.ok) setInvitations(prev => prev.map(i => i.id === id ? { ...i, gifts: [] } : i))
+    } catch { setError('Error al resetear regalos.') }
+  }
+
   function getLink(inv) {
     const base = (content.site_url || '').trim() || window.location.origin
     return `${base}/?token=${inv.token}`
@@ -344,11 +364,19 @@ export default function InvitationsManager() {
                     </span>
                   </td>
                   <td>
-                    {inv.attending === null || inv.attending === undefined
-                      ? <span style={{ opacity: 0.4 }}>Sin respuesta</span>
-                      : inv.attending
-                        ? <span className="tag tag-accent">Asiste ({inv.num_guests})</span>
-                        : <span className="tag tag-neutral">No asiste</span>}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                      {inv.attending === null || inv.attending === undefined
+                        ? <span style={{ opacity: 0.4 }}>Sin respuesta</span>
+                        : inv.attending
+                          ? <span className="tag tag-accent">Asiste ({inv.num_guests})</span>
+                          : <span className="tag tag-neutral">No asiste</span>}
+                      {inv.attending !== null && inv.attending !== undefined && (
+                        <button className="btn btn-ghost" style={{ fontSize: '0.65rem', padding: '1px 5px', color: '#c0392b' }}
+                          onClick={() => handleResetRsvp(inv.id)}>
+                          Resetear
+                        </button>
+                      )}
+                    </div>
                   </td>
                   <td style={{ fontSize: '0.78rem', maxWidth: 200 }}>
                     {inv.gifts?.length > 0 ? (() => {
@@ -363,6 +391,10 @@ export default function InvitationsManager() {
                               ${Number(total).toLocaleString('es-CL')} CLP
                             </strong>
                           )}
+                          <button className="btn btn-ghost" style={{ fontSize: '0.65rem', padding: '1px 5px', color: '#c0392b', alignSelf: 'flex-start' }}
+                            onClick={() => handleResetGifts(inv.id)}>
+                            Resetear
+                          </button>
                         </div>
                       )
                     })() : <span style={{ opacity: 0.4 }}>—</span>}
