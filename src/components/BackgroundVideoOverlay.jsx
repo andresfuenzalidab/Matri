@@ -35,25 +35,14 @@ export default function BackgroundVideoOverlay() {
         muted
         playsInline
         onEnded={handleEnded}
-        style={{
-          position: 'fixed',
-          inset: 0,
-          width: '100%',
-          height: '100%',
-          objectFit: 'cover',
-          pointerEvents: 'none',
-          zIndex: 200,
-          opacity: visible ? 1 : 0,
-          transition: 'opacity 0.6s ease',
-          background: 'transparent',
-          mixBlendMode: 'multiply',
-        }}
+        className="pet-video-overlay"
+        style={{ opacity: visible ? 1 : 0 }}
       />
       <button
         onClick={play}
         title="Probar video mascotas"
         style={{
-          position: 'fixed', bottom: '1.75rem', left: '5rem', zIndex: 201,
+          position: 'fixed', bottom: '1.75rem', left: '5rem', zIndex: 1000,
           width: 40, height: 40, borderRadius: '50%',
           border: '1.5px solid var(--color-accent)',
           background: 'var(--color-bg)', color: 'var(--color-accent)',
