@@ -181,8 +181,8 @@ export default function GiftsDashboard() {
   }
 
   async function deleteGift(gift, tripId) {
-    const msg = gift.reservation_id
-      ? `"${gift.name}" ya fue reservado por ${gift.guest_name || 'un invitado'}.\n\n¿Eliminar de todas formas? Esto también cancelará su reserva.`
+    const msg = gift.reservation_count > 0
+      ? `"${gift.name}" tiene ${gift.reservation_count} reserva(s).\n\n¿Eliminar de todas formas? Esto también cancelará sus reservas.`
       : `¿Eliminar "${gift.name}"?`
     if (!window.confirm(msg)) return
     try {
@@ -194,7 +194,7 @@ export default function GiftsDashboard() {
           ? { ...t, gifts: t.gifts.filter(g => g.id !== gift.id) }
           : t
         ))
-        setSummary(s => ({ ...s, total: (s.total || 1) - 1, available: (s.available || 1) - 1 }))
+        setSummary(s => ({ ...s, total: Math.max(0, (s.total || 1) - 1), available: Math.max(0, (s.available || 1) - 1) }))
       } else {
         const d = await res.json().catch(() => ({}))
         setError(d.error || 'No se pudo eliminar.')
@@ -243,8 +243,8 @@ export default function GiftsDashboard() {
           <span className="stat-label">Disponibles</span>
         </div>
         <div className="stat-card">
-          <span className="stat-number">{trips.length}</span>
-          <span className="stat-label">Destinos</span>
+          <span className="stat-number" style={{ fontSize: '0.95rem' }}>{formatCLP(summary.totalReceived ?? 0)}</span>
+          <span className="stat-label">Total recibido</span>
         </div>
       </div>
 
@@ -368,9 +368,9 @@ export default function GiftsDashboard() {
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>{gift.name}</span>
                         <span style={{ fontSize: '0.78rem', color: 'var(--color-accent)', marginLeft: '0.5rem' }}>{formatCLP(gift.price)}</span>
-                        {gift.reservation_id && (
+                        {gift.reservation_count > 0 && (
                           <span className="tag tag-accent" style={{ marginLeft: '0.4rem', fontSize: '0.65rem' }}>
-                            Reservado{gift.guest_name ? ` — ${gift.guest_name}` : ''}
+                            Reservado{gift.total_quantity > 1 ? ` ×${gift.total_quantity}` : ''}
                           </span>
                         )}
                         {gift.description && (

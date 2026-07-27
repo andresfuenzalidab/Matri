@@ -12,7 +12,22 @@ export async function onRequestGet({ request, env }) {
       LEFT JOIN rsvp_responses r ON i.id = r.invitation_id
       ORDER BY i.created_at DESC
     `).all()
-    return json(rows.results)
+
+    const giftRows = await env.DB.prepare(`
+      SELECT gr.invitation_id, g.name, gr.quantity
+      FROM gift_reservations gr
+      JOIN gifts g ON g.id = gr.gift_id
+      WHERE g.active = 1
+      ORDER BY gr.reserved_at ASC
+    `).all()
+
+    const giftsByInv = {}
+    for (const gr of giftRows.results) {
+      if (!giftsByInv[gr.invitation_id]) giftsByInv[gr.invitation_id] = []
+      giftsByInv[gr.invitation_id].push({ name: gr.name, quantity: gr.quantity })
+    }
+
+    return json(rows.results.map(r => ({ ...r, gifts: giftsByInv[r.id] || [] })))
   } catch (e) {
     return handleAuthError(e) || err('Error interno.', 500)
   }

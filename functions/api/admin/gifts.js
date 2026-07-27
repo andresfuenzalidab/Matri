@@ -11,12 +11,12 @@ export async function onRequestGet({ request, env }) {
     const gifts = await env.DB.prepare(`
       SELECT
         g.id, g.trip_id, g.name, g.price, g.description, g.image_url, g.order_idx,
-        gr.id AS reservation_id, gr.confirmed_payment, gr.reserved_at, gr.congratulations_message,
-        i.name AS guest_name
+        COUNT(gr.id) AS reservation_count,
+        COALESCE(SUM(gr.quantity), 0) AS total_quantity
       FROM gifts g
       LEFT JOIN gift_reservations gr ON g.id = gr.gift_id
-      LEFT JOIN invitations i ON gr.invitation_id = i.id
       WHERE g.active = 1
+      GROUP BY g.id
       ORDER BY g.order_idx ASC
     `).all()
 
@@ -26,8 +26,11 @@ export async function onRequestGet({ request, env }) {
     }))
 
     const allGifts = gifts.results
-    const reserved = allGifts.filter(g => g.reservation_id).length
-    const summary = { total: allGifts.length, reserved, available: allGifts.length - reserved }
+    const reserved = allGifts.filter(g => g.reservation_count > 0).length
+    const totalReceived = allGifts.reduce(
+      (sum, g) => sum + (g.reservation_count > 0 ? (g.price || 0) * g.total_quantity : 0), 0
+    )
+    const summary = { total: allGifts.length, reserved, available: allGifts.length - reserved, totalReceived }
 
     return json({ trips: tripList, summary })
   } catch (e) {

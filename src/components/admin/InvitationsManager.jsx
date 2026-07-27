@@ -272,6 +272,7 @@ export default function InvitationsManager() {
                 <th>Contacto</th>
                 <th>Tipo</th>
                 <th>RSVP</th>
+                <th>Regalos</th>
                 <th>Personalización</th>
                 <th>Enlace</th>
                 <th></th>
@@ -302,6 +303,11 @@ export default function InvitationsManager() {
                       : inv.attending
                         ? <span className="tag tag-accent">Asiste ({inv.num_guests})</span>
                         : <span className="tag tag-neutral">No asiste</span>}
+                  </td>
+                  <td style={{ fontSize: '0.78rem', maxWidth: 180 }}>
+                    {inv.gifts?.length > 0
+                      ? inv.gifts.map(g => g.quantity > 1 ? `${g.name} ×${g.quantity}` : g.name).join(', ')
+                      : <span style={{ opacity: 0.4 }}>—</span>}
                   </td>
                   <td>
                     {editId === inv.id ? (
