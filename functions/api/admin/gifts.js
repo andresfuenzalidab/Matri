@@ -4,11 +4,9 @@ export async function onRequestGet({ request, env }) {
   try {
     await requireAdmin(request, env)
 
-    const trips = await env.DB.prepare(
-      'SELECT * FROM trips ORDER BY order_idx ASC'
-    ).all()
-
-    const gifts = await env.DB.prepare(`
+    const [trips, gifts] = await Promise.all([
+      env.DB.prepare('SELECT * FROM trips ORDER BY order_idx ASC').all(),
+      env.DB.prepare(`
       SELECT
         g.id, g.trip_id, g.name, g.price, g.description, g.image_url, g.order_idx,
         COUNT(gr.id) AS reservation_count,
@@ -18,7 +16,8 @@ export async function onRequestGet({ request, env }) {
       WHERE g.active = 1
       GROUP BY g.id
       ORDER BY g.order_idx ASC
-    `).all()
+    `).all(),
+    ])
 
     const tripList = trips.results.map(t => ({
       ...t,

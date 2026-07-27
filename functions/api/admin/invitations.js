@@ -3,23 +3,25 @@ import { requireAdmin, json, err, handleAuthError } from '../_auth.js'
 export async function onRequestGet({ request, env }) {
   try {
     await requireAdmin(request, env)
-    const rows = await env.DB.prepare(`
-      SELECT
-        i.id, i.token, i.name, i.email, i.phone, i.nickname, i.is_admin, i.created_at,
-        i.welcome_message, i.max_additional_guests, i.invitation_type, i.notes,
-        r.attending, r.num_guests
-      FROM invitations i
-      LEFT JOIN rsvp_responses r ON i.id = r.invitation_id
-      ORDER BY i.created_at DESC
-    `).all()
 
-    const giftRows = await env.DB.prepare(`
-      SELECT gr.invitation_id, g.name, g.price, gr.quantity
-      FROM gift_reservations gr
-      JOIN gifts g ON g.id = gr.gift_id
-      WHERE g.active = 1
-      ORDER BY gr.reserved_at ASC
-    `).all()
+    const [rows, giftRows] = await Promise.all([
+      env.DB.prepare(`
+        SELECT
+          i.id, i.token, i.name, i.email, i.phone, i.nickname, i.is_admin, i.created_at,
+          i.welcome_message, i.max_additional_guests, i.invitation_type, i.notes,
+          r.attending, r.num_guests
+        FROM invitations i
+        LEFT JOIN rsvp_responses r ON i.id = r.invitation_id
+        ORDER BY i.created_at DESC
+      `).all(),
+      env.DB.prepare(`
+        SELECT gr.invitation_id, g.name, g.price, gr.quantity
+        FROM gift_reservations gr
+        JOIN gifts g ON g.id = gr.gift_id
+        WHERE g.active = 1
+        ORDER BY gr.reserved_at ASC
+      `).all(),
+    ])
 
     const giftsByInv = {}
     for (const gr of giftRows.results) {
