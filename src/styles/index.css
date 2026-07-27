@@ -521,7 +521,7 @@ textarea.input { min-height: 90px; resize: vertical; }
 }
 .admin-panel {
   background: var(--color-bg); border-radius: 10px;
-  width: 100%; max-width: 920px;
+  width: 100%; max-width: 1200px;
   min-height: min(80vh, 600px);
   display: flex; flex-direction: column;
   box-shadow: var(--shadow-lg);
