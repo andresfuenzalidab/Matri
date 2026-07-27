@@ -21,7 +21,7 @@ function useCountdown(targetMs) {
 export default function CountdownSection() {
   const { get } = useApp()
   const { days, hours, minutes, seconds } = useCountdown(WEDDING_MS)
-  const videoUrl = get('background_video_url') || '/mascotas.webm'
+  const videoUrl = get('background_video_url') || '/timer_cat.mp4'
 
   return (
     <div className="countdown-section">

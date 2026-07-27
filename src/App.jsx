@@ -4,7 +4,6 @@ import { useScrollReveal } from './utils/useScrollReveal'
 import Nav from './components/Nav'
 import WelcomeModal from './components/WelcomeModal'
 import MusicPlayer from './components/MusicPlayer'
-import BackgroundVideoOverlay from './components/BackgroundVideoOverlay'
 import Home from './components/sections/Home'
 import CountdownSection from './components/sections/CountdownSection'
 import WeddingInfo from './components/sections/WeddingInfo'
@@ -62,7 +61,6 @@ function MainApp({ token, guest, rsvp, giftReservations }) {
           </>
         )}
         <MusicPlayer welcomed={welcomed} playerRef={musicPlayerRef} />
-        <BackgroundVideoOverlay />
       </div>
     </AppProvider>
   )

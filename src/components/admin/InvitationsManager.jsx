@@ -17,7 +17,7 @@ export default function InvitationsManager() {
   const [newNickname, setNewNickname] = useState('')
   const [newIsAdmin, setNewIsAdmin] = useState(false)
   const [newWelcomeMsg, setNewWelcomeMsg] = useState('')
-  const [newMaxGuests, setNewMaxGuests] = useState('')
+  const [newMaxGuests, setNewMaxGuests] = useState('0')
   const [newInvType, setNewInvType] = useState('all_in')
   const [newNotes, setNewNotes] = useState('')
   const [creating, setCreating] = useState(false)

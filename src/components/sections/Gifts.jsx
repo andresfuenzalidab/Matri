@@ -27,6 +27,7 @@ export default function Gifts({ initialReservations }) {
   const [modalOpen, setModalOpen] = useState(false)
   const [reservations, setReservations] = useState(initialReservations || [])
   const [sortBy, setSortBy] = useState('none')
+  const [purchased, setPurchased] = useState(false)
 
   useEffect(() => {
     fetch('/api/gifts', { headers: { 'X-Invite-Token': token } })
@@ -78,6 +79,7 @@ export default function Gifts({ initialReservations }) {
     })))
     setCart(new Map())
     setModalOpen(false)
+    setPurchased(true)
   }
 
   if (loading) return (
@@ -92,6 +94,30 @@ export default function Gifts({ initialReservations }) {
 
   const thanksMsg = get('gifts_thanks_message', '¡Gracias!')
   const displayName = guest?.nickname || guest?.name
+
+  if (purchased) {
+    const justReserved = trips.flatMap(t => t.gifts).filter(g => myGiftIds.has(g.id))
+    return (
+      <section id="regalos" className="section-compact">
+        <div className="card gifts-already-reserved" style={{ textAlign: 'center', maxWidth: 480, margin: '0 auto' }}>
+          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'clamp(1.8rem, 5vw, 2.5rem)', color: 'var(--color-accent)', marginBottom: '0.5rem' }}>♡</div>
+          <h2 style={{ fontFamily: 'var(--font-heading)', marginBottom: '1rem' }}>
+            {thanksMsg.replace('{nombre}', displayName)}
+          </h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginBottom: '1rem' }}>
+            {justReserved.map(g => (
+              <span key={g.id} style={{ fontSize: '0.9rem' }}>
+                <strong>{g.name}</strong>{g.price != null ? ` — ${formatCLP(g.price)}` : ''}
+              </span>
+            ))}
+          </div>
+          <p style={{ fontSize: '0.8rem', opacity: 0.6, margin: 0 }}>
+            Tu(s) regalo(s) ha(n) quedado reservado(s). ¡Nos hace muy felices!
+          </p>
+        </div>
+      </section>
+    )
+  }
 
   return (
     <section id="regalos" className="section">
@@ -158,7 +184,7 @@ export default function Gifts({ initialReservations }) {
               const byMe = myGiftIds.has(gift.id)
               const byOther = gift.status === 'reserved' && !byMe
               const inCart = cart.has(gift.id)
-              const canAdd = !byOther && !byMe && gift.price != null
+              const canAdd = !byOther && gift.price != null
 
               return (
                 <div

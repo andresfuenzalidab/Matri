@@ -104,7 +104,11 @@ export default function WeddingInfo() {
           <h3>{get('venue_name', 'Altos del Paico')}</h3>
         </div>
         {get('venue_address') && <p className="venue-address">{get('venue_address')}</p>}
-        {get('venue_description') && <p className="venue-description">{get('venue_description')}</p>}
+        <video
+          autoPlay muted loop playsInline
+          style={{ width: '100%', borderRadius: 6, marginTop: '0.75rem', display: 'block' }}
+          src={get('description_video_url') || '/description_dog.mp4'}
+        />
         {mapsUrl && (
           <a href={mapsUrl} target="_blank" rel="noopener noreferrer"
             className="btn btn-secondary"
@@ -119,15 +123,22 @@ export default function WeddingInfo() {
       </div>
 
       {/* Dress code */}
-      <div className="wedding-detail-block reveal-on-scroll">
-        <h3 className="wedding-detail-title">Código de vestimenta</h3>
-        {dressCodeImage ? (
-          <img src={normalizeImageUrl(dressCodeImage)} alt="Código de vestimenta"
-            className="wedding-detail-img"
-            onError={e => e.target.style.display = 'none'} />
-        ) : (
-          <PhotoPlaceholder size="md" label="Imagen de código de vestimenta" />
-        )}
+      <div className="wedding-detail-block reveal-on-scroll" style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+        <video
+          autoPlay muted loop playsInline
+          style={{ flex: '0 0 auto', width: 'min(260px, 100%)', borderRadius: 6, display: 'block' }}
+          src={get('dresscode_video_url') || '/dresscode_cat.mp4'}
+        />
+        <div style={{ flex: 1, minWidth: 180 }}>
+          <h3 className="wedding-detail-title">Código de vestimenta</h3>
+          {dressCodeImage ? (
+            <img src={normalizeImageUrl(dressCodeImage)} alt="Código de vestimenta"
+              className="wedding-detail-img"
+              onError={e => e.target.style.display = 'none'} />
+          ) : (
+            <PhotoPlaceholder size="md" label="Imagen de código de vestimenta" />
+          )}
+        </div>
       </div>
 
       {/* Timeline */}
