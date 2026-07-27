@@ -19,6 +19,8 @@ CREATE TABLE IF NOT EXISTS invitations (
   token TEXT UNIQUE NOT NULL,
   name TEXT NOT NULL,
   email TEXT,
+  phone TEXT,
+  nickname TEXT,
   is_admin INTEGER DEFAULT 0,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
@@ -29,6 +31,7 @@ CREATE TABLE IF NOT EXISTS rsvp_responses (
   attending INTEGER NOT NULL,
   num_guests INTEGER DEFAULT 1,
   message TEXT,
+  dietary_restriction TEXT,
   submitted_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -37,9 +40,10 @@ CREATE TABLE IF NOT EXISTS gift_reservations (
   gift_id TEXT REFERENCES gifts(id),
   invitation_id INTEGER REFERENCES invitations(id),
   guest_name TEXT,
+  quantity INTEGER DEFAULT 1,
   confirmed_payment INTEGER DEFAULT 0,
-  reserved_at TEXT DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE(invitation_id)
+  congratulations_message TEXT,
+  reserved_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS site_content (

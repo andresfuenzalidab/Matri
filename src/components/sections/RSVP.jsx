@@ -4,12 +4,29 @@ import { useApp } from '../../context/AppContext'
 export default function RSVP({ initialRsvp }) {
   const { token, guest, get } = useApp()
   const isPartyOnly = guest?.invitationType === 'party_only'
+  const maxAdditional = guest?.maxAdditionalGuests ?? null
+
   const [rsvp, setRsvp] = useState(initialRsvp)
   const [attending, setAttending] = useState('1')
+  const [companionAttending, setCompanionAttending] = useState(true)
   const [numGuests, setNumGuests] = useState(1)
+  const [dietaryRestriction, setDietaryRestriction] = useState('')
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  // maxAdditional === 0: solo (total 1 person)
+  // maxAdditional === 1: with companion (total 2 people)
+  // maxAdditional > 1 or null: open number input
+  const isSolo = maxAdditional === 0
+  const isCouple = maxAdditional === 1
+
+  function getNumGuests() {
+    if (!attending || attending === '0') return 1
+    if (isSolo) return 1
+    if (isCouple) return companionAttending ? 2 : 1
+    return Number(numGuests) || 1
+  }
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -24,12 +41,18 @@ export default function RSVP({ initialRsvp }) {
         },
         body: JSON.stringify({
           attending: Number(attending),
-          numGuests: Number(numGuests),
+          numGuests: getNumGuests(),
           message,
+          dietaryRestriction: dietaryRestriction.trim(),
         }),
       })
       if (res.ok) {
-        setRsvp({ attending: Number(attending), numGuests: Number(numGuests), message })
+        setRsvp({
+          attending: Number(attending),
+          numGuests: getNumGuests(),
+          message,
+          dietaryRestriction: dietaryRestriction.trim(),
+        })
       } else {
         const d = await res.json().catch(() => ({}))
         setError(d.error || 'Error al enviar. Por favor intenta de nuevo.')
@@ -46,9 +69,7 @@ export default function RSVP({ initialRsvp }) {
     return (
       <section id="rsvp" className="section">
         <div className="rsvp-submitted">
-          <div className="rsvp-check">
-            {rsvp.attending ? '♡' : '✦'}
-          </div>
+          <div className="rsvp-check">{rsvp.attending ? '♡' : '✦'}</div>
           <h2>Gracias, {guest?.name}</h2>
           <p>
             {rsvp.attending
@@ -71,10 +92,13 @@ export default function RSVP({ initialRsvp }) {
     )
   }
 
+  const dietaryQuestion = get('rsvp_dietary_question')
+  const companionQuestion = get('rsvp_companion_question', '¿Confirmas la asistencia de tu acompañante?')
+
   return (
     <section id="rsvp" className="section">
-      <h2 className="section-title">RSVP</h2>
-      <p className="section-subtitle">
+      <h2 className="section-title reveal-on-scroll">RSVP</h2>
+      <p className="section-subtitle reveal-on-scroll">
         {isPartyOnly
           ? `Confírmanos si podrás celebrar con nosotros — te esperamos en la fiesta a las ${get('reception_time', '19:30')}.`
           : 'Confírmanos tu asistencia antes del 15 de octubre de 2026.'}
@@ -90,25 +114,36 @@ export default function RSVP({ initialRsvp }) {
           <label className="form-label">¿Asistirás?</label>
           <div className="rsvp-attending-row">
             <label className="rsvp-radio-label">
-              <input
-                type="radio" name="attending" value="1"
+              <input type="radio" name="attending" value="1"
                 checked={attending === '1'}
-                onChange={e => setAttending(e.target.value)}
-              />
+                onChange={e => setAttending(e.target.value)} />
               Sí, con mucho gusto
             </label>
             <label className="rsvp-radio-label">
-              <input
-                type="radio" name="attending" value="0"
+              <input type="radio" name="attending" value="0"
                 checked={attending === '0'}
-                onChange={e => setAttending(e.target.value)}
-              />
+                onChange={e => setAttending(e.target.value)} />
               No podré asistir
             </label>
           </div>
         </div>
 
-        {attending === '1' && (
+        {/* Companion question (only when attending and maxAdditional === 1) */}
+        {attending === '1' && isCouple && (
+          <div className="form-field">
+            <label className="rsvp-checkbox-label">
+              <input
+                type="checkbox"
+                checked={companionAttending}
+                onChange={e => setCompanionAttending(e.target.checked)}
+              />
+              {companionQuestion}
+            </label>
+          </div>
+        )}
+
+        {/* Number input (only when attending and maxAdditional > 1 or null) */}
+        {attending === '1' && !isSolo && !isCouple && (
           <div className="form-field">
             <label className="form-label" htmlFor="num-guests">
               ¿Cuántos asistirán (incluyéndote)?
@@ -116,10 +151,27 @@ export default function RSVP({ initialRsvp }) {
             <input
               id="num-guests"
               className="input"
-              type="number" min="1" max="10"
+              type="number"
+              min="1"
+              max={maxAdditional != null ? maxAdditional + 1 : 20}
               value={numGuests}
               onChange={e => setNumGuests(e.target.value)}
               style={{ width: 100 }}
+            />
+          </div>
+        )}
+
+        {/* Dietary restriction (optional, only when question is configured) */}
+        {dietaryQuestion && attending === '1' && (
+          <div className="form-field">
+            <label className="form-label" htmlFor="dietary">{dietaryQuestion}</label>
+            <input
+              id="dietary"
+              className="input"
+              type="text"
+              value={dietaryRestriction}
+              onChange={e => setDietaryRestriction(e.target.value)}
+              placeholder="Escribe aquí si tienes alguna restricción..."
             />
           </div>
         )}

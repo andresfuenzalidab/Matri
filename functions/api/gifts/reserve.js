@@ -4,36 +4,45 @@ export async function onRequestPost({ request, env }) {
   try {
     const inv = await requireInvitation(request, env)
 
-    const existing = await env.DB.prepare(
-      'SELECT id FROM gift_reservations WHERE invitation_id = ?'
-    ).bind(inv.id).first()
-
-    if (existing) {
-      return err('Ya reservaste un regalo. Solo se permite uno por invitado.', 409)
-    }
-
     const body = await request.json().catch(() => null)
-    if (!body?.giftId) return err('Datos inválidos.')
-
-    const { giftId, guestName, confirmedPayment = 0, congratulationsMessage = '' } = body
-
-    const giftRow = await env.DB.prepare(
-      'SELECT id FROM gifts WHERE id = ? AND active = 1'
-    ).bind(giftId).first()
-
-    if (!giftRow) return err('Este regalo no está disponible.', 404)
-
-    const alreadyTaken = await env.DB.prepare(
-      'SELECT id FROM gift_reservations WHERE gift_id = ?'
-    ).bind(giftId).first()
-
-    if (alreadyTaken) {
-      return err('Este regalo ya fue reservado por otra persona.', 409)
+    if (!body?.gifts || !Array.isArray(body.gifts) || body.gifts.length === 0) {
+      return err('Datos inválidos.')
     }
 
-    await env.DB.prepare(
-      'INSERT INTO gift_reservations (gift_id, invitation_id, guest_name, confirmed_payment, congratulations_message) VALUES (?, ?, ?, ?, ?)'
-    ).bind(giftId, inv.id, guestName || inv.name, confirmedPayment ? 1 : 0, congratulationsMessage || '').run()
+    const { gifts, guestName, confirmedPayment = 0, congratulationsMessage = '' } = body
+
+    for (const item of gifts) {
+      if (!item.id) return err('Datos inválidos.')
+
+      const giftRow = await env.DB.prepare(
+        'SELECT id FROM gifts WHERE id = ? AND active = 1'
+      ).bind(item.id).first()
+
+      if (!giftRow) return err(`El regalo "${item.id}" no está disponible.`, 404)
+
+      const alreadyTaken = await env.DB.prepare(
+        'SELECT invitation_id FROM gift_reservations WHERE gift_id = ?'
+      ).bind(item.id).first()
+
+      if (alreadyTaken && alreadyTaken.invitation_id !== inv.id) {
+        return err('Uno de los regalos ya fue reservado por otra persona.', 409)
+      }
+
+      const alreadyByMe = await env.DB.prepare(
+        'SELECT id FROM gift_reservations WHERE gift_id = ? AND invitation_id = ?'
+      ).bind(item.id, inv.id).first()
+
+      if (alreadyByMe) continue
+
+      await env.DB.prepare(
+        'INSERT INTO gift_reservations (gift_id, invitation_id, guest_name, quantity, confirmed_payment, congratulations_message) VALUES (?, ?, ?, ?, ?, ?)'
+      ).bind(
+        item.id, inv.id, guestName || inv.name,
+        Math.max(1, Number(item.quantity) || 1),
+        confirmedPayment ? 1 : 0,
+        congratulationsMessage || ''
+      ).run()
+    }
 
     return json({ success: true })
   } catch (e) {

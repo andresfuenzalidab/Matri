@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useApp } from '../context/AppContext'
-import { normalizeImageUrl } from '../utils/imageUrl.js'
 
 function formatCLP(n) {
   return `$${Number(n).toLocaleString('es-CL')} CLP`
 }
 
-export default function GiftModal({ gift, onClose, onReserved }) {
+export default function GiftModal({ cartItems, onClose, onReserved }) {
   const { token, guest, get } = useApp()
   const [confirmed, setConfirmed] = useState(false)
   const [congratsMsg, setCongratsMsg] = useState('')
@@ -19,6 +18,7 @@ export default function GiftModal({ gift, onClose, onReserved }) {
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
 
+  const total = cartItems.reduce((sum, { gift, quantity }) => sum + (gift.price || 0) * quantity, 0)
   const defaultBankMsg = `Regalo Matrimonio Cata y Andrés — ${guest?.name || ''}`
 
   async function handleConfirm() {
@@ -30,14 +30,14 @@ export default function GiftModal({ gift, onClose, onReserved }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Invite-Token': token },
         body: JSON.stringify({
-          giftId: gift.id,
+          gifts: cartItems.map(({ gift, quantity }) => ({ id: gift.id, quantity })),
           guestName: guest?.name,
           confirmedPayment: 1,
           congratulationsMessage: congratsMsg.trim(),
         }),
       })
       if (res.ok) {
-        onReserved(gift.id)
+        onReserved(cartItems.map(({ gift }) => gift.id))
       } else {
         const d = await res.json().catch(() => ({}))
         setError(d.error || 'No se pudo reservar. Intenta de nuevo.')
@@ -49,32 +49,42 @@ export default function GiftModal({ gift, onClose, onReserved }) {
     }
   }
 
-  const giftImage = normalizeImageUrl(gift.imageUrl)
-
   return (
     <div className="dialog-backdrop" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="dialog" role="dialog" aria-modal="true">
         <div className="dialog-title">
-          <span>Regalar</span>
+          <span>Confirmar regalos</span>
           <button className="btn btn-ghost btn-icon" onClick={onClose} aria-label="Cerrar">✕</button>
         </div>
 
         <div className="gift-modal-body">
-          {giftImage && (
-            <img
-              src={giftImage}
-              alt={gift.name}
-              style={{ width: '100%', height: 160, objectFit: 'cover', borderRadius: 6, marginBottom: '1rem' }}
-              onError={e => e.target.style.display = 'none'}
-            />
-          )}
-          <p className="gift-modal-gift-name">{gift.name}</p>
-          {gift.description && (
-            <p style={{ fontSize: '0.875rem', opacity: 0.75, marginBottom: '0.5rem' }}>{gift.description}</p>
-          )}
-          <p className="gift-modal-price">{formatCLP(gift.price)}</p>
+          {/* Gift list */}
+          <div className="gift-modal-items">
+            {cartItems.map(({ gift, quantity }) => (
+              <div key={gift.id} className="gift-modal-item">
+                <div className="gift-modal-item-info">
+                  <span className="gift-name" style={{ fontSize: '1rem' }}>{gift.name}</span>
+                  {gift.description && (
+                    <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>{gift.description}</span>
+                  )}
+                </div>
+                <div className="gift-modal-item-price">
+                  {quantity > 1 && (
+                    <span style={{ fontSize: '0.75rem', opacity: 0.6 }}>{quantity}×</span>
+                  )}
+                  <span style={{ color: 'var(--color-accent)' }}>{formatCLP(gift.price * quantity)}</span>
+                </div>
+              </div>
+            ))}
+            {cartItems.length > 1 && (
+              <div className="gift-modal-total">
+                <span>Total</span>
+                <span style={{ color: 'var(--color-accent)', fontWeight: 600 }}>{formatCLP(total)}</span>
+              </div>
+            )}
+          </div>
 
-          <p style={{ fontSize: '0.875rem', opacity: 0.8, marginBottom: 0 }}>
+          <p style={{ fontSize: '0.875rem', opacity: 0.8, margin: '1rem 0 0' }}>
             Realiza una transferencia con los datos a continuación y confirma tu pago.
           </p>
 
@@ -97,7 +107,7 @@ export default function GiftModal({ gift, onClose, onReserved }) {
             </div>
             <div className="bank-row">
               <span className="bank-label">Monto</span>
-              <span className="bank-value">{formatCLP(gift.price)}</span>
+              <span className="bank-value">{formatCLP(total)}</span>
             </div>
             <div className="bank-row">
               <span className="bank-label">Comentario</span>
@@ -108,8 +118,7 @@ export default function GiftModal({ gift, onClose, onReserved }) {
           <div className="form-field">
             <label className="form-label">Mensaje de felicitaciones (opcional)</label>
             <textarea
-              className="input"
-              rows={2}
+              className="input" rows={2}
               placeholder="Escribe un mensaje para los novios..."
               value={congratsMsg}
               onChange={e => setCongratsMsg(e.target.value)}
@@ -118,7 +127,7 @@ export default function GiftModal({ gift, onClose, onReserved }) {
 
           <label className="checkbox-row">
             <input type="checkbox" checked={confirmed} onChange={e => setConfirmed(e.target.checked)} />
-            <span>Confirmo que he realizado la transferencia de {formatCLP(gift.price)}.</span>
+            <span>Confirmo que he realizado la transferencia de {formatCLP(total)}.</span>
           </label>
 
           {error && <p className="form-error">{error}</p>}

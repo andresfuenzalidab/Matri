@@ -12,6 +12,8 @@ export default function InvitationsManager() {
   const [showCreate, setShowCreate] = useState(false)
   const [newName, setNewName] = useState('')
   const [newEmail, setNewEmail] = useState('')
+  const [newPhone, setNewPhone] = useState('')
+  const [newNickname, setNewNickname] = useState('')
   const [newIsAdmin, setNewIsAdmin] = useState(false)
   const [newWelcomeMsg, setNewWelcomeMsg] = useState('')
   const [newMaxGuests, setNewMaxGuests] = useState('')
@@ -19,15 +21,16 @@ export default function InvitationsManager() {
   const [newNotes, setNewNotes] = useState('')
   const [creating, setCreating] = useState(false)
 
-  // Success state after creating an invitation
   const [createdInv, setCreatedInv] = useState(null)
 
-  // Inline edit for personalization
+  // Inline edit
   const [editId, setEditId] = useState(null)
   const [editWelcomeMsg, setEditWelcomeMsg] = useState('')
   const [editMaxGuests, setEditMaxGuests] = useState('')
   const [editInvType, setEditInvType] = useState('all_in')
   const [editNotes, setEditNotes] = useState('')
+  const [editPhone, setEditPhone] = useState('')
+  const [editNickname, setEditNickname] = useState('')
   const [editSaving, setEditSaving] = useState(false)
 
   const [copiedId, setCopiedId] = useState(null)
@@ -55,6 +58,8 @@ export default function InvitationsManager() {
         body: JSON.stringify({
           name: newName.trim(),
           email: newEmail.trim(),
+          phone: newPhone.trim(),
+          nickname: newNickname.trim(),
           isAdmin: newIsAdmin,
           welcomeMessage: newWelcomeMsg.trim(),
           maxAdditionalGuests: newMaxGuests !== '' ? Number(newMaxGuests) : null,
@@ -66,8 +71,10 @@ export default function InvitationsManager() {
         const inv = await res.json()
         setInvitations(prev => [inv, ...prev])
         setCreatedInv({ ...inv, welcome_message: newWelcomeMsg.trim() || null })
-        setNewName(''); setNewEmail(''); setNewIsAdmin(false)
-        setNewWelcomeMsg(''); setNewMaxGuests(''); setNewInvType('all_in'); setNewNotes(''); setShowCreate(false)
+        setNewName(''); setNewEmail(''); setNewPhone(''); setNewNickname('')
+        setNewIsAdmin(false); setNewWelcomeMsg('')
+        setNewMaxGuests(''); setNewInvType('all_in'); setNewNotes('')
+        setShowCreate(false)
       } else {
         const d = await res.json().catch(() => ({}))
         setError(d.error || 'Error al crear invitación.')
@@ -104,6 +111,8 @@ export default function InvitationsManager() {
     setEditMaxGuests(inv.max_additional_guests != null ? String(inv.max_additional_guests) : '')
     setEditInvType(inv.invitation_type || 'all_in')
     setEditNotes(inv.notes || '')
+    setEditPhone(inv.phone || '')
+    setEditNickname(inv.nickname || '')
   }
 
   async function saveEdit(id) {
@@ -118,13 +127,20 @@ export default function InvitationsManager() {
           maxAdditionalGuests: editMaxGuests !== '' ? Number(editMaxGuests) : null,
           invitationType: editInvType,
           notes: editNotes.trim(),
+          phone: editPhone.trim(),
+          nickname: editNickname.trim(),
         }),
       })
       if (res.ok) {
-        setInvitations(prev => prev.map(i => i.id === id
-          ? { ...i, welcome_message: editWelcomeMsg.trim() || null, max_additional_guests: editMaxGuests !== '' ? Number(editMaxGuests) : null, invitation_type: editInvType, notes: editNotes.trim() || null }
-          : i
-        ))
+        setInvitations(prev => prev.map(i => i.id === id ? {
+          ...i,
+          welcome_message: editWelcomeMsg.trim() || null,
+          max_additional_guests: editMaxGuests !== '' ? Number(editMaxGuests) : null,
+          invitation_type: editInvType,
+          notes: editNotes.trim() || null,
+          phone: editPhone.trim() || null,
+          nickname: editNickname.trim() || null,
+        } : i))
         setEditId(null)
       } else { setError('Error al guardar.') }
     } catch { setError('Error de conexión.') }
@@ -136,7 +152,6 @@ export default function InvitationsManager() {
 
   return (
     <div>
-      {/* Success modal after creation */}
       {createdInv && (
         <div className="inv-success-overlay" onClick={e => e.target === e.currentTarget && setCreatedInv(null)}>
           <div className="inv-success-card">
@@ -148,33 +163,20 @@ export default function InvitationsManager() {
               </div>
               <button className="btn btn-ghost btn-icon" onClick={() => setCreatedInv(null)}>✕</button>
             </div>
-
             <div className="inv-success-link-box">
               <div className="inv-success-link-label">Enlace personalizado</div>
               <div className="inv-success-link-url">{getLink(createdInv)}</div>
             </div>
-
             <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-              <button
-                className="btn btn-secondary"
-                style={{ flex: 1 }}
-                onClick={() => {
-                  navigator.clipboard.writeText(getLink(createdInv))
-                  setCopiedId('new')
-                  setTimeout(() => setCopiedId(null), 2000)
-                }}
-              >
+              <button className="btn btn-secondary" style={{ flex: 1 }}
+                onClick={() => { navigator.clipboard.writeText(getLink(createdInv)); setCopiedId('new'); setTimeout(() => setCopiedId(null), 2000) }}>
                 {copiedId === 'new' ? '✓ Copiado' : 'Copiar enlace'}
               </button>
-              <button
-                className="btn btn-primary"
-                style={{ flex: 1 }}
-                onClick={() => downloadInvitationPDF(createdInv, content)}
-              >
+              <button className="btn btn-primary" style={{ flex: 1 }}
+                onClick={() => downloadInvitationPDF(createdInv, content)}>
                 Descargar PDF
               </button>
             </div>
-
             <p style={{ fontSize: '0.75rem', opacity: 0.5, textAlign: 'center', marginTop: '0.5rem' }}>
               El PDF se abrirá en una nueva pestaña — guárdalo con "Imprimir → Guardar como PDF"
             </p>
@@ -207,8 +209,10 @@ export default function InvitationsManager() {
         <form className="create-form" onSubmit={handleCreate}>
           <div className="create-form-title">Nueva invitación</div>
           <div className="create-form-fields">
-            <input className="input" placeholder="Nombre *" value={newName} onChange={e => setNewName(e.target.value)} required />
+            <input className="input" placeholder="Nombre formal *" value={newName} onChange={e => setNewName(e.target.value)} required />
+            <input className="input" placeholder="Apodo (nombre informal, opcional)" value={newNickname} onChange={e => setNewNickname(e.target.value)} />
             <input className="input" placeholder="Email (opcional)" value={newEmail} onChange={e => setNewEmail(e.target.value)} type="email" />
+            <input className="input" placeholder="Teléfono (opcional)" value={newPhone} onChange={e => setNewPhone(e.target.value)} type="tel" />
             <label className="admin-checkbox-label">
               <input type="checkbox" checked={newIsAdmin} onChange={e => setNewIsAdmin(e.target.checked)} />
               Admin
@@ -217,22 +221,16 @@ export default function InvitationsManager() {
           <div style={{ marginTop: '0.75rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
             <div style={{ flex: 1, minWidth: 200 }}>
               <label className="form-label">Mensaje de bienvenida personalizado (opcional)</label>
-              <textarea
-                className="input" rows={2}
+              <textarea className="input" rows={2}
                 placeholder="ej. ¡Familia querida! Los esperamos con mucho amor..."
-                value={newWelcomeMsg}
-                onChange={e => setNewWelcomeMsg(e.target.value)}
-              />
+                value={newWelcomeMsg} onChange={e => setNewWelcomeMsg(e.target.value)} />
             </div>
             <div style={{ minWidth: 140 }}>
-              <label className="form-label">Máx. acompañantes (opcional)</label>
-              <input
-                className="input" type="number" min="0" max="20"
+              <label className="form-label">Máx. acompañantes (0 = solo, 1 = con pareja)</label>
+              <input className="input" type="number" min="0" max="20"
                 placeholder="Sin límite"
-                value={newMaxGuests}
-                onChange={e => setNewMaxGuests(e.target.value)}
-                style={{ width: '100%' }}
-              />
+                value={newMaxGuests} onChange={e => setNewMaxGuests(e.target.value)}
+                style={{ width: '100%' }} />
             </div>
           </div>
           <div style={{ marginTop: '0.5rem' }}>
@@ -250,12 +248,8 @@ export default function InvitationsManager() {
           </div>
           <div style={{ marginTop: '0.5rem' }}>
             <label className="form-label">Nota interna (solo visible en admin)</label>
-            <input
-              className="input"
-              placeholder="ej. Amigos del novio - lado Fuenzalida"
-              value={newNotes}
-              onChange={e => setNewNotes(e.target.value)}
-            />
+            <input className="input" placeholder="ej. Amigos del novio - lado Fuenzalida"
+              value={newNotes} onChange={e => setNewNotes(e.target.value)} />
           </div>
           <div style={{ marginTop: '0.75rem' }}>
             <button className="btn btn-primary" type="submit" disabled={creating || !newName.trim()}>
@@ -274,8 +268,8 @@ export default function InvitationsManager() {
           <table className="admin-table">
             <thead>
               <tr>
-                <th>Nombre</th>
-                <th>Email</th>
+                <th>Nombre / Apodo</th>
+                <th>Contacto</th>
                 <th>Tipo</th>
                 <th>RSVP</th>
                 <th>Personalización</th>
@@ -286,12 +280,21 @@ export default function InvitationsManager() {
             <tbody>
               {invitations.map(inv => (
                 <tr key={inv.id}>
-                  <td><strong>{inv.name}</strong></td>
-                  <td style={{ opacity: 0.7 }}>{inv.email || '—'}</td>
                   <td>
-                    {inv.is_admin
-                      ? <span className="tag tag-accent">Admin</span>
-                      : <span className="tag tag-neutral">Invitado</span>}
+                    <strong>{inv.name}</strong>
+                    {inv.nickname && (
+                      <div style={{ fontSize: '0.75rem', opacity: 0.6, fontStyle: 'italic' }}>"{inv.nickname}"</div>
+                    )}
+                    {inv.is_admin && <span className="tag tag-accent" style={{ fontSize: '0.65rem', marginTop: 2 }}>Admin</span>}
+                  </td>
+                  <td style={{ opacity: 0.7, fontSize: '0.8rem' }}>
+                    <div>{inv.email || '—'}</div>
+                    {inv.phone && <div>{inv.phone}</div>}
+                  </td>
+                  <td>
+                    <span className={`tag ${inv.invitation_type === 'party_only' ? 'tag-neutral' : 'tag-accent'}`} style={{ fontSize: '0.65rem' }}>
+                      {inv.invitation_type === 'party_only' ? 'Solo fiesta' : 'Completa'}
+                    </span>
                   </td>
                   <td>
                     {inv.attending === null || inv.attending === undefined
@@ -303,37 +306,33 @@ export default function InvitationsManager() {
                   <td>
                     {editId === inv.id ? (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', minWidth: 220 }}>
-                        <textarea
-                          className="input" rows={2} style={{ fontSize: '0.8rem' }}
+                        <input className="input" style={{ fontSize: '0.8rem' }}
+                          placeholder="Apodo / nombre informal"
+                          value={editNickname} onChange={e => setEditNickname(e.target.value)} />
+                        <input className="input" style={{ fontSize: '0.8rem' }}
+                          placeholder="Teléfono"
+                          value={editPhone} onChange={e => setEditPhone(e.target.value)} />
+                        <textarea className="input" rows={2} style={{ fontSize: '0.8rem' }}
                           placeholder="Mensaje de bienvenida..."
-                          value={editWelcomeMsg}
-                          onChange={e => setEditWelcomeMsg(e.target.value)}
-                        />
-                        <input
-                          className="input" type="number" min="0" max="20"
-                          placeholder="Máx. acompañantes (vacío = sin límite)"
+                          value={editWelcomeMsg} onChange={e => setEditWelcomeMsg(e.target.value)} />
+                        <input className="input" type="number" min="0" max="20"
+                          placeholder="Máx. acompañantes (0 = solo, 1 = pareja)"
                           style={{ fontSize: '0.8rem' }}
-                          value={editMaxGuests}
-                          onChange={e => setEditMaxGuests(e.target.value)}
-                        />
-                        <input
-                          className="input"
-                          placeholder="Nota interna (ej. Amigos novio - Fuenzalida)"
+                          value={editMaxGuests} onChange={e => setEditMaxGuests(e.target.value)} />
+                        <input className="input" placeholder="Nota interna"
                           style={{ fontSize: '0.8rem' }}
-                          value={editNotes}
-                          onChange={e => setEditNotes(e.target.value)}
-                        />
-                            <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.25rem' }}>
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.78rem', cursor: 'pointer' }}>
-                              <input type="radio" name={`invType_${inv.id}`} value="all_in" checked={editInvType === 'all_in'} onChange={() => setEditInvType('all_in')} />
-                              Completa
-                            </label>
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.78rem', cursor: 'pointer' }}>
-                              <input type="radio" name={`invType_${inv.id}`} value="party_only" checked={editInvType === 'party_only'} onChange={() => setEditInvType('party_only')} />
-                              Solo fiesta
-                            </label>
-                          </div>
-                          <div style={{ display: 'flex', gap: '0.3rem', marginTop: '0.25rem' }}>
+                          value={editNotes} onChange={e => setEditNotes(e.target.value)} />
+                        <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.25rem' }}>
+                          <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.78rem', cursor: 'pointer' }}>
+                            <input type="radio" name={`invType_${inv.id}`} value="all_in" checked={editInvType === 'all_in'} onChange={() => setEditInvType('all_in')} />
+                            Completa
+                          </label>
+                          <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.78rem', cursor: 'pointer' }}>
+                            <input type="radio" name={`invType_${inv.id}`} value="party_only" checked={editInvType === 'party_only'} onChange={() => setEditInvType('party_only')} />
+                            Solo fiesta
+                          </label>
+                        </div>
+                        <div style={{ display: 'flex', gap: '0.3rem', marginTop: '0.25rem' }}>
                           <button className="btn btn-primary" style={{ fontSize: '0.75rem', padding: '3px 8px' }} onClick={() => saveEdit(inv.id)} disabled={editSaving}>
                             {editSaving ? '...' : 'Guardar'}
                           </button>
@@ -345,11 +344,10 @@ export default function InvitationsManager() {
                     ) : (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                          <span className={`tag ${inv.invitation_type === 'party_only' ? 'tag-neutral' : 'tag-accent'}`} style={{ fontSize: '0.65rem' }}>
-                            {inv.invitation_type === 'party_only' ? 'Solo fiesta' : 'Completa'}
-                          </span>
                           {inv.max_additional_guests != null && (
-                            <span style={{ fontSize: '0.72rem', opacity: 0.55 }}>máx {inv.max_additional_guests}</span>
+                            <span style={{ fontSize: '0.72rem', opacity: 0.55 }}>
+                              máx {inv.max_additional_guests} acomp.
+                            </span>
                           )}
                           <button className="btn btn-ghost" style={{ fontSize: '0.7rem', padding: '2px 6px' }} onClick={() => startEdit(inv)}>
                             Editar
@@ -359,7 +357,7 @@ export default function InvitationsManager() {
                           <span style={{ fontSize: '0.72rem', opacity: 0.55 }}>✓ Mensaje personalizado</span>
                         )}
                         {inv.notes && (
-                          <span style={{ fontSize: '0.72rem', opacity: 0.65, fontStyle: 'italic', display: 'block' }}>{inv.notes}</span>
+                          <span style={{ fontSize: '0.72rem', opacity: 0.65, fontStyle: 'italic' }}>{inv.notes}</span>
                         )}
                       </div>
                     )}
@@ -367,30 +365,19 @@ export default function InvitationsManager() {
                   <td>
                     <div className="token-cell">
                       <span className="token-badge">{inv.token}</span>
-                      <button
-                        className="btn btn-ghost"
-                        style={{ fontSize: '0.75rem', padding: '2px 6px' }}
-                        onClick={() => copyLink(inv)}
-                        title="Copiar enlace"
-                      >
+                      <button className="btn btn-ghost" style={{ fontSize: '0.75rem', padding: '2px 6px' }}
+                        onClick={() => copyLink(inv)} title="Copiar enlace">
                         {copiedId === inv.id ? '✓' : 'Copiar'}
                       </button>
-                      <button
-                        className="btn btn-ghost"
-                        style={{ fontSize: '0.75rem', padding: '2px 6px' }}
-                        onClick={() => downloadInvitationPDF(inv, content)}
-                        title="Descargar PDF"
-                      >
+                      <button className="btn btn-ghost" style={{ fontSize: '0.75rem', padding: '2px 6px' }}
+                        onClick={() => downloadInvitationPDF(inv, content)} title="Descargar PDF">
                         PDF
                       </button>
                     </div>
                   </td>
                   <td>
-                    <button
-                      className="btn btn-ghost"
-                      style={{ color: '#c0392b', fontSize: '0.75rem' }}
-                      onClick={() => handleDelete(inv.id)}
-                    >
+                    <button className="btn btn-ghost" style={{ color: '#c0392b', fontSize: '0.75rem' }}
+                      onClick={() => handleDelete(inv.id)}>
                       Eliminar
                     </button>
                   </td>

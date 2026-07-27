@@ -17,11 +17,16 @@ export async function onRequestPost({ request, env }) {
       return err('Datos inválidos.')
     }
 
-    const { attending, numGuests = 1, message = '' } = body
+    const { attending, numGuests = 1, message = '', dietaryRestriction = '' } = body
 
     await env.DB.prepare(
-      'INSERT INTO rsvp_responses (invitation_id, attending, num_guests, message) VALUES (?, ?, ?, ?)'
-    ).bind(inv.id, attending ? 1 : 0, Number(numGuests) || 1, message || '').run()
+      'INSERT INTO rsvp_responses (invitation_id, attending, num_guests, message, dietary_restriction) VALUES (?, ?, ?, ?, ?)'
+    ).bind(
+      inv.id, attending ? 1 : 0,
+      Number(numGuests) || 1,
+      message || '',
+      dietaryRestriction || ''
+    ).run()
 
     return json({ success: true })
   } catch (e) {
