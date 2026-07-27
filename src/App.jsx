@@ -55,10 +55,6 @@ function MainApp({ token, guest, rsvp }) {
 
   useScrollReveal(welcomed)
 
-  useEffect(() => {
-    if (videoReady) document.documentElement.classList.remove('skip-reveal')
-  }, [videoReady])
-
   function handleVideoReady() {
     heroVideoRef.current?.play().catch(() => {})
     setVideoReady(true)

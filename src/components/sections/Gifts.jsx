@@ -26,8 +26,12 @@ export default function Gifts() {
   const [cart, setCart] = useState(new Map())
   const [modalOpen, setModalOpen] = useState(false)
   const [sortBy, setSortBy] = useState('none')
-  const [purchased, setPurchased] = useState(false)
-  const [purchasedGifts, setPurchasedGifts] = useState([])
+  const [purchased, setPurchased] = useState(() => {
+    try { return !!JSON.parse(sessionStorage.getItem('purchasedGifts') || 'null') } catch { return false }
+  })
+  const [purchasedGifts, setPurchasedGifts] = useState(() => {
+    try { return JSON.parse(sessionStorage.getItem('purchasedGifts') || 'null') || [] } catch { return [] }
+  })
 
   useEffect(() => {
     fetch('/api/gifts', { headers: { 'X-Invite-Token': token } })
@@ -61,8 +65,9 @@ export default function Gifts() {
     })
   }
 
-  function handleReserved(reservedIds) {
-    const reserved = trips.flatMap(t => t.gifts).filter(g => reservedIds.includes(g.id))
+  function handleReserved() {
+    const reserved = Array.from(cart.values()).map(({ gift, quantity }) => ({ ...gift, quantity }))
+    try { sessionStorage.setItem('purchasedGifts', JSON.stringify(reserved)) } catch {}
     setPurchasedGifts(reserved)
     setCart(new Map())
     setModalOpen(false)
@@ -81,6 +86,7 @@ export default function Gifts() {
   const displayName = guest?.nickname || guest?.name
 
   if (purchased) {
+    const purchasedTotal = purchasedGifts.reduce((sum, g) => sum + (g.price || 0) * (g.quantity || 1), 0)
     return (
       <section id="regalos" className="section-compact">
         <div className="card" style={{ textAlign: 'center', maxWidth: 480, margin: '0 auto' }}>
@@ -88,13 +94,20 @@ export default function Gifts() {
           <h2 style={{ fontFamily: 'var(--font-heading)', marginBottom: '1rem' }}>
             {thanksMsg.replace('{nombre}', displayName)}
           </h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginBottom: '1rem' }}>
-            {purchasedGifts.map(g => (
-              <span key={g.id} style={{ fontSize: '0.9rem' }}>
-                <strong>{g.name}</strong>{g.price != null ? ` — ${formatCLP(g.price)}` : ''}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginBottom: '0.75rem' }}>
+            {purchasedGifts.map((g, i) => (
+              <span key={i} style={{ fontSize: '0.9rem' }}>
+                <strong>{g.name}</strong>
+                {(g.quantity || 1) > 1 ? ` ×${g.quantity}` : ''}
+                {g.price != null ? ` — ${formatCLP(g.price * (g.quantity || 1))}` : ''}
               </span>
             ))}
           </div>
+          {purchasedTotal > 0 && (
+            <div style={{ borderTop: '1px solid var(--color-divider)', paddingTop: '0.5rem', marginBottom: '0.75rem', fontWeight: 600, fontSize: '0.95rem' }}>
+              Total: {formatCLP(purchasedTotal)}
+            </div>
+          )}
           <p style={{ fontSize: '0.8rem', opacity: 0.6, margin: 0 }}>
             Tu(s) regalo(s) ha(n) quedado reservado(s). ¡Nos hace muy felices!
           </p>
