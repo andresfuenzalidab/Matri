@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import { useApp } from '../../context/AppContext'
 import PhotoPlaceholder from '../PhotoPlaceholder'
 
-export default function Home({ welcomed, onReady }) {
+export default function Home({ welcomed, onReady, shouldPreload }) {
   const { get, loadContent } = useApp()
   const videoRef = useRef(null)
 
@@ -15,18 +15,25 @@ export default function Home({ welcomed, onReady }) {
     }
   }, [welcomed])
 
+  useEffect(() => {
+    if (shouldPreload && videoRef.current && !welcomed) {
+      videoRef.current.load()
+    }
+  }, [shouldPreload, welcomed])
+
   const heroImage = get('hero_image')
   const heroVideo = get('hero_video') || '/hero.mp4'
 
   return (
     <section id="inicio" className="hero">
-      {welcomed && heroVideo ? (
+      {heroVideo ? (
         <div className="hero-video-wrap">
           <video
             ref={videoRef}
             muted loop playsInline
             className="hero-video"
             src={heroVideo}
+            preload={shouldPreload || welcomed ? 'auto' : 'none'}
             onCanPlay={onReady || undefined}
           />
           <div className="hero-video-overlay" />

@@ -184,7 +184,7 @@ export default function Gifts({ initialReservations }) {
               const byMe = myGiftIds.has(gift.id)
               const byOther = gift.status === 'reserved' && !byMe
               const inCart = cart.has(gift.id)
-              const canAdd = !byOther && gift.price != null
+              const canAdd = gift.price != null
 
               return (
                 <div

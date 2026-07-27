@@ -76,6 +76,7 @@ const SECTIONS = [
   {
     label: 'Datos de transferencia',
     fields: [
+      { key: 'bank_holder', label: 'Nombre titular', type: 'text' },
       { key: 'bank_name', label: 'Banco', type: 'text' },
       { key: 'bank_account', label: 'N° cuenta', type: 'text' },
       { key: 'bank_rut', label: 'RUT', type: 'text' },

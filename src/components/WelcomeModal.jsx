@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useApp } from '../context/AppContext'
 
-export default function WelcomeModal({ guest, onEnter }) {
+export default function WelcomeModal({ guest, onEnter, onVideoReady }) {
   const [visible, setVisible] = useState(false)
   const [contentVisible, setContentVisible] = useState(true)
   const [videoReady, setVideoReady] = useState(false)
@@ -41,7 +41,7 @@ export default function WelcomeModal({ guest, onEnter }) {
         <video
           ref={videoRef}
           muted loop playsInline
-          onCanPlay={() => setVideoReady(true)}
+          onCanPlay={() => { setVideoReady(true); onVideoReady?.() }}
           style={{
             position: 'absolute', inset: 0, width: '100%', height: '100%',
             objectFit: 'cover', zIndex: 0,

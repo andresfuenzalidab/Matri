@@ -26,6 +26,7 @@ function MainApp({ token, guest, rsvp, giftReservations }) {
   const [adminOpen, setAdminOpen] = useState(false)
   const [welcomed, setWelcomed] = useState(() => sessionStorage.getItem('welcomed') === '1')
   const [pageReady, setPageReady] = useState(() => sessionStorage.getItem('welcomed') !== '1')
+  const [preloadHero, setPreloadHero] = useState(false)
   const musicPlayerRef = useRef(null)
 
   useScrollReveal(welcomed)
@@ -41,7 +42,7 @@ function MainApp({ token, guest, rsvp, giftReservations }) {
   return (
     <AppProvider token={token} guest={guest} rsvp={rsvp} giftReservations={giftReservations}>
       {!welcomed && (
-        <WelcomeModal guest={guest} onEnter={handleWelcomed} />
+        <WelcomeModal guest={guest} onEnter={handleWelcomed} onVideoReady={() => setPreloadHero(true)} />
       )}
 
       {welcomed && !pageReady && (
@@ -53,7 +54,7 @@ function MainApp({ token, guest, rsvp, giftReservations }) {
       <div style={{ opacity: showContent ? 1 : 0, transition: 'opacity 0.5s ease', pointerEvents: showContent ? 'auto' : 'none' }}>
         <Nav />
         <main>
-          <Home welcomed={welcomed} onReady={() => setPageReady(true)} />
+          <Home welcomed={welcomed} onReady={() => setPageReady(true)} shouldPreload={preloadHero} />
           <CountdownSection />
           <WeddingInfo />
           <OurStory />
