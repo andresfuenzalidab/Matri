@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { useApp } from '../../context/AppContext'
 import GiftModal from '../GiftModal'
 import { normalizeImageUrl } from '../../utils/imageUrl.js'
@@ -19,15 +19,15 @@ function sortGifts(gifts, sortBy) {
   })
 }
 
-export default function Gifts({ initialReservations }) {
+export default function Gifts() {
   const { token, get, guest } = useApp()
   const [trips, setTrips] = useState([])
   const [loading, setLoading] = useState(true)
-  const [cart, setCart] = useState(new Map()) // giftId -> { gift, quantity }
+  const [cart, setCart] = useState(new Map())
   const [modalOpen, setModalOpen] = useState(false)
-  const [reservations, setReservations] = useState(initialReservations || [])
   const [sortBy, setSortBy] = useState('none')
   const [purchased, setPurchased] = useState(false)
+  const [purchasedGifts, setPurchasedGifts] = useState([])
 
   useEffect(() => {
     fetch('/api/gifts', { headers: { 'X-Invite-Token': token } })
@@ -35,11 +35,6 @@ export default function Gifts({ initialReservations }) {
       .then(data => { setTrips(data); setLoading(false) })
       .catch(() => setLoading(false))
   }, [token])
-
-  const myGiftIds = useMemo(
-    () => new Set(reservations.map(r => r.giftId)),
-    [reservations]
-  )
 
   function addToCart(gift) {
     setCart(prev => {
@@ -67,16 +62,8 @@ export default function Gifts({ initialReservations }) {
   }
 
   function handleReserved(reservedIds) {
-    setReservations(prev => [
-      ...prev,
-      ...reservedIds.map(id => ({ giftId: id })),
-    ])
-    setTrips(prev => prev.map(t => ({
-      ...t,
-      gifts: t.gifts.map(g =>
-        reservedIds.includes(g.id) ? { ...g, status: 'reserved-by-you' } : g
-      ),
-    })))
+    const reserved = trips.flatMap(t => t.gifts).filter(g => reservedIds.includes(g.id))
+    setPurchasedGifts(reserved)
     setCart(new Map())
     setModalOpen(false)
     setPurchased(true)
@@ -90,22 +77,19 @@ export default function Gifts({ initialReservations }) {
 
   const cartItems = Array.from(cart.values())
   const cartTotal = cartItems.reduce((sum, { gift, quantity }) => sum + (gift.price || 0) * quantity, 0)
-  const myGifts = trips.flatMap(t => t.gifts).filter(g => myGiftIds.has(g.id))
-
   const thanksMsg = get('gifts_thanks_message', '¡Gracias!')
   const displayName = guest?.nickname || guest?.name
 
   if (purchased) {
-    const justReserved = trips.flatMap(t => t.gifts).filter(g => myGiftIds.has(g.id))
     return (
       <section id="regalos" className="section-compact">
-        <div className="card gifts-already-reserved" style={{ textAlign: 'center', maxWidth: 480, margin: '0 auto' }}>
+        <div className="card" style={{ textAlign: 'center', maxWidth: 480, margin: '0 auto' }}>
           <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'clamp(1.8rem, 5vw, 2.5rem)', color: 'var(--color-accent)', marginBottom: '0.5rem' }}>♡</div>
           <h2 style={{ fontFamily: 'var(--font-heading)', marginBottom: '1rem' }}>
             {thanksMsg.replace('{nombre}', displayName)}
           </h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginBottom: '1rem' }}>
-            {justReserved.map(g => (
+            {purchasedGifts.map(g => (
               <span key={g.id} style={{ fontSize: '0.9rem' }}>
                 <strong>{g.name}</strong>{g.price != null ? ` — ${formatCLP(g.price)}` : ''}
               </span>
@@ -121,25 +105,6 @@ export default function Gifts({ initialReservations }) {
 
   return (
     <section id="regalos" className="section">
-      {myGifts.length > 0 && (
-        <div className="card gifts-already-reserved" style={{ textAlign: 'center', maxWidth: 480, margin: '0 auto 2rem' }}>
-          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'clamp(1.8rem, 5vw, 2.5rem)', color: 'var(--color-accent)', marginBottom: '0.5rem' }}>♡</div>
-          <h2 style={{ fontFamily: 'var(--font-heading)', marginBottom: '1rem' }}>
-            {thanksMsg.replace('{nombre}', displayName)}
-          </h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginBottom: '1rem' }}>
-            {myGifts.map(g => (
-              <span key={g.id} style={{ fontSize: '0.9rem' }}>
-                <strong>{g.name}</strong>{g.price != null ? ` — ${formatCLP(g.price)}` : ''}
-              </span>
-            ))}
-          </div>
-          <p style={{ fontSize: '0.8rem', opacity: 0.6, margin: 0 }}>
-            Tu(s) regalo(s) ha(n) quedado reservado(s). ¡Nos hace muy felices!
-          </p>
-        </div>
-      )}
-
       <div className="gifts-hero reveal-on-scroll">
         <p className="gifts-hero-label">{get('gifts_section_label', 'Luna de Miel')}</p>
         <h2 className="gifts-hero-title">{get('gifts_section_title', 'Regala un pedacito de nuestro viaje')}</h2>
@@ -181,15 +146,13 @@ export default function Gifts({ initialReservations }) {
           <div className="trip-title">{trip.name}</div>
           <div className="gifts-grid">
             {sortGifts(trip.gifts, sortBy).map(gift => {
-              const byMe = myGiftIds.has(gift.id)
-              const byOther = gift.status === 'reserved' && !byMe
               const inCart = cart.has(gift.id)
               const canAdd = gift.price != null
 
               return (
                 <div
                   key={gift.id}
-                  className={`card gift-card ${byOther ? 'gift-unavailable' : ''} ${inCart ? 'gift-in-cart' : ''}`}
+                  className={`card gift-card ${inCart ? 'gift-in-cart' : ''}`}
                 >
                   {normalizeImageUrl(gift.imageUrl) && (
                     <img
@@ -205,9 +168,7 @@ export default function Gifts({ initialReservations }) {
                   )}
                   <div className="gift-price">{formatCLP(gift.price)}</div>
                   <div className="gift-action">
-                    {byMe && <span className="tag tag-accent">Tu regalo ♡</span>}
-                    {byOther && <span className="tag tag-neutral">Reservado</span>}
-                    {gift.price == null && !byMe && !byOther && <span className="tag tag-neutral">Próximamente</span>}
+                    {!canAdd && <span className="tag tag-neutral">Próximamente</span>}
                     {canAdd && !inCart && (
                       <button className="btn btn-secondary" style={{ width: '100%' }} onClick={() => addToCart(gift)}>
                         Seleccionar

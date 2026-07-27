@@ -878,6 +878,12 @@ textarea.input { min-height: 90px; resize: vertical; }
   opacity: 1;
   transform: translateY(0);
 }
+/* On refresh (already welcomed), skip reveal animations to avoid blank spaces */
+.skip-reveal .reveal-on-scroll {
+  opacity: 1 !important;
+  transform: none !important;
+  transition: none !important;
+}
 
 /* ── Hero video ── */
 .hero-video-wrap {

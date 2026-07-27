@@ -24,12 +24,20 @@ function getToken() {
 
 function MainApp({ token, guest, rsvp, giftReservations }) {
   const [adminOpen, setAdminOpen] = useState(false)
-  const [welcomed, setWelcomed] = useState(() => sessionStorage.getItem('welcomed') === '1')
+  const [welcomed, setWelcomed] = useState(() => {
+    const already = sessionStorage.getItem('welcomed') === '1'
+    if (already) document.documentElement.classList.add('skip-reveal')
+    return already
+  })
   const [pageReady, setPageReady] = useState(() => sessionStorage.getItem('welcomed') !== '1')
   const [preloadHero, setPreloadHero] = useState(false)
   const musicPlayerRef = useRef(null)
 
   useScrollReveal(welcomed)
+
+  useEffect(() => {
+    if (pageReady) document.documentElement.classList.remove('skip-reveal')
+  }, [pageReady])
 
   function handleWelcomed() {
     sessionStorage.setItem('welcomed', '1')
@@ -59,7 +67,7 @@ function MainApp({ token, guest, rsvp, giftReservations }) {
           <WeddingInfo />
           <OurStory />
           <RSVP initialRsvp={rsvp} />
-          <Gifts initialReservations={giftReservations} />
+          <Gifts />
           <Contact />
         </main>
         {guest?.isAdmin && (
