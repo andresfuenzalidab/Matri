@@ -14,7 +14,7 @@ export default function WelcomeModal({ guest, onEnter }) {
 
   const message = guest.welcomeMessage
   const displayName = guest.nickname || guest.name
-  const heroVideo = get('hero_video')
+  const heroVideo = get('hero_video') || '/hero.mp4'
 
   function handleEnter() {
     // Start video on click (user gesture = reliable autoplay)

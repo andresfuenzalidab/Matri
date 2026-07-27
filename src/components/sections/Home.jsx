@@ -31,7 +31,7 @@ export default function Home() {
   useEffect(() => { loadContent() }, [loadContent])
 
   const heroImage = get('hero_image')
-  const heroVideo = get('hero_video')
+  const heroVideo = get('hero_video') || '/hero.mp4'
 
   return (
     <section id="inicio" className="hero">

@@ -7,7 +7,7 @@ export default function BackgroundVideoOverlay() {
   const [visible, setVisible] = useState(false)
   const timerRef = useRef(null)
 
-  const videoUrl = get('background_video_url')
+  const videoUrl = get('background_video_url') || '/mascotas.webm'
 
   const play = useCallback(() => {
     const video = videoRef.current
@@ -27,8 +27,6 @@ export default function BackgroundVideoOverlay() {
     timerRef.current = setTimeout(play, 45000 + Math.random() * 45000)
     return () => clearTimeout(timerRef.current)
   }, [videoUrl, play])
-
-  if (!videoUrl) return null
 
   return (
     <>
