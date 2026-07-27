@@ -23,10 +23,9 @@ export default function BackgroundVideoOverlay() {
   }
 
   useEffect(() => {
-    if (!videoUrl) return
     timerRef.current = setTimeout(play, 45000 + Math.random() * 45000)
     return () => clearTimeout(timerRef.current)
-  }, [videoUrl, play])
+  }, [play])
 
   return (
     <>
@@ -40,14 +39,17 @@ export default function BackgroundVideoOverlay() {
           position: 'fixed',
           bottom: 0,
           right: 0,
-          width: 'min(400px, 50vw)',
+          width: 'min(480px, 55vw)',
           pointerEvents: 'none',
           zIndex: 200,
           opacity: visible ? 1 : 0,
           transition: 'opacity 0.6s ease',
+          // Removes the default white/black browser background on video elements
+          background: 'transparent',
+          // mix-blend-mode: multiply makes white pixels transparent against any background
+          mixBlendMode: 'multiply',
         }}
       />
-      {/* Test trigger button — click to preview the video immediately */}
       <button
         onClick={play}
         title="Probar video mascotas"
