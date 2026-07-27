@@ -15,7 +15,7 @@ export async function onRequestGet({ request, env }) {
         ORDER BY i.created_at DESC
       `).all(),
       env.DB.prepare(`
-        SELECT gr.invitation_id, g.name, g.price, gr.quantity
+        SELECT gr.invitation_id, g.name, g.price, gr.quantity, gr.congratulations_message
         FROM gift_reservations gr
         JOIN gifts g ON g.id = gr.gift_id
         WHERE g.active = 1
@@ -26,7 +26,7 @@ export async function onRequestGet({ request, env }) {
     const giftsByInv = {}
     for (const gr of giftRows.results) {
       if (!giftsByInv[gr.invitation_id]) giftsByInv[gr.invitation_id] = []
-      giftsByInv[gr.invitation_id].push({ name: gr.name, price: gr.price, quantity: gr.quantity })
+      giftsByInv[gr.invitation_id].push({ name: gr.name, price: gr.price, quantity: gr.quantity, message: gr.congratulations_message || '' })
     }
 
     return json(rows.results.map(r => ({ ...r, gifts: giftsByInv[r.id] || [] })))

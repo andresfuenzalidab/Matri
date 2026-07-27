@@ -370,9 +370,10 @@ export default function InvitationsManager() {
                         ? <span className="tag tag-accent">Asiste ({inv.num_guests})</span>
                         : <span className="tag tag-neutral">No asiste</span>}
                   </td>
-                  <td style={{ fontSize: '0.78rem', maxWidth: 200 }}>
+                  <td style={{ fontSize: '0.78rem', maxWidth: 220 }}>
                     {inv.gifts?.length > 0 ? (() => {
                       const total = inv.gifts.reduce((s, g) => s + (g.price || 0) * (g.quantity || 1), 0)
+                      const messages = inv.gifts.map(g => g.message).filter(Boolean)
                       return (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
                           <span style={{ opacity: 0.75 }}>
@@ -382,6 +383,11 @@ export default function InvitationsManager() {
                             <strong style={{ color: 'var(--color-accent)' }}>
                               ${Number(total).toLocaleString('es-CL')} CLP
                             </strong>
+                          )}
+                          {messages.length > 0 && (
+                            <span style={{ opacity: 0.6, fontStyle: 'italic', fontSize: '0.72rem' }}>
+                              "{messages.join(' / ')}"
+                            </span>
                           )}
                         </div>
                       )

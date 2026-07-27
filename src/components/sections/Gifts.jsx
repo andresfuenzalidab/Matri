@@ -65,8 +65,8 @@ export default function Gifts() {
     })
   }
 
-  function handleReserved() {
-    const reserved = Array.from(cart.values()).map(({ gift, quantity }) => ({ ...gift, quantity }))
+  function handleReserved(cartItems) {
+    const reserved = cartItems.map(({ gift, quantity }) => ({ ...gift, quantity }))
     try { localStorage.setItem('purchasedGifts', JSON.stringify(reserved)) } catch {}
     setPurchasedGifts(reserved)
     setCart(new Map())

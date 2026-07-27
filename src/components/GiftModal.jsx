@@ -37,7 +37,7 @@ export default function GiftModal({ cartItems, onClose, onReserved }) {
         }),
       })
       if (res.ok) {
-        onReserved(cartItems.map(({ gift }) => gift.id))
+        onReserved(cartItems)
       } else {
         const d = await res.json().catch(() => ({}))
         setError(d.error || 'No se pudo reservar. Intenta de nuevo.')
