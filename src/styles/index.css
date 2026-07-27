@@ -255,6 +255,7 @@ textarea.input { min-height: 90px; resize: vertical; }
 .section {
   padding: 6rem 1.5rem;
   max-width: 960px; margin: 0 auto;
+  background: var(--color-bg);
 }
 .section-title {
   font-family: var(--font-heading); font-weight: 600;
@@ -1016,6 +1017,7 @@ textarea.input { min-height: 90px; resize: vertical; }
   position: relative;
   overflow: hidden;
   display: flex;
+  background: var(--color-bg);
   align-items: center;
   justify-content: center;
   min-height: 320px;
@@ -1041,6 +1043,7 @@ textarea.input { min-height: 90px; resize: vertical; }
   padding: 2.5rem 1.5rem;
   max-width: 960px;
   margin: 0 auto;
+  background: var(--color-bg);
 }
 
 /* ── Pet video overlay ── */

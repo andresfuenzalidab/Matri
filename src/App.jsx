@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react'
-import { AppProvider } from './context/AppContext'
+import { useState, useEffect, useRef, forwardRef } from 'react'
+import { AppProvider, useApp } from './context/AppContext'
 import { useScrollReveal } from './utils/useScrollReveal'
 import Nav from './components/Nav'
 import WelcomeModal from './components/WelcomeModal'
@@ -22,22 +22,47 @@ function getToken() {
   return sessionStorage.getItem('inviteToken') || ''
 }
 
-function MainApp({ token, guest, rsvp, giftReservations }) {
+// Rendered inside AppProvider so it can access useApp()
+const SharedHeroVideo = forwardRef(function SharedHeroVideo({ onCanPlay }, ref) {
+  const { get } = useApp()
+  const src = get('hero_video') || '/hero.mp4'
+  return (
+    <video
+      ref={ref}
+      muted loop playsInline
+      src={src}
+      style={{
+        position: 'fixed', inset: 0,
+        width: '100%', height: '100%',
+        objectFit: 'cover',
+        zIndex: 0,
+      }}
+      onCanPlay={onCanPlay}
+    />
+  )
+})
+
+function MainApp({ token, guest, rsvp }) {
   const [adminOpen, setAdminOpen] = useState(false)
   const [welcomed, setWelcomed] = useState(() => {
     const already = sessionStorage.getItem('welcomed') === '1'
     if (already) document.documentElement.classList.add('skip-reveal')
     return already
   })
-  const [pageReady, setPageReady] = useState(() => sessionStorage.getItem('welcomed') !== '1')
-  const [preloadHero, setPreloadHero] = useState(false)
+  const [videoReady, setVideoReady] = useState(false)
+  const heroVideoRef = useRef(null)
   const musicPlayerRef = useRef(null)
 
   useScrollReveal(welcomed)
 
   useEffect(() => {
-    if (pageReady) document.documentElement.classList.remove('skip-reveal')
-  }, [pageReady])
+    if (videoReady) document.documentElement.classList.remove('skip-reveal')
+  }, [videoReady])
+
+  function handleVideoReady() {
+    heroVideoRef.current?.play().catch(() => {})
+    setVideoReady(true)
+  }
 
   function handleWelcomed() {
     sessionStorage.setItem('welcomed', '1')
@@ -45,24 +70,42 @@ function MainApp({ token, guest, rsvp, giftReservations }) {
     musicPlayerRef.current?.tryPlay()
   }
 
-  const showContent = welcomed && pageReady
-
   return (
-    <AppProvider token={token} guest={guest} rsvp={rsvp} giftReservations={giftReservations}>
-      {!welcomed && (
-        <WelcomeModal guest={guest} onEnter={handleWelcomed} onVideoReady={() => setPreloadHero(true)} />
-      )}
+    <AppProvider token={token} guest={guest} rsvp={rsvp}>
+      {/* Single hero video — always in DOM, loads once */}
+      <SharedHeroVideo ref={heroVideoRef} onCanPlay={handleVideoReady} />
 
-      {welcomed && !pageReady && (
-        <div style={{ position: 'fixed', inset: 0, background: 'var(--color-bg, #faf8f5)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ width: 36, height: 36, border: '3px solid rgba(0,0,0,0.1)', borderTopColor: 'var(--color-accent)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+      {/* Spinner until video is ready */}
+      {!videoReady && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 9999,
+          background: 'var(--color-bg, #faf8f5)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <div style={{
+            width: 36, height: 36,
+            border: '3px solid rgba(0,0,0,0.1)',
+            borderTopColor: 'var(--color-accent)',
+            borderRadius: '50%',
+            animation: 'spin 0.8s linear infinite',
+          }} />
         </div>
       )}
 
-      <div style={{ opacity: showContent ? 1 : 0, transition: 'opacity 0.5s ease', pointerEvents: showContent ? 'auto' : 'none' }}>
+      {/* WelcomeModal — shown only once video is ready, no video inside */}
+      {!welcomed && videoReady && (
+        <WelcomeModal guest={guest} onEnter={handleWelcomed} />
+      )}
+
+      <div style={{
+        position: 'relative', zIndex: 1,
+        opacity: welcomed ? 1 : 0,
+        transition: 'opacity 0.5s ease',
+        pointerEvents: welcomed ? 'auto' : 'none',
+      }}>
         <Nav />
         <main>
-          <Home welcomed={welcomed} onReady={() => setPageReady(true)} shouldPreload={preloadHero} />
+          <Home />
           <CountdownSection />
           <WeddingInfo />
           <OurStory />
@@ -88,7 +131,6 @@ export default function App() {
   const [status, setStatus] = useState('loading')
   const [guest, setGuest] = useState(null)
   const [rsvp, setRsvp] = useState(null)
-  const [giftReservations, setGiftReservations] = useState([])
   const token = getToken()
 
   useEffect(() => {
@@ -99,7 +141,6 @@ export default function App() {
         if (data.valid) {
           setGuest(data.guest)
           setRsvp(data.rsvp)
-          setGiftReservations(data.giftReservations || [])
           setStatus('valid')
         } else {
           setStatus('invalid')
@@ -122,12 +163,5 @@ export default function App() {
     )
   }
 
-  return (
-    <MainApp
-      token={token}
-      guest={guest}
-      rsvp={rsvp}
-      giftReservations={giftReservations}
-    />
-  )
+  return <MainApp token={token} guest={guest} rsvp={rsvp} />
 }

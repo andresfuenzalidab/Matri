@@ -18,7 +18,16 @@ export function useScrollReveal(active) {
       { threshold: 0.1 }
     )
 
-    els.forEach(el => observer.observe(el))
+    els.forEach(el => {
+      const rect = el.getBoundingClientRect()
+      // Synchronously reveal elements already in the viewport
+      if (rect.top < window.innerHeight && rect.bottom > 0) {
+        el.classList.add('is-visible')
+      } else {
+        observer.observe(el)
+      }
+    })
+
     return () => observer.disconnect()
   }, [active])
 }

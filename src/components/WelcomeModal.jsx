@@ -1,12 +1,8 @@
-import { useState, useEffect, useRef } from 'react'
-import { useApp } from '../context/AppContext'
+import { useState, useEffect } from 'react'
 
-export default function WelcomeModal({ guest, onEnter, onVideoReady }) {
+export default function WelcomeModal({ guest, onEnter }) {
   const [visible, setVisible] = useState(false)
   const [contentVisible, setContentVisible] = useState(true)
-  const [videoReady, setVideoReady] = useState(false)
-  const { get } = useApp()
-  const videoRef = useRef(null)
 
   useEffect(() => {
     const t = setTimeout(() => setVisible(true), 50)
@@ -15,10 +11,8 @@ export default function WelcomeModal({ guest, onEnter, onVideoReady }) {
 
   const message = guest.welcomeMessage
   const displayName = guest.nickname || guest.name
-  const heroVideo = get('hero_video') || '/hero.mp4'
 
   function handleEnter() {
-    videoRef.current?.play().catch(() => {})
     setContentVisible(false)
     setTimeout(() => {
       setVisible(false)
@@ -27,59 +21,20 @@ export default function WelcomeModal({ guest, onEnter, onVideoReady }) {
   }
 
   return (
-    <div
-      style={{
-        position: 'fixed', inset: 0, zIndex: 1000,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: '2rem',
-        opacity: visible ? 1 : 0,
-        transition: 'opacity 0.5s ease',
-        background: 'var(--color-bg)',
-      }}
-    >
-      {heroVideo && (
-        <video
-          ref={videoRef}
-          muted loop playsInline
-          onCanPlay={() => { setVideoReady(true); onVideoReady?.() }}
-          style={{
-            position: 'absolute', inset: 0, width: '100%', height: '100%',
-            objectFit: 'cover', zIndex: 0,
-            opacity: videoReady ? 1 : 0,
-            transition: 'opacity 0.4s ease',
-          }}
-          src={heroVideo}
-        />
-      )}
-
-      {/* Overlay */}
-      {heroVideo && videoReady && (
-        <div style={{
-          position: 'absolute', inset: 0, zIndex: 1,
-          background: 'linear-gradient(to bottom, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.55) 100%)',
-        }} />
-      )}
-
-      {/* Spinner while loading */}
-      {!videoReady && (
-        <div style={{ position: 'relative', zIndex: 2 }}>
-          <div style={{
-            width: 36, height: 36, borderRadius: '50%',
-            border: '3px solid var(--color-neutral-300)',
-            borderTopColor: 'var(--color-accent)',
-            animation: 'spin 0.8s linear infinite',
-          }} />
-        </div>
-      )}
-
-      {/* Welcome content */}
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 1000,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: '2rem',
+      opacity: visible ? 1 : 0,
+      transition: 'opacity 0.5s ease',
+      background: 'linear-gradient(to bottom, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.55) 100%)',
+    }}>
       <div style={{
         textAlign: 'center', maxWidth: 480,
         position: 'relative', zIndex: 2,
-        opacity: videoReady && contentVisible ? 1 : 0,
+        opacity: contentVisible ? 1 : 0,
         transform: contentVisible ? 'translateY(0)' : 'translateY(-12px)',
         transition: 'opacity 0.35s ease, transform 0.35s ease',
-        pointerEvents: videoReady ? 'auto' : 'none',
       }}>
         <div style={{
           fontFamily: 'var(--font-heading)', fontSize: 'clamp(3rem, 10vw, 5rem)',
