@@ -37,16 +37,15 @@ export default function BackgroundVideoOverlay() {
         onEnded={handleEnded}
         style={{
           position: 'fixed',
-          bottom: 0,
-          right: 0,
-          width: 'min(480px, 55vw)',
+          inset: 0,
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
           pointerEvents: 'none',
           zIndex: 200,
           opacity: visible ? 1 : 0,
           transition: 'opacity 0.6s ease',
-          // Removes the default white/black browser background on video elements
           background: 'transparent',
-          // mix-blend-mode: multiply makes white pixels transparent against any background
           mixBlendMode: 'multiply',
         }}
       />
