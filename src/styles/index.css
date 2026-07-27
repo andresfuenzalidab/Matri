@@ -1008,7 +1008,6 @@ textarea.input { min-height: 90px; resize: vertical; }
   z-index: 999;
   transition: opacity 0.6s ease;
   background: transparent;
-  mix-blend-mode: multiply;
 }
 
 /* Desktop: corner */
