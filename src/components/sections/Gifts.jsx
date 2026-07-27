@@ -27,10 +27,10 @@ export default function Gifts() {
   const [modalOpen, setModalOpen] = useState(false)
   const [sortBy, setSortBy] = useState('none')
   const [purchased, setPurchased] = useState(() => {
-    try { return !!JSON.parse(sessionStorage.getItem('purchasedGifts') || 'null') } catch { return false }
+    try { return !!JSON.parse(localStorage.getItem('purchasedGifts') || 'null') } catch { return false }
   })
   const [purchasedGifts, setPurchasedGifts] = useState(() => {
-    try { return JSON.parse(sessionStorage.getItem('purchasedGifts') || 'null') || [] } catch { return [] }
+    try { return JSON.parse(localStorage.getItem('purchasedGifts') || 'null') || [] } catch { return [] }
   })
 
   useEffect(() => {
@@ -67,7 +67,7 @@ export default function Gifts() {
 
   function handleReserved() {
     const reserved = Array.from(cart.values()).map(({ gift, quantity }) => ({ ...gift, quantity }))
-    try { sessionStorage.setItem('purchasedGifts', JSON.stringify(reserved)) } catch {}
+    try { localStorage.setItem('purchasedGifts', JSON.stringify(reserved)) } catch {}
     setPurchasedGifts(reserved)
     setCart(new Map())
     setModalOpen(false)

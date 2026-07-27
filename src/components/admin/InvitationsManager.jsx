@@ -364,19 +364,11 @@ export default function InvitationsManager() {
                     </span>
                   </td>
                   <td>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                      {inv.attending === null || inv.attending === undefined
-                        ? <span style={{ opacity: 0.4 }}>Sin respuesta</span>
-                        : inv.attending
-                          ? <span className="tag tag-accent">Asiste ({inv.num_guests})</span>
-                          : <span className="tag tag-neutral">No asiste</span>}
-                      {inv.attending !== null && inv.attending !== undefined && (
-                        <button className="btn btn-ghost" style={{ fontSize: '0.65rem', padding: '1px 5px', color: '#c0392b' }}
-                          onClick={() => handleResetRsvp(inv.id)}>
-                          Resetear
-                        </button>
-                      )}
-                    </div>
+                    {inv.attending === null || inv.attending === undefined
+                      ? <span style={{ opacity: 0.4 }}>Sin respuesta</span>
+                      : inv.attending
+                        ? <span className="tag tag-accent">Asiste ({inv.num_guests})</span>
+                        : <span className="tag tag-neutral">No asiste</span>}
                   </td>
                   <td style={{ fontSize: '0.78rem', maxWidth: 200 }}>
                     {inv.gifts?.length > 0 ? (() => {
@@ -391,10 +383,6 @@ export default function InvitationsManager() {
                               ${Number(total).toLocaleString('es-CL')} CLP
                             </strong>
                           )}
-                          <button className="btn btn-ghost" style={{ fontSize: '0.65rem', padding: '1px 5px', color: '#c0392b', alignSelf: 'flex-start' }}
-                            onClick={() => handleResetGifts(inv.id)}>
-                            Resetear
-                          </button>
                         </div>
                       )
                     })() : <span style={{ opacity: 0.4 }}>—</span>}
