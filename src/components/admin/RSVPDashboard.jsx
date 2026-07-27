@@ -73,6 +73,7 @@ export default function RSVPDashboard() {
               <th>Nombre</th>
               <th>Asistencia</th>
               <th>Invitados</th>
+              <th>Acompañante</th>
               <th>Mensaje</th>
               <th>Restricción dieta</th>
               <th>Enviado</th>
@@ -88,6 +89,7 @@ export default function RSVPDashboard() {
                     : <span className="tag tag-neutral">No</span>}
                 </td>
                 <td>{r.attending ? r.num_guests : '—'}</td>
+                <td style={{ opacity: 0.75 }}>{r.companion_name || '—'}</td>
                 <td style={{ maxWidth: 200, opacity: 0.75 }}>{r.message || '—'}</td>
                 <td style={{ opacity: 0.75 }}>{r.dietary_restriction || '—'}</td>
                 <td style={{ opacity: 0.55, fontSize: '0.8rem', whiteSpace: 'nowrap' }}>

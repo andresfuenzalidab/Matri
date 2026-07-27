@@ -25,6 +25,7 @@ function getToken() {
 function MainApp({ token, guest, rsvp, giftReservations }) {
   const [adminOpen, setAdminOpen] = useState(false)
   const [welcomed, setWelcomed] = useState(() => sessionStorage.getItem('welcomed') === '1')
+  const [pageReady, setPageReady] = useState(() => sessionStorage.getItem('welcomed') !== '1')
   const musicPlayerRef = useRef(null)
 
   useScrollReveal(welcomed)
@@ -35,16 +36,24 @@ function MainApp({ token, guest, rsvp, giftReservations }) {
     musicPlayerRef.current?.tryPlay()
   }
 
+  const showContent = welcomed && pageReady
+
   return (
     <AppProvider token={token} guest={guest} rsvp={rsvp} giftReservations={giftReservations}>
       {!welcomed && (
         <WelcomeModal guest={guest} onEnter={handleWelcomed} />
       )}
 
-      <div style={{ opacity: welcomed ? 1 : 0, transition: 'opacity 0.5s ease', pointerEvents: welcomed ? 'auto' : 'none' }}>
+      {welcomed && !pageReady && (
+        <div style={{ position: 'fixed', inset: 0, background: 'var(--color-bg, #faf8f5)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 36, height: 36, border: '3px solid rgba(0,0,0,0.1)', borderTopColor: 'var(--color-accent)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+        </div>
+      )}
+
+      <div style={{ opacity: showContent ? 1 : 0, transition: 'opacity 0.5s ease', pointerEvents: showContent ? 'auto' : 'none' }}>
         <Nav />
         <main>
-          <Home welcomed={welcomed} />
+          <Home welcomed={welcomed} onReady={() => setPageReady(true)} />
           <CountdownSection />
           <WeddingInfo />
           <OurStory />

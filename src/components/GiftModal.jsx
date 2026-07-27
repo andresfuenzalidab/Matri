@@ -90,6 +90,10 @@ export default function GiftModal({ cartItems, onClose, onReserved }) {
 
           <div className="bank-details">
             <div className="bank-row">
+              <span className="bank-label">Nombre</span>
+              <span className="bank-value">{get('bank_holder', '—')}</span>
+            </div>
+            <div className="bank-row">
               <span className="bank-label">Banco</span>
               <span className="bank-value">{get('bank_name', '—')}</span>
             </div>

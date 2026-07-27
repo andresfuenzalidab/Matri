@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import { useApp } from '../../context/AppContext'
 import PhotoPlaceholder from '../PhotoPlaceholder'
 
-export default function Home({ welcomed }) {
+export default function Home({ welcomed, onReady }) {
   const { get, loadContent } = useApp()
   const videoRef = useRef(null)
 
@@ -20,13 +20,14 @@ export default function Home({ welcomed }) {
 
   return (
     <section id="inicio" className="hero">
-      {heroVideo ? (
+      {welcomed && heroVideo ? (
         <div className="hero-video-wrap">
           <video
             ref={videoRef}
             muted loop playsInline
             className="hero-video"
             src={heroVideo}
+            onCanPlay={onReady || undefined}
           />
           <div className="hero-video-overlay" />
         </div>
