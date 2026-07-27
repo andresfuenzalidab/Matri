@@ -45,7 +45,7 @@ function MainApp({ token, guest, rsvp, giftReservations }) {
       <div style={{ opacity: welcomed ? 1 : 0, transition: 'opacity 0.5s ease', pointerEvents: welcomed ? 'auto' : 'none' }}>
         <Nav />
         <main>
-          <Home />
+          <Home welcomed={welcomed} />
           <CountdownSection />
           <WeddingInfo />
           <OurStory />

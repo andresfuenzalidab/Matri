@@ -1,11 +1,19 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useApp } from '../../context/AppContext'
 import PhotoPlaceholder from '../PhotoPlaceholder'
 
-export default function Home() {
+export default function Home({ welcomed }) {
   const { get, loadContent } = useApp()
+  const videoRef = useRef(null)
 
   useEffect(() => { loadContent() }, [loadContent])
+
+  useEffect(() => {
+    if (welcomed && videoRef.current) {
+      videoRef.current.currentTime = 0
+      videoRef.current.play().catch(() => {})
+    }
+  }, [welcomed])
 
   const heroImage = get('hero_image')
   const heroVideo = get('hero_video') || '/hero.mp4'
@@ -15,7 +23,8 @@ export default function Home() {
       {heroVideo ? (
         <div className="hero-video-wrap">
           <video
-            autoPlay muted loop playsInline
+            ref={videoRef}
+            muted loop playsInline
             className="hero-video"
             src={heroVideo}
           />
