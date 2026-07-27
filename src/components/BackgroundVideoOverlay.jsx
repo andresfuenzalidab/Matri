@@ -29,15 +29,17 @@ export default function BackgroundVideoOverlay() {
 
   return (
     <>
-      <video
-        ref={videoRef}
-        src={videoUrl}
-        muted
-        playsInline
-        onEnded={handleEnded}
-        className="pet-video-overlay"
-        style={{ opacity: visible ? 1 : 0 }}
-      />
+      {/* Wrapper owns z-index. Video owns blend mode. Keeping them separate fixes the stacking bug. */}
+      <div className="pet-video-wrapper" style={{ opacity: visible ? 1 : 0 }}>
+        <video
+          ref={videoRef}
+          src={videoUrl}
+          muted
+          playsInline
+          onEnded={handleEnded}
+          className="pet-video-overlay"
+        />
+      </div>
       <button
         onClick={play}
         title="Probar video mascotas"
