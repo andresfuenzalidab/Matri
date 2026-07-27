@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useApp } from '../../context/AppContext'
 import { normalizeImageUrl } from '../../utils/imageUrl.js'
+import { downloadCSV } from '../../utils/exportCsv.js'
 
 function formatCLP(n) {
   if (n == null) return '—'
@@ -248,8 +249,25 @@ export default function GiftsDashboard() {
         </div>
       </div>
 
-      {/* New trip form */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem', gap: '0.75rem' }}>
+        <button
+          className="btn btn-ghost"
+          onClick={() => downloadCSV('regalos.csv',
+            trips.flatMap(trip =>
+              trip.gifts.map(gift => [
+                trip.name,
+                gift.name,
+                gift.price ?? '',
+                gift.reservation_count > 0 ? 'Sí' : 'No',
+                gift.total_quantity || 0,
+              ])
+            ),
+            ['Destino', 'Regalo', 'Precio', 'Reservado', 'Cantidad total reservada']
+          )}
+        >
+          Exportar CSV
+        </button>
+        {/* New trip form */}
         <button className="btn btn-primary" onClick={() => { setShowNewTrip(s => !s); setNewTrip(EMPTY_TRIP) }}>
           {showNewTrip ? 'Cancelar' : '+ Nuevo destino'}
         </button>

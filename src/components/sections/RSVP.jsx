@@ -9,6 +9,7 @@ export default function RSVP({ initialRsvp }) {
   const [rsvp, setRsvp] = useState(initialRsvp)
   const [attending, setAttending] = useState('1')
   const [companionAttending, setCompanionAttending] = useState(true)
+  const [companionName, setCompanionName] = useState('')
   const [numGuests, setNumGuests] = useState(1)
   const [dietaryRestriction, setDietaryRestriction] = useState('')
   const [message, setMessage] = useState('')
@@ -44,6 +45,7 @@ export default function RSVP({ initialRsvp }) {
           numGuests: getNumGuests(),
           message,
           dietaryRestriction: dietaryRestriction.trim(),
+          companionName: companionName.trim(),
         }),
       })
       if (res.ok) {
@@ -142,6 +144,21 @@ export default function RSVP({ initialRsvp }) {
           </div>
         )}
 
+        {/* Companion name (only when attending, isCouple, and companion is attending) */}
+        {attending === '1' && isCouple && companionAttending && (
+          <div className="form-field">
+            <label className="form-label" htmlFor="companion-name">Nombre de tu acompañante</label>
+            <input
+              id="companion-name"
+              className="input"
+              type="text"
+              value={companionName}
+              onChange={e => setCompanionName(e.target.value)}
+              placeholder="Nombre completo..."
+            />
+          </div>
+        )}
+
         {/* Number input (only when attending and maxAdditional > 1 or null) */}
         {attending === '1' && !isSolo && !isCouple && (
           <div className="form-field">
@@ -161,8 +178,8 @@ export default function RSVP({ initialRsvp }) {
           </div>
         )}
 
-        {/* Dietary restriction (optional, only when question is configured) */}
-        {dietaryQuestion && attending === '1' && (
+        {/* Dietary restriction (optional, only when question is configured and not party-only) */}
+        {dietaryQuestion && attending === '1' && !isPartyOnly && (
           <div className="form-field">
             <label className="form-label" htmlFor="dietary">{dietaryQuestion}</label>
             <input

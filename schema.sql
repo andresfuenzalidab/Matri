@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS invitations (
   phone TEXT,
   nickname TEXT,
   is_admin INTEGER DEFAULT 0,
+  invitation_sent INTEGER DEFAULT 0,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -32,6 +33,7 @@ CREATE TABLE IF NOT EXISTS rsvp_responses (
   num_guests INTEGER DEFAULT 1,
   message TEXT,
   dietary_restriction TEXT,
+  companion_name TEXT,
   submitted_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 

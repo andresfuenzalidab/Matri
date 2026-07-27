@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useApp } from '../../context/AppContext'
+import { downloadCSV } from '../../utils/exportCsv.js'
 
 export default function RSVPDashboard() {
   const { token } = useApp()
@@ -45,6 +46,26 @@ export default function RSVPDashboard() {
         </div>
       </div>
 
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.75rem' }}>
+        <button
+          className="btn btn-ghost"
+          onClick={() => downloadCSV('rsvp.csv',
+            responses.map(r => [
+              r.guest_name,
+              r.attending ? 'Sí' : 'No',
+              r.attending ? r.num_guests : '',
+              r.companion_name || '',
+              r.dietary_restriction || '',
+              r.message || '',
+              r.submitted_at ? new Date(r.submitted_at).toLocaleDateString('es-CL') : '',
+            ]),
+            ['Nombre', 'Asistencia', 'N° invitados', 'Acompañante', 'Restricción alimenticia', 'Mensaje', 'Enviado']
+          )}
+        >
+          Exportar CSV
+        </button>
+      </div>
+
       <div className="admin-table-wrap">
         <table className="admin-table">
           <thead>
@@ -53,6 +74,7 @@ export default function RSVPDashboard() {
               <th>Asistencia</th>
               <th>Invitados</th>
               <th>Mensaje</th>
+              <th>Restricción dieta</th>
               <th>Enviado</th>
             </tr>
           </thead>
@@ -67,6 +89,7 @@ export default function RSVPDashboard() {
                 </td>
                 <td>{r.attending ? r.num_guests : '—'}</td>
                 <td style={{ maxWidth: 200, opacity: 0.75 }}>{r.message || '—'}</td>
+                <td style={{ opacity: 0.75 }}>{r.dietary_restriction || '—'}</td>
                 <td style={{ opacity: 0.55, fontSize: '0.8rem', whiteSpace: 'nowrap' }}>
                   {r.submitted_at ? new Date(r.submitted_at).toLocaleDateString('es-CL') : '—'}
                 </td>

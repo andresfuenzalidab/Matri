@@ -131,16 +131,18 @@ export default function WeddingInfo() {
       </div>
 
       {/* Timeline */}
-      <div className="wedding-detail-block reveal-on-scroll">
-        <h3 className="wedding-detail-title">Programa del día</h3>
-        {timelineImage ? (
-          <img src={normalizeImageUrl(timelineImage)} alt="Programa del día"
-            className="wedding-detail-img"
-            onError={e => e.target.style.display = 'none'} />
-        ) : (
-          <PhotoPlaceholder size="md" label="Imagen del programa / timeline" />
-        )}
-      </div>
+      {!isPartyOnly && (
+        <div className="wedding-detail-block reveal-on-scroll">
+          <h3 className="wedding-detail-title">Programa del día</h3>
+          {timelineImage ? (
+            <img src={normalizeImageUrl(timelineImage)} alt="Programa del día"
+              className="wedding-detail-img"
+              onError={e => e.target.style.display = 'none'} />
+          ) : (
+            <PhotoPlaceholder size="md" label="Imagen del programa / timeline" />
+          )}
+        </div>
+      )}
 
       {/* Venue photos carousel */}
       {venuePhotos.length > 0 && (

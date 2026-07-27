@@ -4,7 +4,6 @@ export function downloadInvitationPDF(inv, content = {}) {
   const base = (content.site_url || '').trim() || window.location.origin
   const link = `${base}/?token=${inv.token}`
   const guestName = inv.name
-  const personalMessage = inv.welcome_message || ''
   const isPartyOnly = (inv.invitation_type || 'all_in') === 'party_only'
 
   const coupleNames = content.hero_title || 'Andrés & Catalina'
@@ -17,7 +16,7 @@ export function downloadInvitationPDF(inv, content = {}) {
 
   const timingLine = isPartyOnly
     ? `Citación a fiesta: ${receptionTime} hrs`
-    : `Citación a ceremonia: ${ceremonyTime} hrs &nbsp;·&nbsp; Recepción: ${receptionTime} hrs`
+    : `Citación a ceremonia: ${ceremonyTime} hrs`
 
   const html = `<!DOCTYPE html>
 <html lang="es">
@@ -72,11 +71,6 @@ body{font-family:'Lora',Georgia,serif;color:#2d2520}
   font-weight:400;color:#2d2520;margin-bottom:6mm;line-height:1.2
 }
 .intro{font-size:9.5pt;line-height:1.85;color:#4a3f35;max-width:132mm;margin-bottom:5mm}
-.personal{
-  background:rgba(192,144,69,.07);border-left:2.5px solid #c09045;
-  padding:3.5mm 5.5mm;max-width:132mm;width:100%;text-align:left;
-  font-style:italic;font-size:9pt;line-height:1.8;color:#4a3f35;margin-bottom:6mm
-}
 .wedding-box{display:flex;flex-direction:column;align-items:center;gap:2mm;margin-bottom:6mm}
 .wd-date{font-family:'Cormorant Garamond',serif;font-size:18pt;font-weight:600;color:#2d2520;letter-spacing:.04em}
 .wd-times{font-size:9pt;color:#c09045;letter-spacing:.06em}
@@ -133,8 +127,6 @@ body{font-family:'Lora',Georgia,serif;color:#2d2520}
     <div class="guest-name">${guestName}</div>
 
     <p class="intro">Con todo nuestro amor, tenemos el placer de invitarte a celebrar con nosotros el día más especial de nuestras vidas. Tu presencia hará de este momento algo aún más mágico.</p>
-
-    ${personalMessage ? `<div class="personal">${personalMessage.replace(/\n/g, '<br>')}</div>` : ''}
 
     <div class="wedding-box">
       <div class="wd-date">${weddingDate}</div>

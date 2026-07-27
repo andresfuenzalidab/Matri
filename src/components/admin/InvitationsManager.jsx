@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useApp } from '../../context/AppContext'
 import { downloadInvitationPDF } from '../../utils/invitationPdf.js'
+import { downloadCSV } from '../../utils/exportCsv.js'
 
 export default function InvitationsManager() {
   const { token, content } = useApp()
@@ -105,6 +106,25 @@ export default function InvitationsManager() {
     })
   }
 
+  function openWhatsApp(phone) {
+    const digits = phone.replace(/\D/g, '')
+    window.open(`https://wa.me/${digits}`, '_blank', 'noopener')
+  }
+
+  async function toggleSent(inv) {
+    const newVal = !inv.invitation_sent
+    setInvitations(prev => prev.map(i => i.id === inv.id ? { ...i, invitation_sent: newVal } : i))
+    try {
+      await fetch('/api/admin/invitations-sent', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'X-Invite-Token': token },
+        body: JSON.stringify({ id: inv.id, invitation_sent: newVal }),
+      })
+    } catch {
+      setInvitations(prev => prev.map(i => i.id === inv.id ? { ...i, invitation_sent: !newVal } : i))
+    }
+  }
+
   function startEdit(inv) {
     setEditId(inv.id)
     setEditWelcomeMsg(inv.welcome_message || '')
@@ -199,7 +219,32 @@ export default function InvitationsManager() {
         </div>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginBottom: '1rem' }}>
+        <button
+          className="btn btn-ghost"
+          onClick={() => downloadCSV('invitaciones.csv',
+            invitations.map(inv => {
+              const rsvp = inv.attending === null || inv.attending === undefined ? '' : inv.attending ? 'Sí' : 'No'
+              const giftNames = inv.gifts?.map(g => g.quantity > 1 ? `${g.name} ×${g.quantity}` : g.name).join(' | ') || ''
+              const giftTotal = inv.gifts?.reduce((s, g) => s + (g.price || 0) * (g.quantity || 1), 0) || 0
+              return [
+                inv.name,
+                inv.nickname || '',
+                inv.email || '',
+                inv.phone || '',
+                inv.invitation_type === 'party_only' ? 'Solo fiesta' : 'Completa',
+                rsvp,
+                inv.attending ? inv.num_guests : '',
+                giftNames,
+                giftTotal > 0 ? giftTotal : '',
+                inv.token,
+              ]
+            }),
+            ['Nombre', 'Apodo', 'Email', 'Teléfono', 'Tipo', 'RSVP', 'N° personas', 'Regalos', 'Total regalos (CLP)', 'Token']
+          )}
+        >
+          Exportar CSV
+        </button>
         <button className="btn btn-primary" onClick={() => setShowCreate(s => !s)}>
           {showCreate ? 'Cancelar' : '+ Nueva invitación'}
         </button>
@@ -275,6 +320,7 @@ export default function InvitationsManager() {
                 <th>Regalos</th>
                 <th>Personalización</th>
                 <th>Enlace</th>
+                <th>Enviado</th>
                 <th></th>
               </tr>
             </thead>
@@ -391,7 +437,22 @@ export default function InvitationsManager() {
                         onClick={() => downloadInvitationPDF(inv, content)} title="Descargar PDF">
                         PDF
                       </button>
+                      {inv.phone && (
+                        <button className="btn btn-ghost" style={{ fontSize: '0.75rem', padding: '2px 6px', color: '#25D366' }}
+                          onClick={() => openWhatsApp(inv.phone)} title="Abrir WhatsApp">
+                          WA
+                        </button>
+                      )}
                     </div>
+                  </td>
+                  <td style={{ textAlign: 'center' }}>
+                    <input
+                      type="checkbox"
+                      checked={Boolean(inv.invitation_sent)}
+                      onChange={() => toggleSent(inv)}
+                      title={inv.invitation_sent ? 'Enviado' : 'Marcar como enviado'}
+                      style={{ width: 16, height: 16, accentColor: 'var(--color-accent)', cursor: 'pointer' }}
+                    />
                   </td>
                   <td>
                     <button className="btn btn-ghost" style={{ color: '#c0392b', fontSize: '0.75rem' }}

@@ -93,10 +93,10 @@ export default function Gifts({ initialReservations }) {
   const thanksMsg = get('gifts_thanks_message', '¡Gracias!')
   const displayName = guest?.nickname || guest?.name
 
-  if (myGifts.length > 0) {
-    return (
-      <section id="regalos" className="section-compact">
-        <div className="card gifts-already-reserved" style={{ textAlign: 'center', maxWidth: 480, margin: '0 auto' }}>
+  return (
+    <section id="regalos" className="section">
+      {myGifts.length > 0 && (
+        <div className="card gifts-already-reserved" style={{ textAlign: 'center', maxWidth: 480, margin: '0 auto 2rem' }}>
           <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'clamp(1.8rem, 5vw, 2.5rem)', color: 'var(--color-accent)', marginBottom: '0.5rem' }}>♡</div>
           <h2 style={{ fontFamily: 'var(--font-heading)', marginBottom: '1rem' }}>
             {thanksMsg.replace('{nombre}', displayName)}
@@ -112,12 +112,8 @@ export default function Gifts({ initialReservations }) {
             Tu(s) regalo(s) ha(n) quedado reservado(s). ¡Nos hace muy felices!
           </p>
         </div>
-      </section>
-    )
-  }
+      )}
 
-  return (
-    <section id="regalos" className="section">
       <div className="gifts-hero reveal-on-scroll">
         <p className="gifts-hero-label">{get('gifts_section_label', 'Luna de Miel')}</p>
         <h2 className="gifts-hero-title">{get('gifts_section_title', 'Regala un pedacito de nuestro viaje')}</h2>

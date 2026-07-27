@@ -7,7 +7,7 @@ export async function onRequestGet({ request, env }) {
     const [rows, giftRows] = await Promise.all([
       env.DB.prepare(`
         SELECT
-          i.id, i.token, i.name, i.email, i.phone, i.nickname, i.is_admin, i.created_at,
+          i.id, i.token, i.name, i.email, i.phone, i.nickname, i.is_admin, i.invitation_sent, i.created_at,
           i.welcome_message, i.max_additional_guests, i.invitation_type, i.notes,
           r.attending, r.num_guests
         FROM invitations i
