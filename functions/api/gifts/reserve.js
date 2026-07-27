@@ -20,14 +20,6 @@ export async function onRequestPost({ request, env }) {
 
       if (!giftRow) return err(`El regalo "${item.id}" no está disponible.`, 404)
 
-      const alreadyTaken = await env.DB.prepare(
-        'SELECT invitation_id FROM gift_reservations WHERE gift_id = ?'
-      ).bind(item.id).first()
-
-      if (alreadyTaken && alreadyTaken.invitation_id !== inv.id) {
-        return err('Uno de los regalos ya fue reservado por otra persona.', 409)
-      }
-
       const alreadyByMe = await env.DB.prepare(
         'SELECT id FROM gift_reservations WHERE gift_id = ? AND invitation_id = ?'
       ).bind(item.id, inv.id).first()
