@@ -34,6 +34,32 @@ export default function Gifts() {
   })
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const status = params.get('status') || params.get('collection_status')
+    const paymentId = params.get('payment_id') || params.get('collection_id')
+
+    if (paymentId) {
+      window.history.replaceState({}, '', window.location.pathname)
+      if (status === 'approved') {
+        try {
+          const raw = localStorage.getItem('pendingMPCart')
+          if (raw) {
+            localStorage.removeItem('pendingMPCart')
+            const items = JSON.parse(raw)
+            const reserved = items.map(({ gift, quantity }) => ({ ...gift, quantity }))
+            localStorage.setItem('purchasedGifts', JSON.stringify(reserved))
+            setPurchasedGifts(reserved)
+            setPurchased(true)
+          }
+        } catch {}
+      } else {
+        localStorage.removeItem('pendingMPCart')
+      }
+      setTimeout(() => document.getElementById('regalos')?.scrollIntoView({ behavior: 'smooth' }), 300)
+    }
+  }, [])
+
+  useEffect(() => {
     fetch('/api/gifts', { headers: { 'X-Invite-Token': token } })
       .then(r => r.json())
       .then(data => { setTrips(data); setLoading(false) })

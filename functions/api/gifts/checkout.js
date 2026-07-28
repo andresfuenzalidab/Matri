@@ -36,9 +36,16 @@ export async function onRequestPost({ request, env }) {
 
     if (total <= 0) return err('El monto total debe ser mayor a cero.')
 
-    const siteUrl = (await env.DB.prepare("SELECT value FROM site_content WHERE key = 'site_url'").first())?.value || ''
-    const description = (await env.DB.prepare("SELECT value FROM site_content WHERE key = 'mp_description'").first())?.value || 'Regalo Matrimonio'
-    const backUrl = siteUrl ? `${siteUrl}/#regalos` : '/#regalos'
+    const siteUrl = ((await env.DB.prepare("SELECT value FROM site_content WHERE key = 'site_url'").first())?.value || '').replace(/\/$/, '')
+    const prefix = (await env.DB.prepare("SELECT value FROM site_content WHERE key = 'mp_description'").first())?.value || 'Matrimonio Cata y Andrés'
+    const backUrl = siteUrl || '/'
+
+    const mpItems = items.map(({ giftRow, qty }) => ({
+      title: `${prefix} — ${giftRow.name}`,
+      quantity: qty,
+      unit_price: Math.round(Number(giftRow.price || 0)),
+      currency_id: 'CLP',
+    }))
 
     const mpRes = await fetch('https://api.mercadopago.com/checkout/preferences', {
       method: 'POST',
@@ -47,7 +54,7 @@ export async function onRequestPost({ request, env }) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        items: [{ title: description, quantity: 1, unit_price: Math.round(Number(total)), currency_id: 'CLP' }],
+        items: mpItems,
         back_urls: { success: backUrl, failure: backUrl, pending: backUrl },
         auto_return: 'approved',
       }),
