@@ -45,8 +45,13 @@ const SharedHeroVideo = forwardRef(function SharedHeroVideo({ onCanPlay }, ref) 
 function MainApp({ token, guest, rsvp }) {
   const [adminOpen, setAdminOpen] = useState(false)
   const [welcomed, setWelcomed] = useState(() => {
-    const already = sessionStorage.getItem('welcomed') === '1'
-    if (already) document.documentElement.classList.add('skip-reveal')
+    const params = new URLSearchParams(window.location.search)
+    const isMpReturn = params.has('payment_id') || params.has('collection_id')
+    const already = sessionStorage.getItem('welcomed') === '1' || isMpReturn
+    if (already) {
+      document.documentElement.classList.add('skip-reveal')
+      sessionStorage.setItem('welcomed', '1')
+    }
     return already
   })
   const [videoReady, setVideoReady] = useState(false)

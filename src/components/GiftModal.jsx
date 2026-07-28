@@ -20,9 +20,27 @@ function CopyAllButton({ values }) {
   }
 
   return (
-    <button className="btn btn-ghost" onClick={copyAll}
-      style={{ fontSize: '0.8rem', padding: '0.25rem 0.75rem', marginTop: '0.5rem' }}>
-      {copied ? '✓ Copiado' : 'Copiar todos los datos'}
+    <button onClick={copyAll} style={{
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+      gap: '0.4rem', width: '100%', marginTop: '1rem', padding: '0.9rem',
+      background: copied ? 'var(--color-accent)' : 'transparent',
+      border: `1.5px solid ${copied ? 'var(--color-accent)' : 'var(--color-divider)'}`,
+      borderRadius: 8, cursor: 'pointer', transition: 'all 0.2s',
+      color: copied ? '#fff' : 'var(--color-text)',
+    }}>
+      {copied ? (
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+      ) : (
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <rect x="9" y="9" width="13" height="13" rx="2" />
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+        </svg>
+      )}
+      <span style={{ fontSize: '0.85rem', fontWeight: 500 }}>
+        {copied ? '¡Copiado!' : 'Copiar datos de transferencia'}
+      </span>
     </button>
   )
 }
@@ -213,7 +231,7 @@ export default function GiftModal({ cartItems, onClose, onReserved }) {
                 <div className="bank-row"><span className="bank-label">RUT</span><span className="bank-value">{get('bank_rut', '—')}<CopyButton value={get('bank_rut', '')} /></span></div>
                 <div className="bank-row"><span className="bank-label">Email</span><span className="bank-value">{get('bank_email', '—')}<CopyButton value={get('bank_email', '')} /></span></div>
                 <div className="bank-row"><span className="bank-label">Monto</span><span className="bank-value">{formatCLP(total)}<CopyButton value={total} /></span></div>
-                <div className="bank-row"><span className="bank-label">Comentario</span><span className="bank-value">{defaultBankMsg}<CopyButton value={defaultBankMsg} /></span></div>
+                <div className="bank-row"><span className="bank-label">Comentario</span><span className="bank-value">{defaultBankMsg}</span></div>
               </div>
               <div className="form-field">
                 <label className="form-label">Mensaje de felicitaciones (opcional)</label>
