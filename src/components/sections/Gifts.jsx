@@ -65,6 +65,12 @@ export default function Gifts() {
   }, [giftKey, pendingKey])
 
   useEffect(() => {
+    if (purchased) {
+      setTimeout(() => document.getElementById('regalos')?.scrollIntoView({ behavior: 'smooth' }), 400)
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
     fetch('/api/gifts', { headers: { 'X-Invite-Token': token } })
       .then(r => r.json())
       .then(data => { setTrips(data); setLoading(false) })

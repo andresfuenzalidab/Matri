@@ -5,6 +5,28 @@ function formatCLP(n) {
   return `$${Number(n).toLocaleString('es-CL')} CLP`
 }
 
+function CopyAllButton({ values }) {
+  const [copied, setCopied] = useState(false)
+
+  function copyAll() {
+    const text = Object.entries(values)
+      .filter(([, v]) => v)
+      .map(([k, v]) => `${k}: ${v}`)
+      .join('\n')
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }).catch(() => {})
+  }
+
+  return (
+    <button className="btn btn-ghost" onClick={copyAll}
+      style={{ fontSize: '0.8rem', padding: '0.25rem 0.75rem', marginTop: '0.5rem' }}>
+      {copied ? '✓ Copiado' : 'Copiar todos los datos'}
+    </button>
+  )
+}
+
 function CopyButton({ value }) {
   const [copied, setCopied] = useState(false)
 
@@ -175,6 +197,15 @@ export default function GiftModal({ cartItems, onClose, onReserved }) {
               <p style={{ fontSize: '0.875rem', opacity: 0.8, margin: '1rem 0 0' }}>
                 Realiza una transferencia con los datos a continuación y confirma tu pago.
               </p>
+              <CopyAllButton values={{
+                Nombre: get('bank_holder', ''),
+                Banco: get('bank_name', ''),
+                Cuenta: get('bank_account', ''),
+                RUT: get('bank_rut', ''),
+                Email: get('bank_email', ''),
+                Monto: total,
+                Comentario: defaultBankMsg,
+              }} />
               <div className="bank-details">
                 <div className="bank-row"><span className="bank-label">Nombre</span><span className="bank-value">{get('bank_holder', '—')}<CopyButton value={get('bank_holder', '')} /></span></div>
                 <div className="bank-row"><span className="bank-label">Banco</span><span className="bank-value">{get('bank_name', '—')}</span></div>
