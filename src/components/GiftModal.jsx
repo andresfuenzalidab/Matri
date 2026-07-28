@@ -219,6 +219,7 @@ export default function GiftModal({ cartItems, onClose, onReserved }) {
                 Nombre: get('bank_holder', ''),
                 Banco: get('bank_name', ''),
                 Tipo: get('bank_type', ''),
+                Cuenta: get('bank_account', ''),
                 RUT: get('bank_rut', ''),
                 Email: get('bank_email', ''),
               }} />

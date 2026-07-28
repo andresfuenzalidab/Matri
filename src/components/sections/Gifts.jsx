@@ -67,7 +67,7 @@ export default function Gifts() {
   useEffect(() => {
     if (!loading && (purchased || sessionStorage.getItem('scrollToGifts'))) {
       sessionStorage.removeItem('scrollToGifts')
-      setTimeout(() => document.getElementById('regalos')?.scrollIntoView({ behavior: 'smooth' }), 100)
+      setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }), 100)
     }
   }, [loading, purchased])
 
