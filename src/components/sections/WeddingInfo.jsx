@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useApp } from '../../context/AppContext'
 import { normalizeImageUrl } from '../../utils/imageUrl.js'
 import PhotoPlaceholder from '../PhotoPlaceholder'
@@ -57,9 +57,18 @@ function VenueCarousel({ photos }) {
   )
 }
 
-export default function WeddingInfo() {
+export default function WeddingInfo({ shouldPlay }) {
   const { get, token, guest } = useApp()
   const [venuePhotos, setVenuePhotos] = useState([])
+  const descVideoRef = useRef(null)
+  const dressVideoRef = useRef(null)
+
+  useEffect(() => {
+    if (shouldPlay) {
+      descVideoRef.current?.play().catch(() => {})
+      dressVideoRef.current?.play().catch(() => {})
+    }
+  }, [shouldPlay])
 
   useEffect(() => {
     fetch('/api/venue-photos', { headers: { 'X-Invite-Token': token } })
@@ -105,7 +114,8 @@ export default function WeddingInfo() {
         </div>
         {get('venue_address') && <p className="venue-address">{get('venue_address')}</p>}
         <video
-          autoPlay muted loop playsInline
+          ref={descVideoRef}
+          muted loop playsInline
           style={{ width: '100%', borderRadius: 6, marginTop: '0.75rem', display: 'block' }}
           src={get('description_video_url') || '/description_dog.mp4'}
         />
@@ -125,7 +135,8 @@ export default function WeddingInfo() {
       {/* Dress code */}
       <div className="wedding-detail-block reveal-on-scroll" style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
         <video
-          autoPlay muted loop playsInline
+          ref={dressVideoRef}
+          muted loop playsInline
           style={{ flex: '0 0 auto', width: 'min(260px, 100%)', borderRadius: 6, display: 'block' }}
           src={get('dresscode_video_url') || '/dresscode_cat.mp4'}
         />

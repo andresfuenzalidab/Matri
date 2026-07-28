@@ -2,6 +2,7 @@ import * as validate from '../functions/api/validate.js'
 import * as rsvpModule from '../functions/api/rsvp.js'
 import * as giftsModule from '../functions/api/gifts.js'
 import * as giftsReserve from '../functions/api/gifts/reserve.js'
+import * as giftsCheckout from '../functions/api/gifts/checkout.js'
 import * as contentModule from '../functions/api/content.js'
 import * as storyModule from '../functions/api/story.js'
 import * as venuePhotosModule from '../functions/api/venue-photos.js'
@@ -58,6 +59,8 @@ export default {
         response = await dispatch(giftsModule, method, request, env)
       } else if (path === '/api/gifts/reserve') {
         response = await dispatch(giftsReserve, method, request, env)
+      } else if (path === '/api/gifts/checkout') {
+        response = await dispatch(giftsCheckout, method, request, env)
       } else if (path === '/api/content') {
         response = await dispatch(contentModule, method, request, env)
       } else if (path === '/api/admin/invitations') {

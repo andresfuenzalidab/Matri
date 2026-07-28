@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useApp } from '../../context/AppContext'
 
 const WEDDING_MS = new Date('2026-11-06T17:00:00-03:00').getTime()
@@ -18,15 +18,21 @@ function useCountdown(targetMs) {
   }
 }
 
-export default function CountdownSection() {
+export default function CountdownSection({ shouldPlay }) {
   const { get } = useApp()
   const { days, hours, minutes, seconds } = useCountdown(WEDDING_MS)
   const videoUrl = get('background_video_url') || '/timer_cat.mp4'
+  const videoRef = useRef(null)
+
+  useEffect(() => {
+    if (shouldPlay) videoRef.current?.play().catch(() => {})
+  }, [shouldPlay])
 
   return (
     <div className="countdown-section">
       <video
-        autoPlay muted loop playsInline
+        ref={videoRef}
+        muted loop playsInline
         className="countdown-section-video"
         src={videoUrl}
       />

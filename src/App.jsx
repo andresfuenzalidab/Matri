@@ -102,8 +102,8 @@ function MainApp({ token, guest, rsvp }) {
         <Nav />
         <main>
           <Home />
-          <CountdownSection />
-          <WeddingInfo />
+          <CountdownSection shouldPlay={welcomed} />
+          <WeddingInfo shouldPlay={welcomed} />
           <OurStory />
           <RSVP initialRsvp={rsvp} />
           <Gifts />

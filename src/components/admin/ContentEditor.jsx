@@ -74,6 +74,13 @@ const SECTIONS = [
     ],
   },
   {
+    label: 'MercadoPago (pago con tarjeta)',
+    fields: [
+      { key: 'mp_enabled', label: 'Habilitar opción de pago con tarjeta', type: 'toggle' },
+      { key: 'mp_description', label: 'Descripción del pago (aparece en MercadoPago)', type: 'text' },
+    ],
+  },
+  {
     label: 'Datos de transferencia',
     fields: [
       { key: 'bank_holder', label: 'Nombre titular', type: 'text' },
@@ -105,6 +112,47 @@ const SECTIONS = [
     ],
   },
 ]
+
+function ToggleField({ fieldKey, label, value, onSave, token }) {
+  const [val, setVal] = useState(value === 'si')
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+
+  useEffect(() => { setVal(value === 'si') }, [value])
+
+  async function save(newVal) {
+    setSaving(true)
+    const strVal = newVal ? 'si' : 'no'
+    try {
+      await fetch('/api/admin/content', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'X-Invite-Token': token },
+        body: JSON.stringify({ key: fieldKey, value: strVal }),
+      })
+      onSave(fieldKey, strVal)
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+    } finally { setSaving(false) }
+  }
+
+  return (
+    <div className="content-field">
+      <label className="form-label">{label}</label>
+      <div className="content-field-row">
+        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: saving ? 'not-allowed' : 'pointer' }}>
+          <input type="checkbox" checked={val}
+            onChange={e => { setVal(e.target.checked); save(e.target.checked) }}
+            disabled={saving} />
+          <span style={{ fontSize: '0.875rem' }}>{val ? 'Habilitado' : 'Deshabilitado'}</span>
+        </label>
+      </div>
+      {saved && <span className="saved-indicator">✓ Guardado</span>}
+      <span style={{ fontSize: '0.7rem', opacity: 0.5 }}>
+        Requiere el secret <code>mp_access_token</code> configurado en el Worker de Cloudflare.
+      </span>
+    </div>
+  )
+}
 
 function TextField({ fieldKey, label, type, value, onSave, token }) {
   const [val, setVal] = useState(value)
@@ -284,6 +332,12 @@ export default function ContentEditor() {
         <div key={section.label} className="content-section">
           <div className="content-section-title">{section.label}</div>
           {section.fields.map(field => {
+            if (field.type === 'toggle') {
+              return (
+                <ToggleField key={field.key} fieldKey={field.key} label={field.label}
+                  value={content[field.key] || 'no'} onSave={updateContent} token={token} />
+              )
+            }
             if (field.type === 'image') {
               return (
                 <ImageField key={field.key} fieldKey={field.key} label={field.label}
