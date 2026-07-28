@@ -60,15 +60,16 @@ export default function Gifts() {
       } else {
         localStorage.removeItem(pendingKey)
       }
-      setTimeout(() => document.getElementById('regalos')?.scrollIntoView({ behavior: 'smooth' }), 300)
+      sessionStorage.setItem('scrollToGifts', '1')
     }
   }, [giftKey, pendingKey])
 
   useEffect(() => {
-    if (purchased) {
-      setTimeout(() => document.getElementById('regalos')?.scrollIntoView({ behavior: 'smooth' }), 400)
+    if (!loading && (purchased || sessionStorage.getItem('scrollToGifts'))) {
+      sessionStorage.removeItem('scrollToGifts')
+      setTimeout(() => document.getElementById('regalos')?.scrollIntoView({ behavior: 'smooth' }), 100)
     }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [loading, purchased])
 
   useEffect(() => {
     fetch('/api/gifts', { headers: { 'X-Invite-Token': token } })

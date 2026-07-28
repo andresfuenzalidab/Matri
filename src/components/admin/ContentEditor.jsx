@@ -86,6 +86,7 @@ const SECTIONS = [
     fields: [
       { key: 'bank_holder', label: 'Nombre titular', type: 'text' },
       { key: 'bank_name', label: 'Banco', type: 'text' },
+      { key: 'bank_type', label: 'Tipo de cuenta (ej. Cuenta Vista)', type: 'text' },
       { key: 'bank_account', label: 'N° cuenta', type: 'text' },
       { key: 'bank_rut', label: 'RUT', type: 'text' },
       { key: 'bank_email', label: 'Email', type: 'text' },

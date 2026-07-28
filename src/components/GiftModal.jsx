@@ -218,15 +218,14 @@ export default function GiftModal({ cartItems, onClose, onReserved }) {
               <CopyAllButton values={{
                 Nombre: get('bank_holder', ''),
                 Banco: get('bank_name', ''),
-                Cuenta: get('bank_account', ''),
+                Tipo: get('bank_type', ''),
                 RUT: get('bank_rut', ''),
                 Email: get('bank_email', ''),
-                Monto: total,
-                Comentario: defaultBankMsg,
               }} />
               <div className="bank-details">
                 <div className="bank-row"><span className="bank-label">Nombre</span><span className="bank-value">{get('bank_holder', '—')}<CopyButton value={get('bank_holder', '')} /></span></div>
-                <div className="bank-row"><span className="bank-label">Banco</span><span className="bank-value">{get('bank_name', '—')}</span></div>
+                <div className="bank-row"><span className="bank-label">Banco</span><span className="bank-value">{get('bank_name', '—')}<CopyButton value={get('bank_name', '')} /></span></div>
+                {get('bank_type') && <div className="bank-row"><span className="bank-label">Tipo</span><span className="bank-value">{get('bank_type')}<CopyButton value={get('bank_type')} /></span></div>}
                 <div className="bank-row"><span className="bank-label">Cuenta</span><span className="bank-value">{get('bank_account', '—')}<CopyButton value={get('bank_account', '')} /></span></div>
                 <div className="bank-row"><span className="bank-label">RUT</span><span className="bank-value">{get('bank_rut', '—')}<CopyButton value={get('bank_rut', '')} /></span></div>
                 <div className="bank-row"><span className="bank-label">Email</span><span className="bank-value">{get('bank_email', '—')}<CopyButton value={get('bank_email', '')} /></span></div>
