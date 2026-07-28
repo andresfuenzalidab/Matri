@@ -10,7 +10,12 @@ export async function onRequestPost({ request, env }) {
     }
 
     const accessToken = env.mp_access_token
-    if (!accessToken) return err('Pago con tarjeta no disponible.', 503)
+    if (!accessToken) {
+      const msg = inv.is_admin
+        ? '[Admin] mp_access_token no está configurado en el Worker de Cloudflare.'
+        : 'Pago con tarjeta no disponible.'
+      return err(msg, 503)
+    }
 
     const { gifts, guestName, congratulationsMessage = '' } = body
 
@@ -50,7 +55,10 @@ export async function onRequestPost({ request, env }) {
     if (!mpRes.ok) {
       const mpErr = await mpRes.text()
       console.error('MercadoPago error:', mpErr)
-      return err('Error al crear el pago. Intenta con transferencia.', 502)
+      const msg = inv.is_admin
+        ? `[Admin] MercadoPago HTTP ${mpRes.status}: ${mpErr}`
+        : 'Error al crear el pago. Intenta con transferencia.'
+      return err(msg, 502)
     }
 
     const { init_point } = await mpRes.json()
