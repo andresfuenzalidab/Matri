@@ -6,6 +6,7 @@ export async function onRequestGet({ request, env }) {
     const rows = await env.DB.prepare('SELECT key, value FROM site_content').all()
     const content = {}
     for (const row of rows.results) {
+      if (row.key === 'mp_access_token') continue
       content[row.key] = row.value
     }
     return json(content)

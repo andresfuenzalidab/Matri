@@ -10,9 +10,10 @@ export async function onRequestPost({ request, env }) {
     }
 
     const accessToken = env.mp_access_token
+      || (await env.DB.prepare("SELECT value FROM site_content WHERE key = 'mp_access_token'").first())?.value
     if (!accessToken) {
       const msg = inv.is_admin
-        ? '[Admin] mp_access_token no está configurado en el Worker de Cloudflare.'
+        ? '[Admin] mp_access_token no configurado: agrégalo en Admin → MercadoPago o como secret en Cloudflare.'
         : 'Pago con tarjeta no disponible.'
       return err(msg, 503)
     }

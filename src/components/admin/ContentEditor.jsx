@@ -77,6 +77,7 @@ const SECTIONS = [
     label: 'MercadoPago (pago con tarjeta)',
     fields: [
       { key: 'mp_enabled', label: 'Habilitar opción de pago con tarjeta', type: 'toggle' },
+      { key: 'mp_access_token', label: 'Access Token de MercadoPago', type: 'secret' },
       { key: 'mp_description', label: 'Descripción del pago (aparece en MercadoPago)', type: 'text' },
     ],
   },
@@ -112,6 +113,45 @@ const SECTIONS = [
     ],
   },
 ]
+
+function SecretField({ fieldKey, label, token }) {
+  const [val, setVal] = useState('')
+  const [saved, setSaved] = useState(false)
+  const [saving, setSaving] = useState(false)
+
+  async function save() {
+    if (!val.trim()) return
+    setSaving(true)
+    try {
+      await fetch('/api/admin/content', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'X-Invite-Token': token },
+        body: JSON.stringify({ key: fieldKey, value: val.trim() }),
+      })
+      setVal('')
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2500)
+    } finally { setSaving(false) }
+  }
+
+  return (
+    <div className="content-field">
+      <label className="form-label">{label}</label>
+      <div className="content-field-row">
+        <input className="input" type="password" placeholder="Pega el token aquí para actualizarlo"
+          value={val} onChange={e => setVal(e.target.value)} />
+        <button className="btn btn-secondary save-btn-inline" onClick={save}
+          disabled={saving || !val.trim()}>
+          {saving ? '...' : 'Guardar'}
+        </button>
+      </div>
+      {saved && <span className="saved-indicator">✓ Guardado</span>}
+      <span style={{ fontSize: '0.7rem', opacity: 0.5 }}>
+        El token no se muestra una vez guardado. Déjalo vacío para no modificarlo.
+      </span>
+    </div>
+  )
+}
 
 function ToggleField({ fieldKey, label, value, onSave, token }) {
   const [val, setVal] = useState(value === 'si')
@@ -332,6 +372,11 @@ export default function ContentEditor() {
         <div key={section.label} className="content-section">
           <div className="content-section-title">{section.label}</div>
           {section.fields.map(field => {
+            if (field.type === 'secret') {
+              return (
+                <SecretField key={field.key} fieldKey={field.key} label={field.label} token={token} />
+              )
+            }
             if (field.type === 'toggle') {
               return (
                 <ToggleField key={field.key} fieldKey={field.key} label={field.label}
