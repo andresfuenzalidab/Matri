@@ -21,16 +21,21 @@ function sortGifts(gifts, sortBy) {
 
 export default function Gifts() {
   const { token, get, guest } = useApp()
+  const giftKey = `purchasedGifts_${token}`
+  const pendingKey = `pendingMPCart_${token}`
+
   const [trips, setTrips] = useState([])
   const [loading, setLoading] = useState(true)
   const [cart, setCart] = useState(new Map())
   const [modalOpen, setModalOpen] = useState(false)
   const [sortBy, setSortBy] = useState('none')
   const [purchased, setPurchased] = useState(() => {
-    try { return !!JSON.parse(localStorage.getItem('purchasedGifts') || 'null') } catch { return false }
+    const t = sessionStorage.getItem('inviteToken') || ''
+    try { return !!JSON.parse(localStorage.getItem(`purchasedGifts_${t}`) || 'null') } catch { return false }
   })
   const [purchasedGifts, setPurchasedGifts] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('purchasedGifts') || 'null') || [] } catch { return [] }
+    const t = sessionStorage.getItem('inviteToken') || ''
+    try { return JSON.parse(localStorage.getItem(`purchasedGifts_${t}`) || 'null') || [] } catch { return [] }
   })
 
   useEffect(() => {
@@ -42,22 +47,22 @@ export default function Gifts() {
       window.history.replaceState({}, '', window.location.pathname)
       if (status === 'approved') {
         try {
-          const raw = localStorage.getItem('pendingMPCart')
+          const raw = localStorage.getItem(pendingKey)
           if (raw) {
-            localStorage.removeItem('pendingMPCart')
+            localStorage.removeItem(pendingKey)
             const items = JSON.parse(raw)
             const reserved = items.map(({ gift, quantity }) => ({ ...gift, quantity }))
-            localStorage.setItem('purchasedGifts', JSON.stringify(reserved))
+            localStorage.setItem(giftKey, JSON.stringify(reserved))
             setPurchasedGifts(reserved)
             setPurchased(true)
           }
         } catch {}
       } else {
-        localStorage.removeItem('pendingMPCart')
+        localStorage.removeItem(pendingKey)
       }
       setTimeout(() => document.getElementById('regalos')?.scrollIntoView({ behavior: 'smooth' }), 300)
     }
-  }, [])
+  }, [giftKey, pendingKey])
 
   useEffect(() => {
     fetch('/api/gifts', { headers: { 'X-Invite-Token': token } })
@@ -93,7 +98,7 @@ export default function Gifts() {
 
   function handleReserved(cartItems) {
     const reserved = cartItems.map(({ gift, quantity }) => ({ ...gift, quantity }))
-    try { localStorage.setItem('purchasedGifts', JSON.stringify(reserved)) } catch {}
+    try { localStorage.setItem(giftKey, JSON.stringify(reserved)) } catch {}
     setPurchasedGifts(reserved)
     setCart(new Map())
     setModalOpen(false)

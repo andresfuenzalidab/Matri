@@ -67,7 +67,7 @@ export default function GiftModal({ cartItems, onClose, onReserved }) {
       })
       if (res.ok) {
         const data = await res.json()
-        try { localStorage.setItem('pendingMPCart', JSON.stringify(cartItems)) } catch {}
+        try { localStorage.setItem(`pendingMPCart_${token}`, JSON.stringify(cartItems)) } catch {}
         window.location.href = data.init_point
       } else {
         const d = await res.json().catch(() => ({}))
