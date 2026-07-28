@@ -1,8 +1,34 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useApp } from '../context/AppContext'
 
 function formatCLP(n) {
   return `$${Number(n).toLocaleString('es-CL')} CLP`
+}
+
+function CopyButton({ value }) {
+  const [copied, setCopied] = useState(false)
+
+  const copy = useCallback(() => {
+    navigator.clipboard.writeText(String(value)).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }).catch(() => {})
+  }, [value])
+
+  return (
+    <button
+      onClick={copy}
+      style={{
+        background: 'none', border: 'none', cursor: 'pointer',
+        padding: '0 0 0 0.4rem', color: copied ? 'var(--color-accent)' : 'rgba(0,0,0,0.35)',
+        fontSize: '0.75rem', fontFamily: 'inherit', whiteSpace: 'nowrap',
+        transition: 'color 0.2s',
+      }}
+      title="Copiar"
+    >
+      {copied ? '✓ Copiado' : 'Copiar'}
+    </button>
+  )
 }
 
 export default function GiftModal({ cartItems, onClose, onReserved }) {
@@ -150,13 +176,13 @@ export default function GiftModal({ cartItems, onClose, onReserved }) {
                 Realiza una transferencia con los datos a continuación y confirma tu pago.
               </p>
               <div className="bank-details">
-                <div className="bank-row"><span className="bank-label">Nombre</span><span className="bank-value">{get('bank_holder', '—')}</span></div>
+                <div className="bank-row"><span className="bank-label">Nombre</span><span className="bank-value">{get('bank_holder', '—')}<CopyButton value={get('bank_holder', '')} /></span></div>
                 <div className="bank-row"><span className="bank-label">Banco</span><span className="bank-value">{get('bank_name', '—')}</span></div>
-                <div className="bank-row"><span className="bank-label">Cuenta</span><span className="bank-value">{get('bank_account', '—')}</span></div>
-                <div className="bank-row"><span className="bank-label">RUT</span><span className="bank-value">{get('bank_rut', '—')}</span></div>
-                <div className="bank-row"><span className="bank-label">Email</span><span className="bank-value">{get('bank_email', '—')}</span></div>
-                <div className="bank-row"><span className="bank-label">Monto</span><span className="bank-value">{formatCLP(total)}</span></div>
-                <div className="bank-row"><span className="bank-label">Comentario</span><span className="bank-value">{defaultBankMsg}</span></div>
+                <div className="bank-row"><span className="bank-label">Cuenta</span><span className="bank-value">{get('bank_account', '—')}<CopyButton value={get('bank_account', '')} /></span></div>
+                <div className="bank-row"><span className="bank-label">RUT</span><span className="bank-value">{get('bank_rut', '—')}<CopyButton value={get('bank_rut', '')} /></span></div>
+                <div className="bank-row"><span className="bank-label">Email</span><span className="bank-value">{get('bank_email', '—')}<CopyButton value={get('bank_email', '')} /></span></div>
+                <div className="bank-row"><span className="bank-label">Monto</span><span className="bank-value">{formatCLP(total)}<CopyButton value={total} /></span></div>
+                <div className="bank-row"><span className="bank-label">Comentario</span><span className="bank-value">{defaultBankMsg}<CopyButton value={defaultBankMsg} /></span></div>
               </div>
               <div className="form-field">
                 <label className="form-label">Mensaje de felicitaciones (opcional)</label>
