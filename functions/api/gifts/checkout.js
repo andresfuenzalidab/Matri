@@ -36,8 +36,8 @@ export async function onRequestPost({ request, env }) {
 
     if (total <= 0) return err('El monto total debe ser mayor a cero.')
 
-    const siteUrl = (await env.DB.prepare("SELECT value FROM content WHERE key = 'site_url'").first())?.value || ''
-    const description = (await env.DB.prepare("SELECT value FROM content WHERE key = 'mp_description'").first())?.value || 'Regalo Matrimonio'
+    const siteUrl = (await env.DB.prepare("SELECT value FROM site_content WHERE key = 'site_url'").first())?.value || ''
+    const description = (await env.DB.prepare("SELECT value FROM site_content WHERE key = 'mp_description'").first())?.value || 'Regalo Matrimonio'
     const backUrl = siteUrl ? `${siteUrl}/#regalos` : '/#regalos'
 
     const mpRes = await fetch('https://api.mercadopago.com/checkout/preferences', {
