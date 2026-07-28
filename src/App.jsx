@@ -61,13 +61,14 @@ function MainApp({ token, guest, rsvp }) {
   useScrollReveal(welcomed)
 
   function handleVideoReady() {
-    heroVideoRef.current?.play().catch(() => {})
+    if (welcomed) heroVideoRef.current?.play().catch(() => {})
     setVideoReady(true)
   }
 
   function handleWelcomed() {
     sessionStorage.setItem('welcomed', '1')
     setWelcomed(true)
+    heroVideoRef.current?.play().catch(() => {})
     musicPlayerRef.current?.tryPlay()
   }
 
