@@ -38,7 +38,7 @@ export async function onRequestPost({ request, env }) {
 
     const siteUrl = ((await env.DB.prepare("SELECT value FROM site_content WHERE key = 'site_url'").first())?.value || '').replace(/\/$/, '')
     const prefix = (await env.DB.prepare("SELECT value FROM site_content WHERE key = 'mp_description'").first())?.value || 'Matrimonio Cata y Andrés'
-    const backUrl = siteUrl || '/'
+    const backUrl = `${siteUrl || ''}/?token=${inv.token}`
 
     const mpItems = items.map(({ giftRow, qty }) => ({
       title: `${prefix} — ${giftRow.name}`,
