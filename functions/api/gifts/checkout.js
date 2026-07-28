@@ -47,7 +47,7 @@ export async function onRequestPost({ request, env }) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        items: [{ title: description, quantity: 1, unit_price: total, currency_id: 'CLP' }],
+        items: [{ title: description, quantity: 1, unit_price: Math.round(Number(total)), currency_id: 'CLP' }],
         back_urls: { success: backUrl, failure: backUrl, pending: backUrl },
         auto_return: 'approved',
       }),
@@ -78,6 +78,7 @@ export async function onRequestPost({ request, env }) {
 
     return json({ init_point })
   } catch (e) {
-    return handleAuthError(e) || err('Error interno.', 500)
+    console.error('checkout error:', e)
+    return handleAuthError(e) || err(`Error interno: ${e?.message || e}`, 500)
   }
 }
