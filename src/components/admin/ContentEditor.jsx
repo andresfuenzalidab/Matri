@@ -53,6 +53,7 @@ const SECTIONS = [
       { key: 'venue_address', label: 'Dirección', type: 'text' },
       { key: 'venue_description', label: 'Descripción del lugar', type: 'textarea' },
       { key: 'wedding_day_off_tip', label: 'Recomendación (ej. "Te recomendamos tomarte el día libre")', type: 'text' },
+      { key: 'wedding_end_time', label: 'Hora de término del evento (HH:MM, ej. 03:00 — para el calendario)', type: 'text' },
       { key: 'venue_maps_url', label: 'Link de Google Maps', type: 'text' },
       { key: 'dress_code_image', label: 'Imagen código de vestimenta', type: 'image' },
       { key: 'timeline_image', label: 'Imagen programa del día (timeline)', type: 'image' },

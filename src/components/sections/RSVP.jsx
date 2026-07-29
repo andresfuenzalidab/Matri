@@ -1,13 +1,16 @@
 import { useState } from 'react'
 import { useApp } from '../../context/AppContext'
 
-function AddToCalendar({ venueName, ceremonyTime, isPartyOnly, receptionTime }) {
+function AddToCalendar({ venueName, ceremonyTime, isPartyOnly, receptionTime, eventEndTime }) {
   const startHour = isPartyOnly ? (receptionTime || '19:30') : (ceremonyTime || '17:00')
   const [h, m] = startHour.split(':').map(Number)
   // Chile is UTC-3 on Nov 6, 2026
   const startUtcH = String(h + 3).padStart(2, '0')
   const dtStart = `20261106T${startUtcH}${String(m).padStart(2, '0')}00Z`
-  const dtEnd = `20261107T060000Z` // rough end ~03:00 Chile
+  // End time: configurable from admin as HH:MM on Nov 7 (next day)
+  const [eh, em] = (eventEndTime || '03:00').split(':').map(Number)
+  const endUtcH = String(eh + 3).padStart(2, '0')
+  const dtEnd = `20261107T${endUtcH}${String(em).padStart(2, '0')}00Z`
 
   const title = 'Matrimonio Cata & Andrés'
   const gcUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE` +
@@ -140,6 +143,7 @@ export default function RSVP({ initialRsvp }) {
               ceremonyTime={ceremonyTime}
               receptionTime={receptionTime}
               isPartyOnly={isPartyOnly}
+              eventEndTime={get('wedding_end_time')}
             />
           )}
           {rsvp.attending ? (

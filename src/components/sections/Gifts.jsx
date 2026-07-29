@@ -130,7 +130,7 @@ export default function Gifts() {
         <div className="card" style={{ textAlign: 'center', maxWidth: 480, margin: '0 auto' }}>
           <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'clamp(1.8rem, 5vw, 2.5rem)', color: 'var(--color-accent)', marginBottom: '0.5rem' }}>♡</div>
           <h2 style={{ fontFamily: 'var(--font-heading)', marginBottom: '1rem' }}>
-            {thanksMsg.replace('{nombre}', displayName)}
+            {thanksMsg.replace(/\{nombre\}/gi, displayName)}
           </h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginBottom: '0.75rem' }}>
             {purchasedGifts.map((g, i) => (
