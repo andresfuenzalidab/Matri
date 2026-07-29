@@ -10,7 +10,9 @@ export async function onRequestGet({ request, env }) {
       SELECT
         g.id, g.trip_id, g.name, g.price, g.description, g.image_url, g.order_idx,
         COUNT(gr.id) AS reservation_count,
-        COALESCE(SUM(gr.quantity), 0) AS total_quantity
+        COALESCE(SUM(gr.quantity), 0) AS total_quantity,
+        COUNT(CASE WHEN gr.confirmed_payment = 1 THEN 1 END) AS confirmed_count,
+        COALESCE(SUM(CASE WHEN gr.confirmed_payment = 1 THEN gr.quantity ELSE 0 END), 0) AS confirmed_quantity
       FROM gifts g
       LEFT JOIN gift_reservations gr ON g.id = gr.gift_id
       WHERE g.active = 1
@@ -25,9 +27,9 @@ export async function onRequestGet({ request, env }) {
     }))
 
     const allGifts = gifts.results
-    const reserved = allGifts.filter(g => g.reservation_count > 0).length
+    const reserved = allGifts.filter(g => g.confirmed_count > 0).length
     const totalReceived = allGifts.reduce(
-      (sum, g) => sum + (g.reservation_count > 0 ? (g.price || 0) * g.total_quantity : 0), 0
+      (sum, g) => sum + (g.confirmed_count > 0 ? (g.price || 0) * g.confirmed_quantity : 0), 0
     )
     const summary = { total: allGifts.length, reserved, available: allGifts.length - reserved, totalReceived }
 

@@ -1,6 +1,48 @@
 import { useState } from 'react'
 import { useApp } from '../../context/AppContext'
 
+function AddToCalendar({ venueName, ceremonyTime, isPartyOnly, receptionTime }) {
+  const startHour = isPartyOnly ? (receptionTime || '19:30') : (ceremonyTime || '17:00')
+  const [h, m] = startHour.split(':').map(Number)
+  // Chile is UTC-3 on Nov 6, 2026
+  const startUtcH = String(h + 3).padStart(2, '0')
+  const dtStart = `20261106T${startUtcH}${String(m).padStart(2, '0')}00Z`
+  const dtEnd = `20261107T060000Z` // rough end ~03:00 Chile
+
+  const title = 'Matrimonio Cata & Andrés'
+  const gcUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE` +
+    `&text=${encodeURIComponent(title)}` +
+    `&dates=${dtStart}/${dtEnd}` +
+    `&location=${encodeURIComponent(venueName || 'Altos del Paico')}`
+
+  function downloadIcs() {
+    const ics = [
+      'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Matrimonio//ES',
+      'BEGIN:VEVENT',
+      `DTSTART:${dtStart}`, `DTEND:${dtEnd}`,
+      `SUMMARY:${title}`,
+      `LOCATION:${venueName || 'Altos del Paico'}`,
+      'END:VEVENT', 'END:VCALENDAR',
+    ].join('\r\n')
+    const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url; a.download = 'matrimonio-cata-andres.ics'; a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  return (
+    <div style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+      <a href={gcUrl} target="_blank" rel="noopener noreferrer" className="btn btn-secondary" style={{ fontSize: '0.85rem' }}>
+        + Google Calendar
+      </a>
+      <button className="btn btn-ghost" style={{ fontSize: '0.85rem' }} onClick={downloadIcs}>
+        + Apple / Outlook
+      </button>
+    </div>
+  )
+}
+
 export default function RSVP({ initialRsvp }) {
   const { token, guest, get } = useApp()
   const isPartyOnly = guest?.invitationType === 'party_only'
@@ -12,15 +54,17 @@ export default function RSVP({ initialRsvp }) {
   const [companionName, setCompanionName] = useState('')
   const [numGuests, setNumGuests] = useState(1)
   const [dietaryRestriction, setDietaryRestriction] = useState('')
+  const [email, setEmail] = useState('')
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  // maxAdditional === 0: solo (total 1 person)
-  // maxAdditional === 1: with companion (total 2 people)
-  // maxAdditional > 1 or null: open number input
   const isSolo = maxAdditional === 0
   const isCouple = maxAdditional === 1
+
+  // Deadline check
+  const deadlineStr = get('rsvp_deadline')
+  const isPastDeadline = deadlineStr ? new Date() > new Date(deadlineStr) : false
 
   function getNumGuests() {
     if (!attending || attending === '0') return 1
@@ -31,21 +75,23 @@ export default function RSVP({ initialRsvp }) {
 
   async function handleSubmit(e) {
     e.preventDefault()
+    if (attending === '1' && !email.trim()) {
+      setError('El email es requerido.')
+      return
+    }
     setLoading(true)
     setError('')
     try {
       const res = await fetch('/api/rsvp', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Invite-Token': token,
-        },
+        headers: { 'Content-Type': 'application/json', 'X-Invite-Token': token },
         body: JSON.stringify({
           attending: Number(attending),
           numGuests: getNumGuests(),
           message,
           dietaryRestriction: dietaryRestriction.trim(),
           companionName: companionName.trim(),
+          email: email.trim(),
         }),
       })
       if (res.ok) {
@@ -66,6 +112,10 @@ export default function RSVP({ initialRsvp }) {
     }
   }
 
+  const venueName = get('venue_name', 'Altos del Paico')
+  const ceremonyTime = get('ceremony_time', '17:00')
+  const receptionTime = get('reception_time', '19:30')
+
   if (rsvp) {
     const companions = rsvp.numGuests > 1 ? rsvp.numGuests - 1 : 0
     return (
@@ -76,10 +126,18 @@ export default function RSVP({ initialRsvp }) {
           <p>
             {rsvp.attending
               ? isPartyOnly
-                ? `¡Nos alegra que puedas celebrar con nosotros!${companions > 0 ? ` Esperamos a ${companions + 1} personas de tu parte.` : ''} Los esperamos a partir de las ${get('reception_time', '19:30')} en ${get('venue_name', 'Altos del Paico')}.`
-                : `¡Nos alegra saber que estarás con nosotros!${companions > 0 ? ` Esperamos a ${companions + 1} personas de tu parte.` : ''} Te esperamos a las ${get('ceremony_time', '17:00')} en ${get('venue_name', 'Altos del Paico')}.`
+                ? `¡Nos alegra que puedas celebrar con nosotros!${companions > 0 ? ` Esperamos a ${companions + 1} personas de tu parte.` : ''} Los esperamos a partir de las ${receptionTime} en ${venueName}.`
+                : `¡Nos alegra saber que estarás con nosotros!${companions > 0 ? ` Esperamos a ${companions + 1} personas de tu parte.` : ''} Te esperamos a las ${ceremonyTime} en ${venueName}.`
               : 'Lamentamos que no puedas acompañarnos. Te tendremos en el corazón ese día especial.'}
           </p>
+          {rsvp.attending && (
+            <AddToCalendar
+              venueName={venueName}
+              ceremonyTime={ceremonyTime}
+              receptionTime={receptionTime}
+              isPartyOnly={isPartyOnly}
+            />
+          )}
           {rsvp.attending ? (
             <button
               className="btn btn-secondary"
@@ -96,14 +154,31 @@ export default function RSVP({ initialRsvp }) {
 
   const dietaryQuestion = get('rsvp_dietary_question')
   const companionQuestion = get('rsvp_companion_question', '¿Confirmas la asistencia de tu acompañante?')
+  const deadlineLabel = deadlineStr
+    ? new Date(deadlineStr + 'T00:00:00').toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric' })
+    : null
+
+  if (isPastDeadline) {
+    return (
+      <section id="rsvp" className="section-compact">
+        <div className="rsvp-submitted">
+          <div className="rsvp-check">✦</div>
+          <h2>Plazo cerrado</h2>
+          <p>El plazo para confirmar asistencia venció el {deadlineLabel}. Si tienes alguna duda, escríbenos directamente.</p>
+        </div>
+      </section>
+    )
+  }
 
   return (
     <section id="rsvp" className="section">
       <h2 className="section-title reveal-on-scroll">RSVP</h2>
       <p className="section-subtitle reveal-on-scroll">
         {isPartyOnly
-          ? `Confírmanos si podrás celebrar con nosotros — te esperamos en la fiesta a las ${get('reception_time', '19:30')}.`
-          : 'Confírmanos tu asistencia antes del 15 de octubre de 2026.'}
+          ? `Confírmanos si podrás celebrar con nosotros — te esperamos en la fiesta a las ${receptionTime}.`
+          : deadlineLabel
+            ? `Confírmanos tu asistencia antes del ${deadlineLabel}.`
+            : 'Confírmanos tu asistencia.'}
       </p>
 
       <form className="rsvp-container" onSubmit={handleSubmit} noValidate>
@@ -130,90 +205,64 @@ export default function RSVP({ initialRsvp }) {
           </div>
         </div>
 
-        {/* Companion question (only when attending and maxAdditional === 1) */}
         {attending === '1' && isCouple && (
           <div className="form-field">
             <label className="rsvp-checkbox-label">
-              <input
-                type="checkbox"
-                checked={companionAttending}
-                onChange={e => setCompanionAttending(e.target.checked)}
-              />
+              <input type="checkbox" checked={companionAttending}
+                onChange={e => setCompanionAttending(e.target.checked)} />
               {companionQuestion}
             </label>
           </div>
         )}
 
-        {/* Companion name (only when attending, isCouple, and companion is attending) */}
         {attending === '1' && isCouple && companionAttending && (
           <div className="form-field">
             <label className="form-label" htmlFor="companion-name">Nombre de tu acompañante</label>
-            <input
-              id="companion-name"
-              className="input"
-              type="text"
-              value={companionName}
-              onChange={e => setCompanionName(e.target.value)}
-              placeholder="Nombre completo..."
-            />
+            <input id="companion-name" className="input" type="text"
+              value={companionName} onChange={e => setCompanionName(e.target.value)}
+              placeholder="Nombre completo..." />
           </div>
         )}
 
-        {/* Number input (only when attending and maxAdditional > 1 or null) */}
         {attending === '1' && !isSolo && !isCouple && (
           <div className="form-field">
-            <label className="form-label" htmlFor="num-guests">
-              ¿Cuántos asistirán (incluyéndote)?
-            </label>
-            <input
-              id="num-guests"
-              className="input"
-              type="number"
-              min="1"
+            <label className="form-label" htmlFor="num-guests">¿Cuántos asistirán (incluyéndote)?</label>
+            <input id="num-guests" className="input" type="number" min="1"
               max={maxAdditional != null ? maxAdditional + 1 : 20}
-              value={numGuests}
-              onChange={e => setNumGuests(e.target.value)}
-              style={{ width: 100 }}
-            />
+              value={numGuests} onChange={e => setNumGuests(e.target.value)}
+              style={{ width: 100 }} />
           </div>
         )}
 
-        {/* Dietary restriction (optional, only when question is configured and not party-only) */}
         {dietaryQuestion && attending === '1' && !isPartyOnly && (
           <div className="form-field">
             <label className="form-label" htmlFor="dietary">{dietaryQuestion}</label>
-            <input
-              id="dietary"
-              className="input"
-              type="text"
-              value={dietaryRestriction}
-              onChange={e => setDietaryRestriction(e.target.value)}
-              placeholder="Escribe aquí si tienes alguna restricción..."
-            />
+            <input id="dietary" className="input" type="text"
+              value={dietaryRestriction} onChange={e => setDietaryRestriction(e.target.value)}
+              placeholder="Escribe aquí si tienes alguna restricción..." />
           </div>
         )}
 
         <div className="form-field">
-          <label className="form-label" htmlFor="rsvp-message">
-            Mensaje para los novios (opcional)
+          <label className="form-label" htmlFor="rsvp-email">
+            Email {attending === '1' ? '*' : '(opcional)'}
           </label>
-          <textarea
-            id="rsvp-message"
-            className="input"
-            rows={3}
-            value={message}
-            onChange={e => setMessage(e.target.value)}
-            placeholder="Escribe un mensaje..."
-          />
+          <input id="rsvp-email" className="input" type="email"
+            value={email} onChange={e => setEmail(e.target.value)}
+            placeholder="tu@email.com" />
+          {attending === '1' && <span style={{ fontSize: '0.75rem', opacity: 0.55 }}>Te enviaremos una confirmación.</span>}
+        </div>
+
+        <div className="form-field">
+          <label className="form-label" htmlFor="rsvp-message">Mensaje para los novios (opcional)</label>
+          <textarea id="rsvp-message" className="input" rows={3}
+            value={message} onChange={e => setMessage(e.target.value)}
+            placeholder="Escribe un mensaje..." />
         </div>
 
         {error && <p className="form-error">{error}</p>}
 
-        <button
-          className="btn btn-primary btn-block"
-          type="submit"
-          disabled={loading}
-        >
+        <button className="btn btn-primary btn-block" type="submit" disabled={loading}>
           {loading ? 'Enviando...' : 'Confirmar asistencia'}
         </button>
       </form>

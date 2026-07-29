@@ -39,6 +39,12 @@ const SECTIONS = [
     ],
   },
   {
+    label: 'Contactos de transporte',
+    fields: [
+      { key: 'transport_contacts', label: 'Contactos de transporte (JSON)', type: 'contacts' },
+    ],
+  },
+  {
     label: 'El Matrimonio',
     fields: [
       { key: 'ceremony_time', label: 'Hora ceremonia', type: 'text' },
@@ -46,6 +52,7 @@ const SECTIONS = [
       { key: 'venue_name', label: 'Nombre del lugar', type: 'text' },
       { key: 'venue_address', label: 'Dirección', type: 'text' },
       { key: 'venue_description', label: 'Descripción del lugar', type: 'textarea' },
+      { key: 'wedding_day_off_tip', label: 'Recomendación (ej. "Te recomendamos tomarte el día libre")', type: 'text' },
       { key: 'venue_maps_url', label: 'Link de Google Maps', type: 'text' },
       { key: 'dress_code_image', label: 'Imagen código de vestimenta', type: 'image' },
       { key: 'timeline_image', label: 'Imagen programa del día (timeline)', type: 'image' },
@@ -56,6 +63,14 @@ const SECTIONS = [
     fields: [
       { key: 'rsvp_dietary_question', label: 'Pregunta restricción alimenticia (vacío = no mostrar)', type: 'text' },
       { key: 'rsvp_companion_question', label: 'Pregunta para acompañante (cuando máx = 1)', type: 'text' },
+      { key: 'rsvp_deadline', label: 'Fecha límite para confirmar (YYYY-MM-DD, ej. 2026-10-15)', type: 'text' },
+    ],
+  },
+  {
+    label: 'Emails (confirmaciones)',
+    fields: [
+      { key: 'email_from', label: 'Email de envío (verificado en Resend)', type: 'text' },
+      { key: 'email_to', label: 'Email de los novios (recibe notificaciones)', type: 'text' },
     ],
   },
   {
@@ -191,6 +206,63 @@ function ToggleField({ fieldKey, label, value, onSave, token }) {
       <span style={{ fontSize: '0.7rem', opacity: 0.5 }}>
         Requiere el secret <code>mp_access_token</code> configurado en el Worker de Cloudflare.
       </span>
+    </div>
+  )
+}
+
+function ContactsField({ fieldKey, value, onSave, token }) {
+  const [contacts, setContacts] = useState(() => {
+    try { return JSON.parse(value || '[]') } catch { return [] }
+  })
+  const [saved, setSaved] = useState(false)
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    try { setContacts(JSON.parse(value || '[]')) } catch {}
+  }, [value])
+
+  async function save(updated) {
+    setSaving(true)
+    const str = JSON.stringify(updated)
+    try {
+      await fetch('/api/admin/content', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'X-Invite-Token': token },
+        body: JSON.stringify({ key: fieldKey, value: str }),
+      })
+      onSave(fieldKey, str)
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+    } finally { setSaving(false) }
+  }
+
+  function update(idx, field, val) {
+    const next = contacts.map((c, i) => i === idx ? { ...c, [field]: val } : c)
+    setContacts(next)
+  }
+
+  function add() { setContacts([...contacts, { name: '', phone: '' }]) }
+  function remove(idx) { const next = contacts.filter((_, i) => i !== idx); setContacts(next); save(next) }
+
+  return (
+    <div className="content-field">
+      <label className="form-label">Contactos de transporte</label>
+      {contacts.map((c, i) => (
+        <div key={i} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem', alignItems: 'center' }}>
+          <input className="input" placeholder="Nombre (ej. Juan — Bus)" value={c.name}
+            onChange={e => update(i, 'name', e.target.value)} style={{ flex: 2 }} />
+          <input className="input" placeholder="+56912345678" value={c.phone}
+            onChange={e => update(i, 'phone', e.target.value)} style={{ flex: 1 }} />
+          <button className="btn btn-ghost" style={{ color: '#c0392b', flexShrink: 0 }} onClick={() => remove(i)}>✕</button>
+        </div>
+      ))}
+      <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.25rem' }}>
+        <button className="btn btn-ghost" style={{ fontSize: '0.8rem' }} onClick={add}>+ Agregar</button>
+        <button className="btn btn-secondary" style={{ fontSize: '0.8rem' }} onClick={() => save(contacts)} disabled={saving}>
+          {saving ? '...' : 'Guardar'}
+        </button>
+      </div>
+      {saved && <span className="saved-indicator">✓ Guardado</span>}
     </div>
   )
 }
@@ -373,6 +445,12 @@ export default function ContentEditor() {
         <div key={section.label} className="content-section">
           <div className="content-section-title">{section.label}</div>
           {section.fields.map(field => {
+            if (field.type === 'contacts') {
+              return (
+                <ContactsField key={field.key} fieldKey={field.key}
+                  value={content[field.key] || '[]'} onSave={updateContent} token={token} />
+              )
+            }
             if (field.type === 'secret') {
               return (
                 <SecretField key={field.key} fieldKey={field.key} label={field.label} token={token} />

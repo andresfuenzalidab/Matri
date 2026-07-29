@@ -258,7 +258,7 @@ export default function GiftsDashboard() {
                 trip.name,
                 gift.name,
                 gift.price ?? '',
-                gift.reservation_count > 0 ? 'Sí' : 'No',
+                gift.confirmed_count > 0 ? 'Confirmado' : (gift.reservation_count > 0 ? 'Pendiente' : 'No'),
                 gift.total_quantity || 0,
               ])
             ),
@@ -386,9 +386,14 @@ export default function GiftsDashboard() {
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>{gift.name}</span>
                         <span style={{ fontSize: '0.78rem', color: 'var(--color-accent)', marginLeft: '0.5rem' }}>{formatCLP(gift.price)}</span>
-                        {gift.reservation_count > 0 && (
+                        {gift.confirmed_count > 0 && (
                           <span className="tag tag-accent" style={{ marginLeft: '0.4rem', fontSize: '0.65rem' }}>
-                            Reservado{gift.total_quantity > 1 ? ` ×${gift.total_quantity}` : ''}
+                            Confirmado{gift.confirmed_quantity > 1 ? ` ×${gift.confirmed_quantity}` : ''}
+                          </span>
+                        )}
+                        {(gift.reservation_count - (gift.confirmed_count || 0)) > 0 && (
+                          <span className="tag tag-neutral" style={{ marginLeft: '0.4rem', fontSize: '0.65rem' }}>
+                            Pendiente
                           </span>
                         )}
                         {gift.description && (
