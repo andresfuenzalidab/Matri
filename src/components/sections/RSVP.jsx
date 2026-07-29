@@ -118,18 +118,22 @@ export default function RSVP({ initialRsvp }) {
 
   if (rsvp) {
     const companions = rsvp.numGuests > 1 ? rsvp.numGuests - 1 : 0
+    const displayName = guest?.nickname || guest?.name || ''
+
+    const defaultAttendingMsg = isPartyOnly
+      ? `¡Nos alegra que puedas celebrar con nosotros!${companions > 0 ? ` Esperamos a ${companions + 1} personas de tu parte.` : ''} Los esperamos a partir de las ${receptionTime} en ${venueName}.`
+      : `¡Nos alegra saber que estarás con nosotros!${companions > 0 ? ` Esperamos a ${companions + 1} personas de tu parte.` : ''} Te esperamos a las ${ceremonyTime} en ${venueName}.`
+    const defaultDeclinedMsg = 'Lamentamos que no puedas acompañarnos. Te tendremos en el corazón ese día especial.'
+
+    const attendingMsg = (get('rsvp_thanks_attending') || defaultAttendingMsg).replace(/\{NOMBRE\}/gi, displayName)
+    const declinedMsg = (get('rsvp_thanks_declined') || defaultDeclinedMsg).replace(/\{NOMBRE\}/gi, displayName)
+
     return (
       <section id="rsvp" className="section-compact">
         <div className="rsvp-submitted">
           <div className="rsvp-check">{rsvp.attending ? '♡' : '✦'}</div>
-          <h2>Gracias, {guest?.name}</h2>
-          <p>
-            {rsvp.attending
-              ? isPartyOnly
-                ? `¡Nos alegra que puedas celebrar con nosotros!${companions > 0 ? ` Esperamos a ${companions + 1} personas de tu parte.` : ''} Los esperamos a partir de las ${receptionTime} en ${venueName}.`
-                : `¡Nos alegra saber que estarás con nosotros!${companions > 0 ? ` Esperamos a ${companions + 1} personas de tu parte.` : ''} Te esperamos a las ${ceremonyTime} en ${venueName}.`
-              : 'Lamentamos que no puedas acompañarnos. Te tendremos en el corazón ese día especial.'}
-          </p>
+          <h2>Gracias, {displayName}</h2>
+          <p>{rsvp.attending ? attendingMsg : declinedMsg}</p>
           {rsvp.attending && (
             <AddToCalendar
               venueName={venueName}

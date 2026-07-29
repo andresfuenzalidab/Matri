@@ -64,6 +64,8 @@ const SECTIONS = [
       { key: 'rsvp_dietary_question', label: 'Pregunta restricción alimenticia (vacío = no mostrar)', type: 'text' },
       { key: 'rsvp_companion_question', label: 'Pregunta para acompañante (cuando máx = 1)', type: 'text' },
       { key: 'rsvp_deadline', label: 'Fecha límite para confirmar (YYYY-MM-DD, ej. 2026-10-15)', type: 'text' },
+      { key: 'rsvp_thanks_attending', label: 'Mensaje confirmación asistencia (usa {NOMBRE})', type: 'textarea' },
+      { key: 'rsvp_thanks_declined', label: 'Mensaje confirmación no asistencia (usa {NOMBRE})', type: 'textarea' },
     ],
   },
   {
