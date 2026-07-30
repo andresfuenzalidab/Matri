@@ -137,9 +137,9 @@ export default function WeddingInfo({ shouldPlay }) {
       </div>
 
       {/* Dress code */}
-      <div className="wedding-detail-block reveal-on-scroll" style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
-        <h3 className="wedding-detail-title" style={{ flex: '0 0 auto', minWidth: 120, maxWidth: 160 }}>Código de vestimenta</h3>
-        <div style={{ display: 'flex', flex: 1, minWidth: 260, borderRadius: 6, overflow: 'hidden' }}>
+      <div className="wedding-detail-block reveal-on-scroll">
+        <h3 className="wedding-detail-title">Código de vestimenta</h3>
+        <div style={{ display: 'flex', borderRadius: 6, overflow: 'hidden', maxWidth: 600 }}>
           <video
             ref={dressVideoRef}
             muted loop playsInline
