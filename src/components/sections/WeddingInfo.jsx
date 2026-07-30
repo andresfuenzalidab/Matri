@@ -126,7 +126,7 @@ export default function WeddingInfo({ shouldPlay }) {
         {mapsUrl && (
           <a href={mapsUrl} target="_blank" rel="noopener noreferrer"
             className="btn btn-secondary"
-            style={{ alignSelf: 'flex-start', marginTop: '0.75rem' }}>
+            style={{ alignSelf: 'center', marginTop: '0.75rem' }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
               style={{ marginRight: 6, verticalAlign: 'middle' }}>
               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
@@ -174,8 +174,8 @@ export default function WeddingInfo({ shouldPlay }) {
 
       {/* Venue photos carousel */}
       {venuePhotos.length > 0 && (
-        <div className="reveal-on-scroll" style={{ marginTop: '2rem' }}>
-          <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.3rem', fontWeight: 600, marginBottom: '0.5rem' }}>
+        <div className="reveal-on-scroll" style={{ marginTop: '2rem', textAlign: 'center' }}>
+          <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.3rem', fontWeight: 600, marginBottom: '0.5rem', textAlign: 'center' }}>
             El lugar
           </h3>
           <VenueCarousel photos={venuePhotos} />
@@ -188,7 +188,7 @@ export default function WeddingInfo({ shouldPlay }) {
           const contacts = JSON.parse(get('transport_contacts') || '[]')
           if (!contacts.length) return null
           return (
-            <div className="reveal-on-scroll" style={{ marginTop: '2rem' }}>
+            <div className="reveal-on-scroll" style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
               <button
                 onClick={() => setTransportOpen(o => !o)}
                 style={{
@@ -202,7 +202,7 @@ export default function WeddingInfo({ shouldPlay }) {
                 <span style={{ fontSize: '0.9rem', opacity: 0.5, transition: 'transform 0.2s', display: 'inline-block', transform: transportOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>▾</span>
               </button>
               {transportOpen && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1rem' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1rem', width: '100%', maxWidth: 400 }}>
                   {contacts.map((c, i) => (
                     <a key={i} href={`https://wa.me/${c.phone.replace(/\D/g, '')}`}
                       target="_blank" rel="noopener noreferrer"
