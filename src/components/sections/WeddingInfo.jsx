@@ -138,20 +138,22 @@ export default function WeddingInfo({ shouldPlay }) {
 
       {/* Dress code */}
       <div className="wedding-detail-block reveal-on-scroll" style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
-        <video
-          ref={dressVideoRef}
-          muted loop playsInline
-          style={{ flex: '0 0 auto', width: 'min(260px, 100%)', borderRadius: 6, display: 'block' }}
-          src={get('dresscode_video_url') || '/dresscode_cat.mp4'}
-        />
-        <div style={{ flex: 1, minWidth: 180 }}>
-          <h3 className="wedding-detail-title">Código de vestimenta</h3>
+        <h3 className="wedding-detail-title" style={{ flex: '0 0 auto', minWidth: 120, maxWidth: 160 }}>Código de vestimenta</h3>
+        <div style={{ display: 'flex', flex: 1, minWidth: 260, borderRadius: 6, overflow: 'hidden' }}>
+          <video
+            ref={dressVideoRef}
+            muted loop playsInline
+            style={{ flex: '0 0 50%', width: '50%', display: 'block', objectFit: 'cover' }}
+            src={get('dresscode_video_url') || '/dresscode_cat.mp4'}
+          />
           {dressCodeImage ? (
             <img src={normalizeImageUrl(dressCodeImage)} alt="Código de vestimenta"
-              className="wedding-detail-img"
+              style={{ flex: '0 0 50%', width: '50%', objectFit: 'cover', display: 'block' }}
               onError={e => e.target.style.display = 'none'} />
           ) : (
-            <PhotoPlaceholder size="md" label="Imagen de código de vestimenta" />
+            <div style={{ flex: '0 0 50%', width: '50%' }}>
+              <PhotoPlaceholder size="md" label="Imagen de código de vestimenta" />
+            </div>
           )}
         </div>
       </div>
