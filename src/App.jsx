@@ -122,16 +122,22 @@ function MainApp({ token, guest, rsvp }) {
         <main className="editorial-main">
           {/* ── Side vines running full height ── */}
           <div className="side-vine side-vine-left" aria-hidden="true">
-            <BotanicalHeroLeft style={{ opacity: 0.72 }}/>
-            <BotanicalHeroLeft style={{ opacity: 0.55, marginTop: -120 }}/>
-            <BotanicalHeroLeft style={{ opacity: 0.45, marginTop: -120 }}/>
-            <BotanicalHeroLeft style={{ opacity: 0.35, marginTop: -120 }}/>
+            <BotanicalHeroLeft style={{ opacity: 0.78 }}/>
+            <BotanicalHeroLeft style={{ opacity: 0.65, marginTop: -100 }}/>
+            <BotanicalHeroLeft style={{ opacity: 0.55, marginTop: -100 }}/>
+            <BotanicalHeroLeft style={{ opacity: 0.45, marginTop: -100 }}/>
+            <BotanicalHeroLeft style={{ opacity: 0.38, marginTop: -100 }}/>
+            <BotanicalHeroLeft style={{ opacity: 0.30, marginTop: -100 }}/>
+            <BotanicalHeroLeft style={{ opacity: 0.22, marginTop: -100 }}/>
           </div>
           <div className="side-vine side-vine-right" aria-hidden="true">
-            <BotanicalHeroRight style={{ opacity: 0.72 }}/>
-            <BotanicalHeroRight style={{ opacity: 0.55, marginTop: -120 }}/>
-            <BotanicalHeroRight style={{ opacity: 0.45, marginTop: -120 }}/>
-            <BotanicalHeroRight style={{ opacity: 0.35, marginTop: -120 }}/>
+            <BotanicalHeroRight style={{ opacity: 0.78 }}/>
+            <BotanicalHeroRight style={{ opacity: 0.65, marginTop: -100 }}/>
+            <BotanicalHeroRight style={{ opacity: 0.55, marginTop: -100 }}/>
+            <BotanicalHeroRight style={{ opacity: 0.45, marginTop: -100 }}/>
+            <BotanicalHeroRight style={{ opacity: 0.38, marginTop: -100 }}/>
+            <BotanicalHeroRight style={{ opacity: 0.30, marginTop: -100 }}/>
+            <BotanicalHeroRight style={{ opacity: 0.22, marginTop: -100 }}/>
           </div>
 
           {/* ── Ambient warm glows ── */}

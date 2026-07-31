@@ -86,7 +86,11 @@ export default function WeddingInfo({ shouldPlay }) {
   return (
     <section id="boda" className="section">
       <h2 className="section-title reveal-on-scroll">Detalles del matrimonio</h2>
-      <p className="section-subtitle reveal-on-scroll">{get('hero_date', 'Viernes 6 de noviembre de 2026')}</p>
+      <p className="reveal-on-scroll" style={{
+        fontFamily: 'var(--font-heading)', fontStyle: 'italic', fontWeight: 400,
+        fontSize: 'clamp(1.25rem, 3.5vw, 1.9rem)', color: 'var(--color-accent)',
+        opacity: 0.75, letterSpacing: '0.04em', marginBottom: '2.5rem',
+      }}>{get('hero_date', 'Viernes 6 de noviembre de 2026')}</p>
 
       <div className="wedding-cards reveal-on-scroll">
         {!isPartyOnly && (
@@ -112,11 +116,6 @@ export default function WeddingInfo({ shouldPlay }) {
       )}
 
       <div className="card venue-card reveal-on-scroll">
-        <div className="venue-card-header">
-          <MapPinIcon />
-          <h3>{get('venue_name', 'Altos del Paico')}</h3>
-        </div>
-        {get('venue_address') && <p className="venue-address">{get('venue_address')}</p>}
         <video
           ref={descVideoRef}
           muted loop playsInline
@@ -174,10 +173,7 @@ export default function WeddingInfo({ shouldPlay }) {
       {/* Venue photos carousel */}
       {venuePhotos.length > 0 && (
         <div className="reveal-on-scroll" style={{ marginTop: '2rem', textAlign: 'center' }}>
-          <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.3rem', fontWeight: 600, marginBottom: '0.5rem', textAlign: 'center' }}>
-            El lugar
-          </h3>
-          <VenueCarousel photos={venuePhotos} />
+            <VenueCarousel photos={venuePhotos} />
         </div>
       )}
 

@@ -1104,7 +1104,7 @@ textarea.input { min-height: 90px; resize: vertical; }
 
 /* Override body to luxury cream, no texture */
 body {
-  background-color: #F3F2F2;
+  background-color: #eceae8;
   background-image: none;
 }
 
@@ -1113,7 +1113,7 @@ body {
    the hero are NOT see-through onto the video. */
 .editorial-main {
   position: relative;
-  background: #F3F2F2;
+  background: #eceae8;
 }
 
 /* Sections: transparent (they inherit from editorial-main's cream bg) */
@@ -1144,7 +1144,7 @@ body {
 
 /* Gift cart bar stays solid */
 .gift-cart-bar {
-  background: #F3F2F2 !important;
+  background: #eceae8 !important;
   border-top: 1px solid rgba(182,130,53,0.2) !important;
   box-shadow: var(--shadow-md) !important;
 }
@@ -1263,7 +1263,7 @@ body {
   position: relative;
   z-index: 2;
   pointer-events: none;
-  background: #F3F2F2;
+  background: #eceae8;
 }
 
 /* Editorial section titles ── */
@@ -1349,7 +1349,7 @@ body {
 
 /* Nav ── editorial, minimal */
 .app-nav {
-  background: color-mix(in srgb, #F3F2F2 82%, transparent);
+  background: color-mix(in srgb, #eceae8 82%, transparent);
   backdrop-filter: blur(16px);
   border-bottom: 1px solid rgba(182,130,53,0.15);
 }
@@ -1454,7 +1454,7 @@ body {
 .side-vine {
   position: absolute;
   top: 0;
-  width: 110px;
+  width: 150px;
   display: flex;
   flex-direction: column;
   pointer-events: none;
