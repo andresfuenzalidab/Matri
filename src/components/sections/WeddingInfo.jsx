@@ -161,7 +161,6 @@ export default function WeddingInfo({ shouldPlay }) {
       {/* Timeline */}
       {!isPartyOnly && (
         <div className="wedding-detail-block reveal-on-scroll">
-          <h3 className="wedding-detail-title">Programa del día</h3>
           {timelineImage ? (
             <img src={normalizeImageUrl(timelineImage)} alt="Programa del día"
               className="wedding-detail-img"
@@ -192,17 +191,26 @@ export default function WeddingInfo({ shouldPlay }) {
               <button
                 onClick={() => setTransportOpen(o => !o)}
                 style={{
-                  display: 'flex', alignItems: 'center', gap: '0.5rem',
-                  background: 'none', border: 'none', cursor: 'pointer',
-                  fontFamily: 'var(--font-heading)', fontSize: '1.3rem', fontWeight: 600,
-                  color: 'inherit', padding: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  gap: '1rem', width: '100%', maxWidth: 400,
+                  background: 'transparent', border: '1px solid var(--color-divider)',
+                  borderRadius: 10, cursor: 'pointer', padding: '0.85rem 1.1rem',
+                  color: 'inherit',
                 }}
               >
-                Transporte
-                <span style={{ fontSize: '0.9rem', opacity: 0.5, transition: 'transform 0.2s', display: 'inline-block', transform: transportOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>▾</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.6, flexShrink: 0 }}>
+                    <rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+                  </svg>
+                  <span style={{ fontFamily: 'var(--font-heading)', fontSize: '1.15rem', fontStyle: 'italic', color: 'var(--color-accent)' }}>Transporte</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem', opacity: 0.5 }}>
+                  <span>{transportOpen ? 'Cerrar' : 'Ver contactos'}</span>
+                  <span style={{ transition: 'transform 0.2s', display: 'inline-block', transform: transportOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>▾</span>
+                </div>
               </button>
               {transportOpen && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1rem', width: '100%', maxWidth: 400 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.75rem', width: '100%', maxWidth: 400 }}>
                   {contacts.map((c, i) => (
                     <a key={i} href={`https://wa.me/${c.phone.replace(/\D/g, '')}`}
                       target="_blank" rel="noopener noreferrer"

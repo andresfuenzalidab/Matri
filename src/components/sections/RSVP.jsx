@@ -1,30 +1,17 @@
 import { useState } from 'react'
 import { useApp } from '../../context/AppContext'
 
-function toUtcStamp(baseDate, localHour, localMin, offsetHours = 3) {
-  // baseDate: Date at midnight local, offsetHours: local is UTC-offsetHours
-  const utcMs = baseDate.getTime() + (localHour * 60 + localMin + offsetHours * 60) * 60000
-  const d = new Date(utcMs)
-  const yy = d.getUTCFullYear()
-  const mo = String(d.getUTCMonth() + 1).padStart(2, '0')
-  const dd = String(d.getUTCDate()).padStart(2, '0')
-  const hh = String(d.getUTCHours()).padStart(2, '0')
-  const mm = String(d.getUTCMinutes()).padStart(2, '0')
-  return `${yy}${mo}${dd}T${hh}${mm}00Z`
-}
-
 function AddToCalendar({ venueName, ceremonyTime, isPartyOnly, receptionTime, eventEndTime }) {
-  // Chile is UTC-3 on Nov 6, 2026 — nov6local = Nov 6 00:00 local = Nov 6 03:00 UTC
-  const nov6local = new Date(Date.UTC(2026, 10, 6, 3))
-
   const startTime = isPartyOnly ? (receptionTime || '19:30') : (ceremonyTime || '17:00')
   const [sh, sm] = startTime.split(':').map(Number)
-  const dtStart = toUtcStamp(nov6local, sh, sm)
-
-  // End time: if end hour < start hour, it's past midnight (next day)
   const [eh, em] = (eventEndTime || '03:00').split(':').map(Number)
-  const endBase = eh < sh ? new Date(nov6local.getTime() + 86400000) : nov6local
-  const dtEnd = toUtcStamp(endBase, eh, em)
+
+  // Use local floating times (no UTC suffix) so calendar shows the exact local hours
+  const pad = n => String(n).padStart(2, '0')
+  const dtStart = `20261106T${pad(sh)}${pad(sm)}00`
+  // If end hour < start hour the party crossed midnight → Nov 7
+  const endDay = eh < sh ? '20261107' : '20261106'
+  const dtEnd = `${endDay}T${pad(eh)}${pad(em)}00`
 
   const title = 'Matrimonio Cata & Andrés'
   const gcUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE` +
