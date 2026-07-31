@@ -1128,17 +1128,17 @@ body {
   box-shadow: none !important;
 }
 
-/* Wedding event time cards: keep a subtle presence */
+/* Wedding event time cards: no box */
 .wedding-event-card {
-  background: rgba(243,242,242,0.7) !important;
-  border: 1px solid rgba(182,130,53,0.18) !important;
+  background: transparent !important;
+  border: none !important;
   box-shadow: none !important;
 }
 
-/* Gift cards: need minimal visual container */
+/* Gift cards: no box */
 .gift-card {
-  background: rgba(243,242,242,0.6) !important;
-  border: 1px solid rgba(182,130,53,0.15) !important;
+  background: transparent !important;
+  border: none !important;
   box-shadow: none !important;
 }
 
@@ -1397,8 +1397,8 @@ body {
   color: var(--color-accent);
 }
 .gift-card {
-  background: rgba(243,242,242,0.5);
-  border: 1px solid rgba(182,130,53,0.18);
+  background: transparent;
+  border: none;
 }
 
 /* RSVP ── */

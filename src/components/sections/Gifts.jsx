@@ -212,7 +212,7 @@ export default function Gifts() {
                   <div className="gift-action">
                     {!canAdd && <span className="tag tag-neutral">Próximamente</span>}
                     {canAdd && !inCart && (
-                      <button className="btn btn-secondary" style={{ width: '100%' }} onClick={() => addToCart(gift)}>
+                      <button className="btn btn-ghost" style={{ width: '100%', letterSpacing: '0.08em', fontSize: '0.78rem', textTransform: 'uppercase' }} onClick={() => addToCart(gift)}>
                         Seleccionar
                       </button>
                     )}
