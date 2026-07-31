@@ -1,62 +1,42 @@
 import { useEffect } from 'react'
 import { useApp } from '../../context/AppContext'
-import { BotanicalHeroLeft, BotanicalHeroRight, BotanicalOrnament } from '../Botanical'
+import { normalizeImageUrl } from '../../utils/imageUrl.js'
 
 export default function Home() {
   const { loadContent, get } = useApp()
   useEffect(() => { loadContent() }, [loadContent])
 
-  const title = get('hero_title', 'Catalina & Andrés')
-  const [name1, name2] = title.includes('&') ? title.split('&').map(s => s.trim()) : [title, '']
-  const date = get('hero_date', 'Viernes 6 de noviembre de 2026')
-  const location = get('hero_location', 'Altos del Paico · Santiago, Chile')
+  const heroImage = normalizeImageUrl(get('hero_image') || '')
 
   return (
-    <section id="inicio" className="editorial-hero">
-      {/* Gradient over video */}
-      <div className="hero-video-overlay" />
+    <section id="inicio" style={{ position: 'relative', width: '100%', height: '100vh', minHeight: 640, overflow: 'hidden' }}>
+      {heroImage ? (
+        <img
+          src={heroImage}
+          alt="Catalina y Andrés"
+          style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 30%', display: 'block' }}
+        />
+      ) : (
+        /* Fallback: show the fixed background video through a transparent layer */
+        <div style={{ width: '100%', height: '100%', background: 'transparent' }} />
+      )}
 
-      {/* Botanical frames — left */}
+      {/* Seamless fade to cream at the bottom */}
       <div style={{
-        position: 'absolute', left: 0, top: 0, bottom: 0,
-        width: 'min(320px, 35vw)', pointerEvents: 'none', zIndex: 2,
-        display: 'flex', alignItems: 'flex-start',
-      }}>
-        <BotanicalHeroLeft style={{ opacity: 0.82, filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.18))' }} />
-      </div>
+        position: 'absolute', inset: 0, pointerEvents: 'none',
+        background: 'linear-gradient(180deg, transparent 65%, #F3F2F2 100%)',
+      }} />
 
-      {/* Botanical frames — right */}
+      {/* Scroll hint */}
       <div style={{
-        position: 'absolute', right: 0, top: 0, bottom: 0,
-        width: 'min(320px, 35vw)', pointerEvents: 'none', zIndex: 2,
-        display: 'flex', alignItems: 'flex-start',
+        position: 'absolute', bottom: 28, left: 0, right: 0,
+        textAlign: 'center',
+        fontFamily: 'var(--font-heading)', fontSize: 12,
+        letterSpacing: '0.3em', textTransform: 'uppercase',
+        color: heroImage ? '#fffdf8' : 'rgba(255,255,255,0.85)',
+        opacity: 0.85, pointerEvents: 'none',
       }}>
-        <BotanicalHeroRight style={{ opacity: 0.82, filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.18))' }} />
-      </div>
-
-      {/* Editorial content */}
-      <div className="editorial-hero-content" style={{ position: 'relative', zIndex: 3 }}>
-        <p className="hero-eyebrow">JUNTO A NUESTRAS FAMILIAS</p>
-        <p className="hero-eyebrow" style={{ marginBottom: '2.5rem' }}>TE INVITAMOS A NUESTRA BODA</p>
-
-        <h1 className="editorial-name">{name1}</h1>
-        <div className="editorial-ampersand">y</div>
-        {name2 && <h1 className="editorial-name">{name2}</h1>}
-
-        <BotanicalOrnament style={{ margin: '1.5rem auto', opacity: 0.7, filter: 'brightness(10) saturate(0)' }} />
-
-        <p className="editorial-date">{date.toUpperCase()}</p>
-        <p className="editorial-location">{location.toUpperCase()}</p>
-
-        {get('hero_quote') && (
-          <p className="editorial-quote">"{get('hero_quote')}"</p>
-        )}
-      </div>
-
-      {/* Scroll indicator */}
-      <div className="scroll-indicator" style={{ position: 'absolute', bottom: '2.5rem', left: '50%', transform: 'translateX(-50%)', zIndex: 3 }}>
-        <div className="scroll-indicator-dot" />
-        <div className="scroll-indicator-line" />
+        Desliza para continuar el jardín ↓
       </div>
     </section>
   )

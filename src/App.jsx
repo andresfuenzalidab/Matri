@@ -12,7 +12,7 @@ import RSVP from './components/sections/RSVP'
 import Gifts from './components/sections/Gifts'
 import Contact from './components/sections/Contact'
 import AdminPanel from './components/admin/AdminPanel'
-import { BotanicalDivider, FloralFooter, SmallRoseSpray } from './components/Botanical'
+import { BotanicalHeroLeft, BotanicalHeroRight } from './components/Botanical'
 
 function getToken() {
   const fromUrl = new URLSearchParams(window.location.search).get('token')
@@ -42,6 +42,17 @@ const SharedHeroVideo = forwardRef(function SharedHeroVideo({ onCanPlay }, ref) 
     />
   )
 })
+
+function Ornament() {
+  return (
+    <div style={{ textAlign: 'center', padding: '0.5rem 0', color: 'var(--color-accent)', opacity: 0.5, pointerEvents: 'none' }}>
+      <svg width="140" height="24" viewBox="0 0 140 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M0 12 H55 M85 12 H140" stroke="currentColor" strokeWidth="0.8"/>
+        <circle cx="70" cy="12" r="4" fill="none" stroke="currentColor" strokeWidth="0.8"/>
+      </svg>
+    </div>
+  )
+}
 
 function MainApp({ token, guest, rsvp }) {
   const [adminOpen, setAdminOpen] = useState(false)
@@ -109,30 +120,38 @@ function MainApp({ token, guest, rsvp }) {
       }}>
         <Nav />
         <main className="editorial-main">
+          {/* ── Side vines running full height ── */}
+          <div className="side-vine side-vine-left" aria-hidden="true">
+            <BotanicalHeroLeft style={{ opacity: 0.72 }}/>
+            <BotanicalHeroLeft style={{ opacity: 0.55, marginTop: -120 }}/>
+            <BotanicalHeroLeft style={{ opacity: 0.45, marginTop: -120 }}/>
+            <BotanicalHeroLeft style={{ opacity: 0.35, marginTop: -120 }}/>
+          </div>
+          <div className="side-vine side-vine-right" aria-hidden="true">
+            <BotanicalHeroRight style={{ opacity: 0.72 }}/>
+            <BotanicalHeroRight style={{ opacity: 0.55, marginTop: -120 }}/>
+            <BotanicalHeroRight style={{ opacity: 0.45, marginTop: -120 }}/>
+            <BotanicalHeroRight style={{ opacity: 0.35, marginTop: -120 }}/>
+          </div>
+
+          {/* ── Ambient warm glows ── */}
+          <div className="ambient-glow" style={{ top: 900, left: '8%' }} aria-hidden="true"/>
+          <div className="ambient-glow" style={{ top: 2200, right: '6%', left: 'auto' }} aria-hidden="true"/>
+          <div className="ambient-glow" style={{ top: 3600, left: '12%' }} aria-hidden="true"/>
+          <div className="ambient-glow" style={{ top: 5000, right: '8%', left: 'auto' }} aria-hidden="true"/>
+
+          {/* ── Content ── */}
           <Home />
-          <div className="botanical-bridge">
-            <BotanicalDivider style={{ margin: '0 auto' }}/>
-          </div>
+          <Ornament />
           <CountdownSection shouldPlay={welcomed} />
-          <div className="botanical-bridge">
-            <BotanicalDivider flip style={{ margin: '0 auto' }}/>
-          </div>
+          <Ornament />
           <WeddingInfo shouldPlay={welcomed} />
-          <div className="botanical-bridge">
-            <BotanicalDivider style={{ margin: '0 auto' }}/>
-          </div>
+          <Ornament />
           <OurStory />
-          <div className="botanical-bridge">
-            <BotanicalDivider flip style={{ margin: '0 auto' }}/>
-          </div>
+          <Ornament />
           <RSVP initialRsvp={rsvp} />
-          <div className="botanical-bridge">
-            <BotanicalDivider style={{ margin: '0 auto' }}/>
-          </div>
+          <Ornament />
           <Gifts />
-          <div className="botanical-bridge">
-            <FloralFooter style={{ margin: '0 auto' }}/>
-          </div>
           <Contact />
         </main>
         {guest?.isAdmin && (

@@ -27,26 +27,32 @@ export default function OurStory() {
   )
 
   return (
-    <section id="historia" className="section">
-      <h2 className="section-title">Nuestra Historia</h2>
-      <p className="section-subtitle">{get('story_subtitle', 'El camino que nos trajo hasta aquí.')}</p>
-      <hr className="hr" />
+    <section id="historia" className="section reveal-on-scroll">
+      <span className="kicker">Nuestra Historia</span>
+      <h2 className="section-title">{get('story_heading', 'El camino que nos trajo hasta aquí')}</h2>
+      <p className="section-subtitle">{get('story_subtitle', '')}</p>
 
-      {sections.map((sec, i) => (
-        <div key={sec.id} className={`story-section ${i % 2 === 1 ? 'reverse' : ''}`}>
-          <div className="story-text">
-            {sec.date_label && <span className="story-date">{sec.date_label}</span>}
-            <h3>{sec.title}</h3>
-            {sec.content && <p>{sec.content}</p>}
+      {sections.map((sec, i) => {
+        const isEven = i % 2 === 0
+        const angle = isEven ? -2.5 : 2
+        const driftClass = isEven ? '' : 'drift-b'
+        return (
+          <div key={sec.id} className={`story-section ${isEven ? '' : 'reverse'}`}>
+            <div className="story-text">
+              {sec.date_label && <span className="story-date">{sec.date_label}</span>}
+              <h3>{sec.title}</h3>
+              {sec.content && <p>{sec.content}</p>}
+            </div>
+            <div className={`polaroid ${driftClass}`} style={{ transform: `rotate(${angle}deg)` }}>
+              {sec.image_url ? (
+                <img src={sec.image_url} alt={sec.title} style={{ width: '100%', height: 280, objectFit: 'cover' }} />
+              ) : (
+                <PhotoPlaceholder size="lg" label={sec.title} alt={sec.title} />
+              )}
+            </div>
           </div>
-          <PhotoPlaceholder
-            size="lg"
-            url={sec.image_url}
-            label={sec.title}
-            alt={sec.title}
-          />
-        </div>
-      ))}
+        )
+      })}
 
       {sections.length === 0 && (
         <p className="text-muted" style={{ textAlign: 'center', padding: '3rem 0' }}>
@@ -55,7 +61,7 @@ export default function OurStory() {
       )}
 
       {photos.length > 0 && (
-        <div style={{ marginTop: '3rem' }}>
+        <div style={{ marginTop: '4rem' }}>
           <StoryCarousel photos={photos} />
         </div>
       )}
