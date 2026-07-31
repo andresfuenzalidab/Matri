@@ -1113,7 +1113,7 @@ body {
    the hero are NOT see-through onto the video. */
 .editorial-main {
   position: relative;
-  background: #eceae8;
+  background: linear-gradient(to bottom, transparent 100vh, #eceae8 100vh);
 }
 
 /* Sections: transparent (they inherit from editorial-main's cream bg) */
@@ -1434,7 +1434,12 @@ body {
 }
 
 /* Gift filter bar */
-.gift-filter-bar { justify-content: center; }
+.gift-filter-bar {
+  justify-content: center;
+  background: transparent !important;
+  border: none !important;
+  padding: 0.5rem 0 1.5rem !important;
+}
 
 /* Reveal animation ── */
 .reveal-on-scroll {
