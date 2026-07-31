@@ -105,6 +105,7 @@ function MainApp({ token, guest, rsvp }) {
         opacity: welcomed ? 1 : 0,
         transition: 'opacity 0.5s ease',
         pointerEvents: welcomed ? 'auto' : 'none',
+        isolation: 'isolate',
       }}>
         <Nav />
         <main className="editorial-main">

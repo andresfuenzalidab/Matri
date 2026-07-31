@@ -1102,33 +1102,62 @@ textarea.input { min-height: 90px; resize: vertical; }
    EDITORIAL REDESIGN — luxury botanical theme
    ═══════════════════════════════════════════════ */
 
-/* Override body to luxury cream */
+/* Override body to luxury cream, no texture */
 body {
   background-color: #F3F2F2;
   background-image: none;
 }
 
-/* Remove section solid backgrounds */
+/* The main content wrapper sits above the fixed video.
+   Give it a solid cream background so sections below
+   the hero are NOT see-through onto the video. */
+.editorial-main {
+  position: relative;
+  background: #F3F2F2;
+}
+
+/* Sections: transparent (they inherit from editorial-main's cream bg) */
 .section, .section-compact {
   background: transparent;
 }
 
-/* Remove card borders in main editorial flow */
-.editorial-main .card:not(.rsvp-card):not(.gift-cart-bar):not(.admin-panel) {
-  border: none;
-  background: transparent;
-  box-shadow: none;
+/* ── Kill ALL card borders and backgrounds everywhere ── */
+.card {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
 }
-.venue-card {
-  background: transparent;
-  border: none;
-  box-shadow: none;
-}
+
+/* Wedding event time cards: keep a subtle presence */
 .wedding-event-card {
-  background: rgba(243,242,242,0.55);
-  border: 1px solid rgba(182,130,53,0.2);
-  backdrop-filter: blur(4px);
+  background: rgba(243,242,242,0.7) !important;
+  border: 1px solid rgba(182,130,53,0.18) !important;
+  box-shadow: none !important;
 }
+
+/* Gift cards: need minimal visual container */
+.gift-card {
+  background: rgba(243,242,242,0.6) !important;
+  border: 1px solid rgba(182,130,53,0.15) !important;
+  box-shadow: none !important;
+}
+
+/* Gift cart bar stays solid */
+.gift-cart-bar {
+  background: #F3F2F2 !important;
+  border-top: 1px solid rgba(182,130,53,0.2) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+/* ── Photo placeholders: invisible when no image ── */
+.photo-placeholder {
+  background: transparent !important;
+  border: 1px solid rgba(182,130,53,0.2) !important;
+  border-radius: 2px !important;
+  color: rgba(182,130,53,0.35) !important;
+}
+.photo-placeholder svg { opacity: 0.25; }
+.photo-placeholder .ph-label { display: none; }
 
 /* Editorial hero ── */
 .editorial-hero {
@@ -1229,11 +1258,12 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 0.5rem 1rem;
+  padding: 1rem 1rem;
   overflow: visible;
   position: relative;
   z-index: 2;
   pointer-events: none;
+  background: #F3F2F2;
 }
 
 /* Editorial section titles ── */
@@ -1276,20 +1306,45 @@ body {
   text-align: center;
 }
 
-/* Story sections ── */
-.story-section { gap: 3rem; }
+/* Story sections ── editorial, flowing */
+.story-section {
+  gap: 4rem;
+  margin: 5rem 0;
+  align-items: start;
+}
+.story-section:first-child { margin-top: 2rem; }
+.story-text { padding: 1rem 0; }
 .story-text h3 {
   font-family: var(--font-heading);
-  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  font-size: clamp(1.8rem, 5vw, 2.8rem);
   font-weight: 400;
   font-style: italic;
   color: var(--color-accent);
+  margin-bottom: 1rem;
+}
+.story-text p {
+  font-size: 0.95rem;
+  line-height: 2;
+  opacity: 0.78;
+  max-width: 38ch;
 }
 .story-date {
-  font-size: 0.68rem;
-  letter-spacing: 0.2em;
+  font-size: 0.62rem;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
-  opacity: 0.55;
+  opacity: 0.45;
+  margin-bottom: 0.6rem;
+}
+/* Story images: soft rounded corners, no box */
+.story-section img,
+.story-section .photo-placeholder {
+  border-radius: 3px;
+  overflow: hidden;
+}
+/* When photo placeholder is in story, make it a thin elegant frame */
+.story-section .photo-placeholder {
+  min-height: 280px;
+  border: 1px solid rgba(182,130,53,0.15) !important;
 }
 
 /* Nav ── editorial, minimal */
@@ -1367,8 +1422,16 @@ body {
   color: var(--color-accent);
 }
 
-/* Venue card header — remove icon color override */
-.venue-card-header { color: var(--color-accent); }
+/* Venue card: no box, just content */
+.venue-card { padding: 0 !important; }
+.venue-card-header { color: var(--color-accent); justify-content: center; }
+.venue-address { text-align: center; }
+
+/* Transport toggle button: no box look */
+.wedding-detail-block button[style] {
+  border-color: rgba(182,130,53,0.2) !important;
+  background: transparent !important;
+}
 
 /* Gift filter bar */
 .gift-filter-bar { justify-content: center; }
