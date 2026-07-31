@@ -292,8 +292,8 @@ export function BotanicalSideVine({ side = 'left', style }) {
       <Rose x={isLeft ? 85 : 35} y={80} s={0.85} r={isLeft ? -10 : 10}/>
       <Rose x={isLeft ? 90 : 30} y={250} s={0.9} r={isLeft ? 8 : -8}/>
       <Rose x={isLeft ? 80 : 40} y={410} s={0.8} r={isLeft ? -5 : 5}/>
-      <RoseBud x={isLeft ? 92} y={165} s={0.6}/>
-      <RoseBud x={isLeft ? 78} y={330} s={0.6}/>
+      <RoseBud x={isLeft ? 92 : 28} y={165} s={0.6}/>
+      <RoseBud x={isLeft ? 78 : 42} y={330} s={0.6}/>
       <WisteriaRaceme x={isLeft ? 82 : 32} y={85} length={70}/>
       <WisteriaRaceme x={isLeft ? 87 : 27} y={255} length={65}/>
       <Leaf x={isLeft ? 65 : 45} y={100} r={isLeft ? 20 : 160} s={0.8} flip={!isLeft}/>
