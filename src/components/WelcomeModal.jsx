@@ -37,9 +37,10 @@ export default function WelcomeModal({ guest, onEnter }) {
         transition: 'opacity 0.35s ease, transform 0.35s ease',
       }}>
         <div style={{
-          fontFamily: 'var(--font-heading)', fontSize: 'clamp(3rem, 10vw, 5rem)',
-          fontWeight: 600, color: '#fff', lineHeight: 1,
-          marginBottom: '2rem',
+          fontFamily: 'var(--font-heading)', fontSize: 'clamp(3.5rem, 12vw, 6rem)',
+          fontWeight: 400, fontStyle: 'italic', color: '#fff', lineHeight: 1,
+          marginBottom: '2rem', letterSpacing: '0.06em',
+          textShadow: '0 2px 20px rgba(0,0,0,0.3)',
         }}>
           A & C
         </div>

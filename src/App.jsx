@@ -12,6 +12,7 @@ import RSVP from './components/sections/RSVP'
 import Gifts from './components/sections/Gifts'
 import Contact from './components/sections/Contact'
 import AdminPanel from './components/admin/AdminPanel'
+import { BotanicalDivider, FloralFooter, SmallRoseSpray } from './components/Botanical'
 
 function getToken() {
   const fromUrl = new URLSearchParams(window.location.search).get('token')
@@ -106,13 +107,31 @@ function MainApp({ token, guest, rsvp }) {
         pointerEvents: welcomed ? 'auto' : 'none',
       }}>
         <Nav />
-        <main>
+        <main className="editorial-main">
           <Home />
+          <div className="botanical-bridge">
+            <BotanicalDivider style={{ margin: '0 auto' }}/>
+          </div>
           <CountdownSection shouldPlay={welcomed} />
+          <div className="botanical-bridge">
+            <BotanicalDivider flip style={{ margin: '0 auto' }}/>
+          </div>
           <WeddingInfo shouldPlay={welcomed} />
+          <div className="botanical-bridge">
+            <BotanicalDivider style={{ margin: '0 auto' }}/>
+          </div>
           <OurStory />
+          <div className="botanical-bridge">
+            <BotanicalDivider flip style={{ margin: '0 auto' }}/>
+          </div>
           <RSVP initialRsvp={rsvp} />
+          <div className="botanical-bridge">
+            <BotanicalDivider style={{ margin: '0 auto' }}/>
+          </div>
           <Gifts />
+          <div className="botanical-bridge">
+            <FloralFooter style={{ margin: '0 auto' }}/>
+          </div>
           <Contact />
         </main>
         {guest?.isAdmin && (

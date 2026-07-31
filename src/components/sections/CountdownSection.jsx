@@ -31,12 +31,20 @@ export default function CountdownSection({ shouldPlay }) {
   }, [shouldPlay])
 
   return (
-    <div className="countdown-section">
+    <div className="countdown-section reveal-on-scroll">
+      {/* Timer with optional background image */}
       <div
         className="countdown-section-timer"
         style={bgImage ? { backgroundImage: `url(${bgImage})` } : undefined}
       >
         <div className="countdown-section-content">
+          <p style={{
+            fontFamily: 'var(--font-body)', fontSize: '0.62rem',
+            letterSpacing: '0.25em', textTransform: 'uppercase',
+            opacity: 0.6, marginBottom: '1rem',
+          }}>
+            FALTAN
+          </p>
           <div className="countdown" aria-label="Cuenta regresiva">
             {[
               ['días', days],
@@ -52,12 +60,53 @@ export default function CountdownSection({ shouldPlay }) {
           </div>
         </div>
       </div>
-      <video
-        ref={videoRef}
-        muted loop playsInline
-        className="countdown-section-video"
-        src={videoUrl}
-      />
+
+      {/* Mascot video — editorial "editorial window" frame */}
+      <div style={{
+        position: 'relative',
+        display: 'flex',
+        justifyContent: 'center',
+        padding: '2rem 1rem 0',
+      }}>
+        {/* Thin frame lines */}
+        <div style={{
+          position: 'relative',
+          maxWidth: 600,
+          width: '100%',
+        }}>
+          <div style={{
+            position: 'absolute', inset: -12,
+            border: '1px solid rgba(182,130,53,0.25)',
+            borderRadius: 2,
+            pointerEvents: 'none',
+            zIndex: 1,
+          }}/>
+          <video
+            ref={videoRef}
+            muted loop playsInline
+            className="countdown-section-video"
+            src={videoUrl}
+            style={{ borderRadius: 2, display: 'block', width: '100%' }}
+          />
+          {/* Corner accents */}
+          {[
+            { top: -5, left: -5, borderWidth: '2px 0 0 2px' },
+            { top: -5, right: -5, borderWidth: '2px 2px 0 0' },
+            { bottom: -5, left: -5, borderWidth: '0 0 2px 2px' },
+            { bottom: -5, right: -5, borderWidth: '0 2px 2px 0' },
+          ].map((s, i) => (
+            <div key={i} style={{
+              position: 'absolute',
+              top: s.top, left: s.left, right: s.right, bottom: s.bottom,
+              width: 20, height: 20,
+              borderColor: 'rgba(182,130,53,0.55)',
+              borderStyle: 'solid',
+              borderWidth: s.borderWidth,
+              pointerEvents: 'none', zIndex: 2,
+            }}/>
+          ))}
+        </div>
+      </div>
     </div>
   )
 }
