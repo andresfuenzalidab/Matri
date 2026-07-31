@@ -1,16 +1,30 @@
 import { useState } from 'react'
 import { useApp } from '../../context/AppContext'
 
+function toUtcStamp(baseDate, localHour, localMin, offsetHours = 3) {
+  // baseDate: Date at midnight local, offsetHours: local is UTC-offsetHours
+  const utcMs = baseDate.getTime() + (localHour * 60 + localMin + offsetHours * 60) * 60000
+  const d = new Date(utcMs)
+  const yy = d.getUTCFullYear()
+  const mo = String(d.getUTCMonth() + 1).padStart(2, '0')
+  const dd = String(d.getUTCDate()).padStart(2, '0')
+  const hh = String(d.getUTCHours()).padStart(2, '0')
+  const mm = String(d.getUTCMinutes()).padStart(2, '0')
+  return `${yy}${mo}${dd}T${hh}${mm}00Z`
+}
+
 function AddToCalendar({ venueName, ceremonyTime, isPartyOnly, receptionTime, eventEndTime }) {
-  const startHour = isPartyOnly ? (receptionTime || '19:30') : (ceremonyTime || '17:00')
-  const [h, m] = startHour.split(':').map(Number)
-  // Chile is UTC-3 on Nov 6, 2026
-  const startUtcH = String(h + 3).padStart(2, '0')
-  const dtStart = `20261106T${startUtcH}${String(m).padStart(2, '0')}00Z`
-  // End time: configurable from admin as HH:MM on Nov 7 (next day)
+  // Chile is UTC-3 on Nov 6, 2026 — nov6local = Nov 6 00:00 local = Nov 6 03:00 UTC
+  const nov6local = new Date(Date.UTC(2026, 10, 6, 3))
+
+  const startTime = isPartyOnly ? (receptionTime || '19:30') : (ceremonyTime || '17:00')
+  const [sh, sm] = startTime.split(':').map(Number)
+  const dtStart = toUtcStamp(nov6local, sh, sm)
+
+  // End time: if end hour < start hour, it's past midnight (next day)
   const [eh, em] = (eventEndTime || '03:00').split(':').map(Number)
-  const endUtcH = String(eh + 3).padStart(2, '0')
-  const dtEnd = `20261107T${endUtcH}${String(em).padStart(2, '0')}00Z`
+  const endBase = eh < sh ? new Date(nov6local.getTime() + 86400000) : nov6local
+  const dtEnd = toUtcStamp(endBase, eh, em)
 
   const title = 'Matrimonio Cata & Andrés'
   const gcUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE` +

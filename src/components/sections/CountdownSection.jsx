@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useApp } from '../../context/AppContext'
+import { normalizeImageUrl } from '../../utils/imageUrl.js'
 
 const WEDDING_MS = new Date('2026-11-06T17:00:00-03:00').getTime()
 
@@ -22,6 +23,7 @@ export default function CountdownSection({ shouldPlay }) {
   const { get } = useApp()
   const { days, hours, minutes, seconds } = useCountdown(WEDDING_MS)
   const videoUrl = get('background_video_url') || '/timer_cat.mp4'
+  const bgImage = normalizeImageUrl(get('countdown_bg_image') || '')
   const videoRef = useRef(null)
 
   useEffect(() => {
@@ -30,27 +32,32 @@ export default function CountdownSection({ shouldPlay }) {
 
   return (
     <div className="countdown-section">
+      <div
+        className="countdown-section-timer"
+        style={bgImage ? { backgroundImage: `url(${bgImage})` } : undefined}
+      >
+        <div className="countdown-section-content">
+          <div className="countdown" aria-label="Cuenta regresiva">
+            {[
+              ['días', days],
+              ['horas', hours],
+              ['min', minutes],
+              ['seg', seconds],
+            ].map(([label, val]) => (
+              <div key={label} className="countdown-unit">
+                <span className="countdown-number">{String(val).padStart(2, '0')}</span>
+                <span className="countdown-label">{label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
       <video
         ref={videoRef}
         muted loop playsInline
         className="countdown-section-video"
         src={videoUrl}
       />
-      <div className="countdown-section-content">
-        <div className="countdown" aria-label="Cuenta regresiva">
-          {[
-            ['días', days],
-            ['horas', hours],
-            ['min', minutes],
-            ['seg', seconds],
-          ].map(([label, val]) => (
-            <div key={label} className="countdown-unit">
-              <span className="countdown-number">{String(val).padStart(2, '0')}</span>
-              <span className="countdown-label">{label}</span>
-            </div>
-          ))}
-        </div>
-      </div>
     </div>
   )
 }

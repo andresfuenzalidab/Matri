@@ -12,6 +12,7 @@ const SECTIONS = [
       { key: 'hero_location', label: 'Lugar', type: 'text' },
       { key: 'hero_image', label: 'Foto principal (si no hay video)', type: 'image' },
       { key: 'hero_video', label: 'Video de portada (MP4)', type: 'video' },
+      { key: 'countdown_bg_image', label: 'Imagen de fondo del contador', type: 'image' },
     ],
   },
   {
