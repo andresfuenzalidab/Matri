@@ -4,7 +4,7 @@ export async function onRequestGet({ request, env }) {
   const inv = await getInvitation(request, env)
   if (!inv) return err('Unauthorized', 401)
 
-  const [rows, myReservations, otherReservations] = await Promise.all([
+  const [rows, myReservations, otherReservations, confirmedRows] = await Promise.all([
     env.DB.prepare(`
       SELECT
         g.id AS gift_id,
@@ -28,7 +28,17 @@ export async function onRequestGet({ request, env }) {
     env.DB.prepare(
       'SELECT DISTINCT gift_id FROM gift_reservations WHERE invitation_id != ?'
     ).bind(inv.id).all(),
+    env.DB.prepare(`
+      SELECT gr.gift_id AS id, g.name, g.price, gr.quantity
+      FROM gift_reservations gr
+      JOIN gifts g ON gr.gift_id = g.id
+      WHERE gr.invitation_id = ? AND gr.confirmed_payment = 1
+    `).bind(inv.id).all(),
   ])
+
+  const purchasedGifts = (confirmedRows.results || []).map(r => ({
+    id: r.id, name: r.name, price: r.price, quantity: r.quantity,
+  }))
 
   const myGiftIds = new Set((myReservations.results || []).map(r => r.gift_id))
   const otherGiftIds = new Set((otherReservations.results || []).map(r => r.gift_id))
@@ -57,5 +67,9 @@ export async function onRequestGet({ request, env }) {
     })
   }
 
-  return json(Array.from(tripMap.values()).sort((a, b) => a.order - b.order))
+  return json({
+    trips: Array.from(tripMap.values()).sort((a, b) => a.order - b.order),
+    purchased: purchasedGifts.length > 0,
+    purchasedGifts,
+  })
 }

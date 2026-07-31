@@ -21,7 +21,6 @@ function sortGifts(gifts, sortBy) {
 
 export default function Gifts() {
   const { token, get, guest } = useApp()
-  const giftKey = `purchasedGifts_${token}`
   const pendingKey = `pendingMPCart_${token}`
 
   const [trips, setTrips] = useState([])
@@ -29,40 +28,40 @@ export default function Gifts() {
   const [cart, setCart] = useState(new Map())
   const [modalOpen, setModalOpen] = useState(false)
   const [sortBy, setSortBy] = useState('none')
-  const [purchased, setPurchased] = useState(() => {
-    const t = sessionStorage.getItem('inviteToken') || ''
-    try { return !!JSON.parse(localStorage.getItem(`purchasedGifts_${t}`) || 'null') } catch { return false }
-  })
-  const [purchasedGifts, setPurchasedGifts] = useState(() => {
-    const t = sessionStorage.getItem('inviteToken') || ''
-    try { return JSON.parse(localStorage.getItem(`purchasedGifts_${t}`) || 'null') || [] } catch { return [] }
-  })
+  const [purchased, setPurchased] = useState(false)
+  const [purchasedGifts, setPurchasedGifts] = useState([])
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    const status = params.get('status') || params.get('collection_status')
-    const paymentId = params.get('payment_id') || params.get('collection_id')
+    async function load() {
+      const params = new URLSearchParams(window.location.search)
+      const status = params.get('status') || params.get('collection_status')
+      const paymentId = params.get('payment_id') || params.get('collection_id')
 
-    if (paymentId) {
-      window.history.replaceState({}, '', window.location.pathname)
-      if (status === 'approved') {
-        try {
-          const raw = localStorage.getItem(pendingKey)
-          if (raw) {
-            localStorage.removeItem(pendingKey)
-            const items = JSON.parse(raw)
-            const reserved = items.map(({ gift, quantity }) => ({ ...gift, quantity }))
-            localStorage.setItem(giftKey, JSON.stringify(reserved))
-            setPurchasedGifts(reserved)
-            setPurchased(true)
-          }
-        } catch {}
-      } else {
+      if (paymentId) {
+        window.history.replaceState({}, '', window.location.pathname)
         localStorage.removeItem(pendingKey)
+        if (status === 'approved') {
+          await fetch('/api/gifts/confirm-payment', {
+            method: 'POST',
+            headers: { 'X-Invite-Token': token },
+          }).catch(() => {})
+        }
+        sessionStorage.setItem('scrollToGifts', '1')
       }
-      sessionStorage.setItem('scrollToGifts', '1')
+
+      try {
+        const r = await fetch('/api/gifts', { headers: { 'X-Invite-Token': token } })
+        const data = await r.json()
+        setTrips(data.trips || [])
+        if (data.purchased) {
+          setPurchased(true)
+          setPurchasedGifts(data.purchasedGifts || [])
+        }
+      } catch {}
+      setLoading(false)
     }
-  }, [giftKey, pendingKey])
+    load()
+  }, [token, pendingKey])
 
   useEffect(() => {
     if (!loading && (purchased || sessionStorage.getItem('scrollToGifts'))) {
@@ -70,13 +69,6 @@ export default function Gifts() {
       setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }), 100)
     }
   }, [loading, purchased])
-
-  useEffect(() => {
-    fetch('/api/gifts', { headers: { 'X-Invite-Token': token } })
-      .then(r => r.json())
-      .then(data => { setTrips(data); setLoading(false) })
-      .catch(() => setLoading(false))
-  }, [token])
 
   function addToCart(gift) {
     setCart(prev => {
@@ -105,7 +97,6 @@ export default function Gifts() {
 
   function handleReserved(cartItems) {
     const reserved = cartItems.map(({ gift, quantity }) => ({ ...gift, quantity }))
-    try { localStorage.setItem(giftKey, JSON.stringify(reserved)) } catch {}
     setPurchasedGifts(reserved)
     setCart(new Map())
     setModalOpen(false)
