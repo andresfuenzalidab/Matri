@@ -28,8 +28,12 @@ export default function OurStory() {
           margin: '0 auto 3rem',
           textAlign: 'left',
           lineHeight: 2,
-          fontSize: '0.95rem',
-          opacity: 0.78,
+          fontFamily: 'var(--font-heading)',
+          fontStyle: 'italic',
+          fontSize: 'clamp(1.05rem, 2.5vw, 1.3rem)',
+          fontWeight: 400,
+          opacity: 0.82,
+          color: 'var(--color-text)',
         }}>
           {body.split('\n').filter(p => p.trim()).map((p, i) => (
             <p key={i} style={{ marginBottom: '1.1rem' }}>{p}</p>

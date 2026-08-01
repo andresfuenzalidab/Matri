@@ -27,7 +27,7 @@ export default function Nav() {
       if (!el) return null
       const obs = new IntersectionObserver(
         ([entry]) => { if (entry.isIntersecting) setActive(id) },
-        { threshold: 0.25, rootMargin: '-60px 0px 0px 0px' }
+        { threshold: 0.05, rootMargin: '-40px 0px -40% 0px' }
       )
       obs.observe(el)
       return obs

@@ -45,6 +45,13 @@ const SharedHeroVideo = forwardRef(function SharedHeroVideo({ onCanPlay }, ref) 
   )
 })
 
+const VINE_STOPS = [
+  { top: '2%',  opacity: 0.82 },
+  { top: '26%', opacity: 0.58 },
+  { top: '52%', opacity: 0.4  },
+  { top: '76%', opacity: 0.28 },
+]
+
 function SideVines() {
   const { get } = useApp()
   const img = normalizeImageUrl(get('flower_vine_left') || '')
@@ -52,10 +59,23 @@ function SideVines() {
   if (img) {
     return (
       <>
-        <div className="side-vine side-vine-left" aria-hidden="true"
-          style={{ backgroundImage: `url(${img})` }} />
-        <div className="side-vine side-vine-right" aria-hidden="true"
-          style={{ backgroundImage: `url(${img})` }} />
+        <div className="side-vine side-vine-left" aria-hidden="true">
+          {VINE_STOPS.map((s, i) => (
+            <img key={i} src={img} alt="" style={{
+              position: 'absolute', top: s.top, left: 0,
+              width: '100%', opacity: s.opacity, mixBlendMode: 'multiply',
+            }} />
+          ))}
+        </div>
+        <div className="side-vine side-vine-right" aria-hidden="true">
+          {VINE_STOPS.map((s, i) => (
+            <img key={i} src={img} alt="" style={{
+              position: 'absolute', top: s.top, right: 0,
+              width: '100%', opacity: s.opacity, mixBlendMode: 'multiply',
+              transform: 'scaleX(-1)',
+            }} />
+          ))}
+        </div>
       </>
     )
   }
@@ -64,15 +84,13 @@ function SideVines() {
     <>
       <div className="side-vine side-vine-left side-vine-svg" aria-hidden="true">
         <BotanicalHeroLeft style={{ opacity: 0.78 }}/>
-        <BotanicalHeroLeft style={{ opacity: 0.55, marginTop: -100 }}/>
-        <BotanicalHeroLeft style={{ opacity: 0.38, marginTop: -100 }}/>
-        <BotanicalHeroLeft style={{ opacity: 0.25, marginTop: -100 }}/>
+        <BotanicalHeroLeft style={{ opacity: 0.45, marginTop: -100 }}/>
+        <BotanicalHeroLeft style={{ opacity: 0.28, marginTop: -100 }}/>
       </div>
       <div className="side-vine side-vine-right side-vine-svg" aria-hidden="true">
         <BotanicalHeroRight style={{ opacity: 0.78 }}/>
-        <BotanicalHeroRight style={{ opacity: 0.55, marginTop: -100 }}/>
-        <BotanicalHeroRight style={{ opacity: 0.38, marginTop: -100 }}/>
-        <BotanicalHeroRight style={{ opacity: 0.25, marginTop: -100 }}/>
+        <BotanicalHeroRight style={{ opacity: 0.45, marginTop: -100 }}/>
+        <BotanicalHeroRight style={{ opacity: 0.28, marginTop: -100 }}/>
       </div>
     </>
   )
@@ -191,10 +209,11 @@ function MainApp({ token, guest, rsvp }) {
           <Ornament />
           <FAQ />
           <Ornament />
+          <Contact />
+          <Ornament />
           <RSVP initialRsvp={rsvp} />
           <Ornament />
           <Gifts />
-          <Contact />
           <FlowerFooter />
         </main>
         {guest?.isAdmin && (
