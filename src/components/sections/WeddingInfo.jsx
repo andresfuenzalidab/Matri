@@ -119,7 +119,7 @@ export default function WeddingInfo({ shouldPlay }) {
         <video
           ref={descVideoRef}
           muted loop playsInline
-          style={{ width: '100%', borderRadius: 6, marginTop: '0.75rem', display: 'block' }}
+          style={{ width: '100%', borderRadius: 6, marginTop: '0.75rem', display: 'block', mixBlendMode: 'multiply' }}
           src={get('description_video_url') || '/description_dog.mp4'}
         />
         {mapsUrl && (
@@ -142,7 +142,7 @@ export default function WeddingInfo({ shouldPlay }) {
           <video
             ref={dressVideoRef}
             muted loop playsInline
-            style={{ flex: '0 0 50%', width: '50%', display: 'block', objectFit: 'cover' }}
+            style={{ flex: '0 0 50%', width: '50%', display: 'block', objectFit: 'cover', mixBlendMode: 'multiply' }}
             src={get('dresscode_video_url') || '/dresscode_cat.mp4'}
           />
           {dressCodeImage ? (

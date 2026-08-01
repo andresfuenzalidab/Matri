@@ -86,7 +86,7 @@ export default function CountdownSection({ shouldPlay }) {
             muted loop playsInline
             className="countdown-section-video"
             src={videoUrl}
-            style={{ borderRadius: 2, display: 'block', width: '100%' }}
+            style={{ borderRadius: 2, display: 'block', width: '100%', mixBlendMode: 'multiply' }}
           />
           {/* Corner accents */}
           {[
