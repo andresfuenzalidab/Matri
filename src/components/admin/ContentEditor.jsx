@@ -13,6 +13,10 @@ const SECTIONS = [
       { key: 'hero_image', label: 'Foto principal (si no hay video)', type: 'image' },
       { key: 'hero_video', label: 'Video de portada (MP4)', type: 'video' },
       { key: 'countdown_bg_image', label: 'Imagen de fondo del contador', type: 'image' },
+      { key: 'flower_vine_left', label: 'Flores laterales IZQUIERDA (PNG fondo blanco o transparente)', type: 'image' },
+      { key: 'flower_vine_right', label: 'Flores laterales DERECHA (PNG fondo blanco o transparente)', type: 'image' },
+      { key: 'flower_footer', label: 'Flores del cierre / footer (PNG ancho, fondo blanco)', type: 'image' },
+      { key: 'flower_overlay', label: 'Flor superpuesta en fotos de historia (PNG fondo blanco)', type: 'image' },
     ],
   },
   {

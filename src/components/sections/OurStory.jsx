@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useApp } from '../../context/AppContext'
+import { normalizeImageUrl } from '../../utils/imageUrl.js'
 import PhotoPlaceholder from '../PhotoPlaceholder'
 import StoryCarousel from '../StoryCarousel'
 
 export default function OurStory() {
   const { token, get } = useApp()
+  const flowerOverlay = normalizeImageUrl(get('flower_overlay') || '')
   const [sections, setSections] = useState([])
   const [photos, setPhotos] = useState([])
   const [loading, setLoading] = useState(true)
@@ -43,11 +45,18 @@ export default function OurStory() {
               <h3>{sec.title}</h3>
               {sec.content && <p>{sec.content}</p>}
             </div>
-            <div className={`polaroid ${driftClass}`} style={{ transform: `rotate(${angle}deg)` }}>
+            <div className={`polaroid ${driftClass}`} style={{ transform: `rotate(${angle}deg)`, position: 'relative' }}>
               {sec.image_url ? (
                 <img src={sec.image_url} alt={sec.title} style={{ width: '100%', height: 280, objectFit: 'cover' }} />
               ) : (
                 <PhotoPlaceholder size="lg" label={sec.title} alt={sec.title} />
+              )}
+              {flowerOverlay && (
+                <img src={flowerOverlay} alt="" style={{
+                  position: 'absolute', bottom: -24, right: -24,
+                  width: 90, height: 90, objectFit: 'contain',
+                  mixBlendMode: 'multiply', pointerEvents: 'none', zIndex: 2,
+                }} />
               )}
             </div>
           </div>

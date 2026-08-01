@@ -1516,6 +1516,28 @@ body {
   50%      { transform: rotate(0.5deg) translateY(-5px); }
 }
 
+/* ── Real-image side vine ── */
+.side-vine-img {
+  width: 100%;
+  display: block;
+  mix-blend-mode: multiply;
+}
+
+/* ── Flower footer ── */
+.flower-footer {
+  width: 100%;
+  pointer-events: none;
+  overflow: hidden;
+  margin-top: -4rem;
+  position: relative;
+  z-index: 2;
+}
+.flower-footer-img {
+  width: 100%;
+  display: block;
+  mix-blend-mode: multiply;
+}
+
 /* Mobile adjustments ── */
 @media (max-width: 640px) {
   .editorial-hero-content { padding: 1rem; }
@@ -1524,4 +1546,15 @@ body {
   .botanical-bridge { padding: 0 0.5rem; }
   .side-vine { width: 60px; }
   .ambient-glow { width: 280px; height: 280px; }
+
+  /* Full-bleed carousel on mobile */
+  .story-carousel {
+    width: 100vw;
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+    max-width: none;
+    border-radius: 0;
+    aspect-ratio: 4/3;
+  }
 }

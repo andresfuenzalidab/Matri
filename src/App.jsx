@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, forwardRef } from 'react'
 import { AppProvider, useApp } from './context/AppContext'
 import { useScrollReveal } from './utils/useScrollReveal'
+import { normalizeImageUrl } from './utils/imageUrl.js'
 import Nav from './components/Nav'
 import WelcomeModal from './components/WelcomeModal'
 import MusicPlayer from './components/MusicPlayer'
@@ -42,6 +43,60 @@ const SharedHeroVideo = forwardRef(function SharedHeroVideo({ onCanPlay }, ref) 
     />
   )
 })
+
+function SideVines() {
+  const { get } = useApp()
+  const leftImg = normalizeImageUrl(get('flower_vine_left') || '')
+  const rightImg = normalizeImageUrl(get('flower_vine_right') || '')
+
+  return (
+    <>
+      <div className="side-vine side-vine-left" aria-hidden="true">
+        {leftImg ? (
+          <>
+            <img src={leftImg} alt="" className="side-vine-img" />
+            <img src={leftImg} alt="" className="side-vine-img" style={{ marginTop: -80, opacity: 0.65 }} />
+            <img src={leftImg} alt="" className="side-vine-img" style={{ marginTop: -80, opacity: 0.4 }} />
+          </>
+        ) : (
+          <>
+            <BotanicalHeroLeft style={{ opacity: 0.78 }}/>
+            <BotanicalHeroLeft style={{ opacity: 0.55, marginTop: -100 }}/>
+            <BotanicalHeroLeft style={{ opacity: 0.38, marginTop: -100 }}/>
+            <BotanicalHeroLeft style={{ opacity: 0.25, marginTop: -100 }}/>
+          </>
+        )}
+      </div>
+      <div className="side-vine side-vine-right" aria-hidden="true">
+        {rightImg ? (
+          <>
+            <img src={rightImg} alt="" className="side-vine-img" />
+            <img src={rightImg} alt="" className="side-vine-img" style={{ marginTop: -80, opacity: 0.65 }} />
+            <img src={rightImg} alt="" className="side-vine-img" style={{ marginTop: -80, opacity: 0.4 }} />
+          </>
+        ) : (
+          <>
+            <BotanicalHeroRight style={{ opacity: 0.78 }}/>
+            <BotanicalHeroRight style={{ opacity: 0.55, marginTop: -100 }}/>
+            <BotanicalHeroRight style={{ opacity: 0.38, marginTop: -100 }}/>
+            <BotanicalHeroRight style={{ opacity: 0.25, marginTop: -100 }}/>
+          </>
+        )}
+      </div>
+    </>
+  )
+}
+
+function FlowerFooter() {
+  const { get } = useApp()
+  const img = normalizeImageUrl(get('flower_footer') || '')
+  if (!img) return null
+  return (
+    <div className="flower-footer" aria-hidden="true">
+      <img src={img} alt="" className="flower-footer-img" />
+    </div>
+  )
+}
 
 function Ornament() {
   return (
@@ -121,24 +176,7 @@ function MainApp({ token, guest, rsvp }) {
         <Nav />
         <main className="editorial-main">
           {/* ── Side vines running full height ── */}
-          <div className="side-vine side-vine-left" aria-hidden="true">
-            <BotanicalHeroLeft style={{ opacity: 0.78 }}/>
-            <BotanicalHeroLeft style={{ opacity: 0.65, marginTop: -100 }}/>
-            <BotanicalHeroLeft style={{ opacity: 0.55, marginTop: -100 }}/>
-            <BotanicalHeroLeft style={{ opacity: 0.45, marginTop: -100 }}/>
-            <BotanicalHeroLeft style={{ opacity: 0.38, marginTop: -100 }}/>
-            <BotanicalHeroLeft style={{ opacity: 0.30, marginTop: -100 }}/>
-            <BotanicalHeroLeft style={{ opacity: 0.22, marginTop: -100 }}/>
-          </div>
-          <div className="side-vine side-vine-right" aria-hidden="true">
-            <BotanicalHeroRight style={{ opacity: 0.78 }}/>
-            <BotanicalHeroRight style={{ opacity: 0.65, marginTop: -100 }}/>
-            <BotanicalHeroRight style={{ opacity: 0.55, marginTop: -100 }}/>
-            <BotanicalHeroRight style={{ opacity: 0.45, marginTop: -100 }}/>
-            <BotanicalHeroRight style={{ opacity: 0.38, marginTop: -100 }}/>
-            <BotanicalHeroRight style={{ opacity: 0.30, marginTop: -100 }}/>
-            <BotanicalHeroRight style={{ opacity: 0.22, marginTop: -100 }}/>
-          </div>
+          <SideVines />
 
           {/* ── Ambient warm glows ── */}
           <div className="ambient-glow" style={{ top: 900, left: '8%' }} aria-hidden="true"/>
@@ -159,6 +197,7 @@ function MainApp({ token, guest, rsvp }) {
           <Ornament />
           <Gifts />
           <Contact />
+          <FlowerFooter />
         </main>
         {guest?.isAdmin && (
           <>

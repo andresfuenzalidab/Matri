@@ -61,12 +61,12 @@ export default function CountdownSection({ shouldPlay }) {
         </div>
       </div>
 
-      {/* Mascot video — editorial "editorial window" frame */}
+      {/* Mascot video — editorial frame */}
       <div style={{
         position: 'relative',
         display: 'flex',
         justifyContent: 'center',
-        padding: '2rem 1rem 0',
+        padding: '0.25rem 1rem 0',
       }}>
         {/* Thin frame lines */}
         <div style={{
