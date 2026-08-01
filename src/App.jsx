@@ -46,42 +46,32 @@ const SharedHeroVideo = forwardRef(function SharedHeroVideo({ onCanPlay }, ref) 
 
 function SideVines() {
   const { get } = useApp()
-  const leftImg = normalizeImageUrl(get('flower_vine_left') || '')
-  const rightImg = normalizeImageUrl(get('flower_vine_right') || '')
+  const img = normalizeImageUrl(get('flower_vine_left') || '')
+
+  if (img) {
+    return (
+      <>
+        <div className="side-vine side-vine-left" aria-hidden="true"
+          style={{ backgroundImage: `url(${img})` }} />
+        <div className="side-vine side-vine-right" aria-hidden="true"
+          style={{ backgroundImage: `url(${img})` }} />
+      </>
+    )
+  }
 
   return (
     <>
-      <div className="side-vine side-vine-left" aria-hidden="true">
-        {leftImg ? (
-          <>
-            <img src={leftImg} alt="" className="side-vine-img" />
-            <img src={leftImg} alt="" className="side-vine-img" style={{ marginTop: -80, opacity: 0.65 }} />
-            <img src={leftImg} alt="" className="side-vine-img" style={{ marginTop: -80, opacity: 0.4 }} />
-          </>
-        ) : (
-          <>
-            <BotanicalHeroLeft style={{ opacity: 0.78 }}/>
-            <BotanicalHeroLeft style={{ opacity: 0.55, marginTop: -100 }}/>
-            <BotanicalHeroLeft style={{ opacity: 0.38, marginTop: -100 }}/>
-            <BotanicalHeroLeft style={{ opacity: 0.25, marginTop: -100 }}/>
-          </>
-        )}
+      <div className="side-vine side-vine-left side-vine-svg" aria-hidden="true">
+        <BotanicalHeroLeft style={{ opacity: 0.78 }}/>
+        <BotanicalHeroLeft style={{ opacity: 0.55, marginTop: -100 }}/>
+        <BotanicalHeroLeft style={{ opacity: 0.38, marginTop: -100 }}/>
+        <BotanicalHeroLeft style={{ opacity: 0.25, marginTop: -100 }}/>
       </div>
-      <div className="side-vine side-vine-right" aria-hidden="true">
-        {rightImg ? (
-          <>
-            <img src={rightImg} alt="" className="side-vine-img" />
-            <img src={rightImg} alt="" className="side-vine-img" style={{ marginTop: -80, opacity: 0.65 }} />
-            <img src={rightImg} alt="" className="side-vine-img" style={{ marginTop: -80, opacity: 0.4 }} />
-          </>
-        ) : (
-          <>
-            <BotanicalHeroRight style={{ opacity: 0.78 }}/>
-            <BotanicalHeroRight style={{ opacity: 0.55, marginTop: -100 }}/>
-            <BotanicalHeroRight style={{ opacity: 0.38, marginTop: -100 }}/>
-            <BotanicalHeroRight style={{ opacity: 0.25, marginTop: -100 }}/>
-          </>
-        )}
+      <div className="side-vine side-vine-right side-vine-svg" aria-hidden="true">
+        <BotanicalHeroRight style={{ opacity: 0.78 }}/>
+        <BotanicalHeroRight style={{ opacity: 0.55, marginTop: -100 }}/>
+        <BotanicalHeroRight style={{ opacity: 0.38, marginTop: -100 }}/>
+        <BotanicalHeroRight style={{ opacity: 0.25, marginTop: -100 }}/>
       </div>
     </>
   )
@@ -89,11 +79,16 @@ function SideVines() {
 
 function FlowerFooter() {
   const { get } = useApp()
-  const img = normalizeImageUrl(get('flower_footer') || '')
+  const img = normalizeImageUrl(get('flower_vine_left') || '')
   if (!img) return null
   return (
     <div className="flower-footer" aria-hidden="true">
-      <img src={img} alt="" className="flower-footer-img" />
+      {/* Left half: image rotated 90° CW, flowers spread from left */}
+      <div className="flower-footer-half flower-footer-l"
+        style={{ backgroundImage: `url(${img})` }} />
+      {/* Right half: same image mirrored → flowers spread from right */}
+      <div className="flower-footer-half flower-footer-r"
+        style={{ backgroundImage: `url(${img})` }} />
     </div>
   )
 }

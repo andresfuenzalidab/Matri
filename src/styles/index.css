@@ -1025,7 +1025,6 @@ textarea.input { min-height: 90px; resize: vertical; }
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 320px;
   background-color: var(--color-bg);
   background-size: cover;
   background-position: center;
@@ -1371,9 +1370,8 @@ body {
 .countdown-section-timer {
   background-color: transparent;
 }
-.countdown-section-timer::after {
-  background: rgba(243,242,242,0.3);
-}
+.countdown-section-timer::after { display: none; }
+.countdown-section-content { padding-bottom: 0 !important; }
 .countdown-number {
   font-size: clamp(3rem, 9vw, 5.5rem);
   font-weight: 400;
@@ -1459,14 +1457,24 @@ body {
 .side-vine {
   position: absolute;
   top: 0;
-  width: 150px;
-  display: flex;
-  flex-direction: column;
+  bottom: 0;
+  width: 160px;
+  background-repeat: repeat-y;
+  background-size: 100% auto;
+  mix-blend-mode: multiply;
   pointer-events: none;
-  z-index: 0;
+  z-index: 2;
 }
 .side-vine-left  { left: 0; }
-.side-vine-right { right: 0; }
+.side-vine-right { right: 0; transform: scaleX(-1); }
+/* SVG fallback: restore flex column layout */
+.side-vine-svg {
+  display: flex;
+  flex-direction: column;
+  background: none !important;
+  transform: none !important;
+  mix-blend-mode: normal;
+}
 
 /* ── Ambient warm glows ── */
 .ambient-glow {
@@ -1516,6 +1524,11 @@ body {
   50%      { transform: rotate(0.5deg) translateY(-5px); }
 }
 
+/* ── All images blend into the cream background ── */
+.editorial-main img {
+  mix-blend-mode: multiply;
+}
+
 /* ── Real-image side vine ── */
 .side-vine-img {
   width: 100%;
@@ -1525,17 +1538,31 @@ body {
 
 /* ── Flower footer ── */
 .flower-footer {
-  width: 100%;
+  position: relative;
+  z-index: 10;
+  margin-top: -5rem;         /* overlaps Contact section from above */
+  height: 260px;
+  display: flex;
   pointer-events: none;
   overflow: hidden;
-  margin-top: -4rem;
-  position: relative;
-  z-index: 2;
 }
-.flower-footer-img {
-  width: 100%;
-  display: block;
+.flower-footer-half {
+  flex: 1;
+  background-repeat: no-repeat;
+  background-size: auto 100%;
   mix-blend-mode: multiply;
+}
+/* Left half: rotate 90° → vine spreads horizontally from left edge */
+.flower-footer-l {
+  background-position: right center;
+  transform: rotate(90deg);
+  transform-origin: center center;
+}
+/* Right half: same image mirrored */
+.flower-footer-r {
+  background-position: left center;
+  transform: rotate(90deg) scaleX(-1);
+  transform-origin: center center;
 }
 
 /* Mobile adjustments ── */
