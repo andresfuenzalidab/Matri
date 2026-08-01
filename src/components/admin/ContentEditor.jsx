@@ -22,14 +22,20 @@ const SECTIONS = [
   {
     label: 'Nuestra Historia',
     fields: [
-      { key: 'story_how_we_met_date', label: 'Fecha en que se conocieron', type: 'text' },
-      { key: 'story_how_we_met', label: 'Cómo se conocieron', type: 'textarea' },
-      { key: 'story_image_1', label: 'Foto juntos', type: 'image' },
-      { key: 'story_proposal_date', label: 'Fecha del compromiso', type: 'text' },
-      { key: 'story_proposal', label: 'Historia del compromiso', type: 'textarea' },
-      { key: 'proposal_image', label: 'Foto del compromiso', type: 'image' },
-      { key: 'story_family', label: 'Texto sobre mascotas', type: 'textarea' },
-      { key: 'story_subtitle', label: 'Subtítulo de la sección', type: 'text' },
+      { key: 'story_heading', label: 'Título de la sección', type: 'text' },
+      { key: 'story_subtitle', label: 'Subtítulo', type: 'text' },
+      { key: 'story_body', label: 'Historia completa (párrafos separados por líneas)', type: 'textarea' },
+    ],
+  },
+  {
+    label: 'Preguntas Frecuentes (FAQ)',
+    fields: [
+      { key: 'faq_heading', label: 'Título de la sección', type: 'text' },
+      {
+        key: 'faq_items',
+        label: 'Preguntas y respuestas (JSON)\nEjemplo: [{"q":"¿Habrá transporte?","a":"Sí, contaremos con buses..."}]',
+        type: 'textarea',
+      },
     ],
   },
   {

@@ -33,25 +33,34 @@ function VenueCarousel({ photos }) {
   const photo = photos[current]
   const src = normalizeImageUrl(photo.image_url)
 
+  const parts = (photo.caption || '').split('|')
+  const title = parts[0]?.trim()
+  const badge = parts[1]?.trim()
+
   return (
-    <div className="story-carousel" style={{ marginTop: '1.5rem' }}>
-      <div className={`story-carousel-img-wrap ${fading ? 'fading' : ''}`}
-        style={{ height: 300 }}>
-        <img src={src} alt={photo.caption || 'Foto del lugar'}
+    <div className="photo-card-carousel">
+      <div className={`photo-card ${fading ? 'photo-card-fading' : ''}`}>
+        <img src={src} alt={title || 'Foto del lugar'}
           onError={e => e.target.style.display = 'none'} />
-        {photo.caption && <div className="story-carousel-caption">{photo.caption}</div>}
+        {title && (
+          <div className="photo-card-overlay">
+            <p className="photo-card-title">{title}</p>
+            {badge && <span className="photo-card-badge">{badge}</span>}
+          </div>
+        )}
       </div>
       {photos.length > 1 && (
-        <>
-          <button className="story-carousel-arrow left" onClick={prev} aria-label="Anterior">‹</button>
-          <button className="story-carousel-arrow right" onClick={next} aria-label="Siguiente">›</button>
-          <div className="story-carousel-dots">
+        <div className="photo-card-controls">
+          <button className="photo-card-arrow" onClick={prev} aria-label="Anterior">‹</button>
+          <div className="photo-card-dots">
             {photos.map((_, i) => (
-              <button key={i} className={`story-carousel-dot ${i === current ? 'active' : ''}`}
+              <button key={i}
+                className={`photo-card-dot ${i === current ? 'active' : ''}`}
                 onClick={() => go(i)} aria-label={`Foto ${i + 1}`} />
             ))}
           </div>
-        </>
+          <button className="photo-card-arrow" onClick={next} aria-label="Siguiente">›</button>
+        </div>
       )}
     </div>
   )

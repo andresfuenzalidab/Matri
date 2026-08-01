@@ -12,6 +12,7 @@ import OurStory from './components/sections/OurStory'
 import RSVP from './components/sections/RSVP'
 import Gifts from './components/sections/Gifts'
 import Contact from './components/sections/Contact'
+import FAQ from './components/sections/FAQ'
 import AdminPanel from './components/admin/AdminPanel'
 import { BotanicalHeroLeft, BotanicalHeroRight } from './components/Botanical'
 
@@ -187,6 +188,8 @@ function MainApp({ token, guest, rsvp }) {
           <WeddingInfo shouldPlay={welcomed} />
           <Ornament />
           <OurStory />
+          <Ornament />
+          <FAQ />
           <Ornament />
           <RSVP initialRsvp={rsvp} />
           <Ornament />
