@@ -46,10 +46,14 @@ const SharedHeroVideo = forwardRef(function SharedHeroVideo({ onCanPlay }, ref) 
 })
 
 const VINE_STOPS = [
-  { top: '2%',  opacity: 0.82 },
-  { top: '26%', opacity: 0.58 },
-  { top: '52%', opacity: 0.4  },
-  { top: '76%', opacity: 0.28 },
+  { top: '0%',  opacity: 0.88 },
+  { top: '13%', opacity: 0.72 },
+  { top: '26%', opacity: 0.60 },
+  { top: '39%', opacity: 0.50 },
+  { top: '52%', opacity: 0.42 },
+  { top: '65%', opacity: 0.34 },
+  { top: '78%', opacity: 0.26 },
+  { top: '91%', opacity: 0.20 },
 ]
 
 function SideVines() {
@@ -207,13 +211,13 @@ function MainApp({ token, guest, rsvp }) {
           <Ornament />
           <OurStory />
           <Ornament />
-          <FAQ />
-          <Ornament />
           <Contact />
           <Ornament />
           <RSVP initialRsvp={rsvp} />
           <Ornament />
           <Gifts />
+          <Ornament />
+          <FAQ />
           <FlowerFooter />
         </main>
         {guest?.isAdmin && (

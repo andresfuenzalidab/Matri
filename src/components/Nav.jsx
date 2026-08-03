@@ -4,9 +4,9 @@ const LINKS = [
   { id: 'inicio',   label: 'Inicio' },
   { id: 'boda',     label: 'Detalles' },
   { id: 'historia', label: 'Historia' },
-  { id: 'faq',      label: 'FAQ' },
   { id: 'rsvp',     label: 'RSVP' },
   { id: 'regalos',  label: 'Regalos' },
+  { id: 'faq',      label: 'FAQ' },
 ]
 
 const BOTTOM_LINKS = [

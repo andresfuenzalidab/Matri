@@ -125,8 +125,8 @@ export default function Gifts() {
           </h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginBottom: '0.75rem' }}>
             {purchasedGifts.map((g, i) => (
-              <span key={i} style={{ fontSize: '0.9rem' }}>
-                <strong>{g.name}</strong>
+              <span key={i} style={{ fontFamily: 'var(--font-heading)', fontStyle: 'italic', fontSize: 'clamp(1rem, 2.5vw, 1.15rem)', fontWeight: 400 }}>
+                {g.name}
                 {(g.quantity || 1) > 1 ? ` ×${g.quantity}` : ''}
                 {g.price != null ? ` — ${formatCLP(g.price * (g.quantity || 1))}` : ''}
               </span>
@@ -137,7 +137,7 @@ export default function Gifts() {
               Total: {formatCLP(purchasedTotal)}
             </div>
           )}
-          <p style={{ fontSize: '0.8rem', opacity: 0.6, margin: 0 }}>
+          <p style={{ fontFamily: 'var(--font-heading)', fontStyle: 'italic', fontSize: 'clamp(1rem, 2.5vw, 1.1rem)', fontWeight: 400, opacity: 0.72, margin: 0 }}>
             Tu(s) regalo(s) ha(n) quedado reservado(s). ¡Nos hace muy felices!
           </p>
         </div>

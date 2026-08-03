@@ -263,7 +263,9 @@ textarea.input { min-height: 90px; resize: vertical; }
   margin-bottom: 0.5rem;
 }
 .section-subtitle {
-  opacity: 0.6; margin-bottom: 2.5rem; font-size: 0.95rem;
+  opacity: 0.72; margin-bottom: 2.5rem;
+  font-family: var(--font-heading); font-style: italic;
+  font-size: clamp(1rem, 2.5vw, 1.25rem); font-weight: 400; line-height: 1.8;
 }
 
 /* ── Hero ── */
@@ -430,7 +432,7 @@ textarea.input { min-height: 90px; resize: vertical; }
 }
 .rsvp-check { font-size: 3rem; color: var(--color-accent); margin-bottom: 1rem; }
 .rsvp-submitted h2 { margin-bottom: 1rem; }
-.rsvp-submitted p { opacity: 0.7; line-height: 1.7; }
+.rsvp-submitted p { opacity: 0.78; line-height: 1.9; font-family: var(--font-heading); font-style: italic; font-size: clamp(1rem, 2.5vw, 1.25rem); font-weight: 400; }
 .form-error { color: #c0392b; font-size: 0.875rem; margin: 0.5rem 0; }
 .form-field { margin-bottom: 1.25rem; }
 .form-label {
@@ -511,7 +513,7 @@ textarea.input { min-height: 90px; resize: vertical; }
 
 /* ── Admin ── */
 .admin-fab {
-  position: fixed; bottom: 1.75rem; right: 1.75rem; z-index: 200;
+  position: fixed; bottom: 1.75rem; right: 1.75rem; z-index: 950;
 }
 .admin-overlay {
   position: fixed; inset: 0; z-index: 300;
@@ -640,7 +642,7 @@ textarea.input { min-height: 90px; resize: vertical; }
 
 /* ── Music player ── */
 .music-player-btn {
-  position: fixed; bottom: 1.75rem; left: 1.75rem; z-index: 150;
+  position: fixed; bottom: 1.75rem; left: 1.75rem; z-index: 950;
   width: 40px; height: 40px; border-radius: 50%;
   border: 1.5px solid var(--color-accent);
   background: var(--color-bg); color: var(--color-accent);
@@ -1454,7 +1456,7 @@ body {
 }
 .side-vine {
   position: absolute;
-  top: 0;
+  top: 100vh;
   bottom: 0;
   width: 160px;
   pointer-events: none;
@@ -1644,6 +1646,9 @@ body {
   .app-nav .nav-links { display: none !important; }
   /* Extra bottom padding so last section isn't hidden under the nav bar */
   .editorial-main { padding-bottom: 5rem; }
+  /* Raise floating buttons above the bottom nav */
+  .music-player-btn { bottom: 5.5rem; }
+  .admin-fab { bottom: 5.5rem; }
 }
 
 /* ── FAQ accordion ── */
