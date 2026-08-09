@@ -860,22 +860,6 @@ textarea.input { min-height: 90px; resize: vertical; }
 }
 
 /* Elements with this class start invisible; JS adds .is-visible */
-.reveal-on-scroll {
-  opacity: 0;
-  transform: translateY(20px);
-  transition: opacity 0.6s ease, transform 0.6s ease;
-}
-.reveal-on-scroll.is-visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-/* On refresh (already welcomed), skip reveal animations to avoid blank spaces */
-.skip-reveal .reveal-on-scroll {
-  opacity: 1 !important;
-  transform: none !important;
-  transition: none !important;
-}
-
 /* ── Hero video ── */
 .hero-video-wrap {
   position: absolute; inset: 0; z-index: 0;
@@ -1045,6 +1029,18 @@ textarea.input { min-height: 90px; resize: vertical; }
   max-width: 960px;
   margin: 0 auto;
   background: var(--color-bg);
+}
+
+/* ── Matte-keyed videos (see BlendVideo.jsx) ──
+   The wrapper is the backdrop the white matte multiplies away against, and
+   `isolation` pins the blend to this box so no ancestor stacking context
+   (scroll reveal, opacity fades) can cut the video off from it. */
+.blend-video {
+  display: block;
+  position: relative;
+  isolation: isolate;
+  background: var(--color-bg);
+  line-height: 0;
 }
 
 /* ── Pet video overlay ── */
@@ -1408,19 +1404,34 @@ body {
 }
 
 /* Reveal animation ── */
+/* Scroll reveal. The revealed state must land on `transform: none`, never
+   `translateY(0)`: any non-none transform keeps a stacking context alive,
+   and that isolates `mix-blend-mode` descendants (the matte-keyed videos)
+   from the page behind them. */
 .reveal-on-scroll {
   opacity: 0;
   transform: translateY(28px);
   transition: opacity 0.75s ease, transform 0.75s ease;
 }
-.reveal-on-scroll.visible, .skip-reveal .reveal-on-scroll {
+.reveal-on-scroll.is-visible,
+.reveal-on-scroll.visible {
   opacity: 1;
   transform: none;
+}
+/* On refresh (already welcomed), skip reveal animations to avoid blank spaces */
+.skip-reveal .reveal-on-scroll {
+  opacity: 1 !important;
+  transform: none !important;
+  transition: none !important;
 }
 
 /* ── Side vines ── */
 .editorial-main {
-  overflow: hidden;
+  /* `clip`, not `hidden`: `overflow: hidden` turns this into the scroll
+     container for every `position: sticky` descendant, and since it never
+     scrolls itself the gift cart bar had nowhere to stick. `clip` trims the
+     vines and glows exactly the same way but creates no scroll container. */
+  overflow: clip;
 }
 .side-vine {
   position: absolute;
