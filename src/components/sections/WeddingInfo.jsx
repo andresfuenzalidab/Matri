@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useApp } from '../../context/AppContext'
 import { normalizeImageUrl } from '../../utils/imageUrl.js'
 import PhotoPlaceholder from '../PhotoPlaceholder'
+import BlendVideo from '../BlendVideo'
 
 const MapPinIcon = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
@@ -124,10 +125,10 @@ export default function WeddingInfo({ shouldPlay }) {
       )}
 
       <div className="card venue-card reveal-on-scroll">
-        <video
+        <BlendVideo
           ref={descVideoRef}
-          muted loop playsInline
-          style={{ width: '100%', borderRadius: 6, marginTop: '0.75rem', display: 'block', mixBlendMode: 'multiply' }}
+          loop
+          style={{ width: '100%', borderRadius: 6, marginTop: '0.75rem', display: 'block' }}
           src={get('description_video_url') || '/description_dog.mp4'}
         />
         {mapsUrl && (
@@ -147,10 +148,10 @@ export default function WeddingInfo({ shouldPlay }) {
       <div className="wedding-detail-block reveal-on-scroll">
         <h3 className="wedding-detail-title">Código de vestimenta</h3>
         <div style={{ display: 'flex', borderRadius: 6, overflow: 'hidden', maxWidth: 600 }}>
-          <video
+          <BlendVideo
             ref={dressVideoRef}
-            muted loop playsInline
-            style={{ flex: '0 0 50%', width: '50%', display: 'block', objectFit: 'cover', mixBlendMode: 'multiply' }}
+            loop
+            style={{ flex: '0 0 50%', width: '50%', display: 'block', objectFit: 'cover' }}
             src={get('dresscode_video_url') || '/dresscode_cat.mp4'}
           />
           {dressCodeImage ? (

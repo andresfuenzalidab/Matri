@@ -254,7 +254,7 @@ export default function Gifts() {
               <span className="gift-cart-price">{formatCLP(cartTotal)}</span>
             )}
           </div>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <div className="gift-cart-actions">
             <button className="btn btn-ghost" onClick={() => setCart(new Map())}>Quitar todo</button>
             <button className="btn btn-primary" onClick={() => setModalOpen(true)}>
               Regalar →

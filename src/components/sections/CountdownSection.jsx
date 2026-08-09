@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useApp } from '../../context/AppContext'
 import { normalizeImageUrl } from '../../utils/imageUrl.js'
+import BlendVideo from '../BlendVideo'
 
 const WEDDING_MS = new Date('2026-11-06T17:00:00-03:00').getTime()
 
@@ -61,12 +62,12 @@ export default function CountdownSection({ shouldPlay }) {
         </div>
       </div>
 
-      <video
+      <BlendVideo
         ref={videoRef}
-        muted loop playsInline
+        loop
         className="countdown-section-video"
         src={videoUrl}
-        style={{ display: 'block', width: '100%', mixBlendMode: 'multiply' }}
+        style={{ display: 'block', width: '100%' }}
       />
     </div>
   )
