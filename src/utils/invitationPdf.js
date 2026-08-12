@@ -94,7 +94,7 @@ export function downloadInvitationPDF(inv, content = {}) {
 @page{size:A4 portrait;margin:0}
 /* Exactly one sheet. 296mm rather than a full 297mm because a block the same
    height as the page rounds up by a fraction and spills into a blank second
-   page; `overflow:hidden` is the hard guarantee behind that. */
+   page; the overflow clip below is the hard guarantee behind that. */
 html,body{width:210mm;height:296mm;overflow:hidden;background:#f7f3ea}
 body{font-family:'Lora',Georgia,serif;color:#4a4038}
 
