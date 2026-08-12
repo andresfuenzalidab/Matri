@@ -1,91 +1,130 @@
 import { useState, useEffect } from 'react'
+import { useApp } from '../context/AppContext'
+import { normalizeImageUrl } from '../utils/imageUrl.js'
+import { guestDisplayName, pick } from '../utils/guestName.js'
+import { longDateLabel } from '../utils/weddingDate.js'
+
+/** The wax seal drawn when no seal image is uploaded. */
+const SealSprig = () => (
+  <svg viewBox="0 0 40 40" className="envelope-seal-art" aria-hidden="true">
+    <g fill="none" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round">
+      <path d="M20 31V15" />
+      <path d="M20 22c-4 0-6.5-2-7.5-5.5 3.5 0 6.5 1.5 7.5 5.5z" />
+      <path d="M20 22c4 0 6.5-2 7.5-5.5-3.5 0-6.5 1.5-7.5 5.5z" />
+      <path d="M20 15c-2.6-1.4-3.6-3.4-3-6 2.2.8 3.4 2.6 3 6z" />
+      <path d="M20 15c2.6-1.4 3.6-3.4 3-6-2.2.8-3.4 2.6-3 6z" />
+      <circle cx="20" cy="10.5" r="1.6" />
+      <circle cx="13.5" cy="13" r="1.2" />
+      <circle cx="26.5" cy="13" r="1.2" />
+    </g>
+  </svg>
+)
+
+/** Bouncing arrow that points down at the seal. */
+const PointerArrow = () => (
+  <svg viewBox="0 0 24 30" className="envelope-arrow" aria-hidden="true">
+    <g fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 3v20" />
+      <path d="M5.5 16.5 12 23l6.5-6.5" />
+    </g>
+  </svg>
+)
 
 export default function WelcomeModal({ guest, onEnter }) {
+  const { get } = useApp()
   const [visible, setVisible] = useState(false)
-  const [contentVisible, setContentVisible] = useState(true)
+  const [opening, setOpening] = useState(false)
 
   useEffect(() => {
     const t = setTimeout(() => setVisible(true), 50)
     return () => clearTimeout(t)
   }, [])
 
-  const message = guest.welcomeMessage
-  const displayName = guest.nickname || guest.name
+  const logo = normalizeImageUrl(get('envelope_logo_image') || '')
+  const sealImage = normalizeImageUrl(get('envelope_seal_image') || '')
+  const cta = get('envelope_cta_text', 'Toca aquí para abrir la invitación')
+  const dateLabel = get('hero_date') || longDateLabel(get('wedding_date'))
+
+  const displayName = guestDisplayName(guest)
+  const message = guest?.welcomeMessage
 
   function handleEnter() {
-    setContentVisible(false)
+    if (opening) return
+    setOpening(true)
+    // Let the flap swing open before the page underneath takes over.
     setTimeout(() => {
       setVisible(false)
-      setTimeout(onEnter, 400)
-    }, 400)
+      setTimeout(onEnter, 420)
+    }, 620)
   }
 
   return (
-    <div style={{
-      position: 'fixed', inset: 0, zIndex: 1000,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      padding: '2rem',
-      opacity: visible ? 1 : 0,
-      transition: 'opacity 0.5s ease',
-      background: 'linear-gradient(to bottom, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.55) 100%)',
-    }}>
-      <div style={{
-        textAlign: 'center', maxWidth: 480,
-        position: 'relative', zIndex: 2,
-        opacity: contentVisible ? 1 : 0,
-        transform: contentVisible ? 'translateY(0)' : 'translateY(-12px)',
-        transition: 'opacity 0.35s ease, transform 0.35s ease',
-      }}>
-        <div style={{
-          fontFamily: 'var(--font-heading)', fontSize: 'clamp(3.5rem, 12vw, 6rem)',
-          fontWeight: 400, fontStyle: 'italic', color: '#fff', lineHeight: 1,
-          marginBottom: '2rem', letterSpacing: '0.06em',
-          textShadow: '0 2px 20px rgba(0,0,0,0.3)',
-        }}>
-          A & C
+    <div
+      className="envelope-overlay"
+      style={{ opacity: visible ? 1 : 0 }}
+    >
+      <div className={`envelope ${opening ? 'is-opening' : ''}`}>
+        {/* ── Upper half: logo + personalised message ── */}
+        <div className="envelope-top">
+          <svg className="envelope-fold" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M0 0 L50 100 L100 0" fill="none" stroke="currentColor" strokeWidth="0.35" vectorEffect="non-scaling-stroke" />
+          </svg>
+
+          <div className="envelope-top-content">
+            {logo ? (
+              <img src={logo} alt="" className="envelope-logo"
+                onError={e => { e.target.style.display = 'none' }} />
+            ) : (
+              <div className="envelope-monogram" aria-hidden="true">
+                <span className="envelope-monogram-ring" />
+                A&nbsp;&amp;&nbsp;C
+              </div>
+            )}
+
+            <p className="envelope-date">{dateLabel}</p>
+
+            <p className="envelope-message">
+              {message || (
+                <>
+                  {pick(guest, 'Querido/a', 'Queridos')} <strong>{displayName}</strong>,
+                  <br />
+                  {pick(
+                    guest,
+                    'nos alegra mucho que puedas acompañarnos en este día tan especial.',
+                    'nos alegra mucho que puedan acompañarnos en este día tan especial.',
+                  )}
+                </>
+              )}
+            </p>
+          </div>
+
+          {/* ── The seal sits exactly on the fold ── */}
+          <div className="envelope-seal-slot">
+            <PointerArrow />
+            <button
+              type="button"
+              className="envelope-seal"
+              onClick={handleEnter}
+              aria-label={cta}
+            >
+              {sealImage ? (
+                <img src={sealImage} alt="" onError={e => { e.target.style.display = 'none' }} />
+              ) : (
+                <SealSprig />
+              )}
+            </button>
+          </div>
         </div>
 
-        <p style={{
-          fontSize: '0.7rem', letterSpacing: '0.2em', textTransform: 'uppercase',
-          color: 'rgba(255,255,255,0.75)',
-          marginBottom: '1.5rem',
-        }}>
-          Viernes 6 de noviembre de 2026
-        </p>
-
-        {message ? (
-          <p style={{
-            fontFamily: 'var(--font-heading)', fontSize: 'clamp(1.2rem, 3vw, 1.6rem)',
-            lineHeight: 1.5, marginBottom: '2rem', color: '#fff',
-          }}>
-            {message}
-          </p>
-        ) : (
-          <p style={{
-            fontFamily: 'var(--font-heading)', fontSize: 'clamp(1.2rem, 3vw, 1.6rem)',
-            lineHeight: 1.5, marginBottom: '2rem', color: '#fff',
-          }}>
-            Querido/a <strong>{displayName}</strong>,<br />
-            nos alegra mucho que puedas acompañarnos<br />en este día tan especial.
-          </p>
-        )}
-
-        <div style={{
-          height: 1,
-          background: 'rgba(255,255,255,0.3)',
-          margin: '2rem auto', maxWidth: 200,
-        }} />
-
-        <button
-          className="btn btn-primary"
-          onClick={handleEnter}
-          style={{
-            fontSize: '0.8rem', letterSpacing: '0.1em', padding: '0.75rem 2.5rem',
-            borderColor: 'rgba(255,255,255,0.7)', color: '#fff',
-          }}
-        >
-          Entrar a la invitación
-        </button>
+        {/* ── Lower half: the invitation to click ── */}
+        <div className="envelope-bottom">
+          <svg className="envelope-fold" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M0 100 L50 0 L100 100" fill="none" stroke="currentColor" strokeWidth="0.35" vectorEffect="non-scaling-stroke" />
+          </svg>
+          <button type="button" className="envelope-cta" onClick={handleEnter}>
+            {cta}
+          </button>
+        </div>
       </div>
     </div>
   )

@@ -7,7 +7,8 @@ export async function onRequestGet({ request, env }) {
     const [rows, giftRows] = await Promise.all([
       env.DB.prepare(`
         SELECT
-          i.id, i.token, i.name, i.email, i.phone, i.nickname, i.is_admin, i.invitation_sent, i.created_at,
+          i.id, i.token, i.name, i.email, i.phone, i.nickname, i.companion_name,
+          i.is_admin, i.invitation_sent, i.created_at,
           i.welcome_message, i.max_additional_guests, i.invitation_type, i.notes,
           r.attending, r.num_guests
         FROM invitations i
@@ -43,15 +44,16 @@ export async function onRequestPost({ request, env }) {
 
     const token = crypto.randomUUID()
     const {
-      name, email = '', phone = '', nickname = '',
+      name, email = '', phone = '', nickname = '', companionName = '',
       isAdmin = false, welcomeMessage = '',
       maxAdditionalGuests = null, invitationType = 'all_in', notes = ''
     } = body
 
     const result = await env.DB.prepare(
-      'INSERT INTO invitations (token, name, email, phone, nickname, is_admin, welcome_message, max_additional_guests, invitation_type, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *'
+      'INSERT INTO invitations (token, name, email, phone, nickname, companion_name, is_admin, welcome_message, max_additional_guests, invitation_type, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *'
     ).bind(
       token, name.trim(), email.trim() || null, phone.trim() || null, nickname.trim() || null,
+      companionName.trim() || null,
       isAdmin ? 1 : 0, welcomeMessage.trim() || null,
       maxAdditionalGuests ?? null, invitationType, notes.trim() || null
     ).first()
@@ -69,7 +71,7 @@ export async function onRequestPut({ request, env }) {
     if (!body?.id) return err('ID requerido.')
 
     await env.DB.prepare(
-      'UPDATE invitations SET welcome_message = ?, max_additional_guests = ?, invitation_type = ?, notes = ?, phone = ?, nickname = ? WHERE id = ?'
+      'UPDATE invitations SET welcome_message = ?, max_additional_guests = ?, invitation_type = ?, notes = ?, phone = ?, nickname = ?, companion_name = ? WHERE id = ?'
     ).bind(
       body.welcomeMessage?.trim() || null,
       body.maxAdditionalGuests ?? null,
@@ -77,6 +79,7 @@ export async function onRequestPut({ request, env }) {
       body.notes?.trim() || null,
       body.phone?.trim() || null,
       body.nickname?.trim() || null,
+      body.companionName?.trim() || null,
       body.id
     ).run()
 

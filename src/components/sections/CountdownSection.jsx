@@ -1,13 +1,13 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useApp } from '../../context/AppContext'
 import { normalizeImageUrl } from '../../utils/imageUrl.js'
+import { weddingInstant } from '../../utils/weddingDate.js'
 import BlendVideo from '../BlendVideo'
-
-const WEDDING_MS = new Date('2026-11-06T17:00:00-03:00').getTime()
 
 function useCountdown(targetMs) {
   const [diff, setDiff] = useState(() => Math.max(0, targetMs - Date.now()))
   useEffect(() => {
+    setDiff(Math.max(0, targetMs - Date.now()))
     const id = setInterval(() => setDiff(Math.max(0, targetMs - Date.now())), 1000)
     return () => clearInterval(id)
   }, [targetMs])
@@ -22,7 +22,12 @@ function useCountdown(targetMs) {
 
 export default function CountdownSection({ shouldPlay }) {
   const { get } = useApp()
-  const { days, hours, minutes, seconds } = useCountdown(WEDDING_MS)
+  const targetMs = useMemo(
+    () => weddingInstant(get('wedding_date'), get('ceremony_time')).getTime(),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [get('wedding_date'), get('ceremony_time')],
+  )
+  const { days, hours, minutes, seconds } = useCountdown(targetMs)
   const videoUrl = get('background_video_url') || '/timer_cat.mp4'
   const bgImage = normalizeImageUrl(get('countdown_bg_image') || '')
   const videoRef = useRef(null)
@@ -33,19 +38,24 @@ export default function CountdownSection({ shouldPlay }) {
 
   return (
     <div className="countdown-section reveal-on-scroll">
-      {/* Timer with optional background image */}
+      <p className="countdown-kicker">FALTAN</p>
+
+      {/* The clip is capped at the page's content width — full-bleed made it
+          scale up so far that the top and bottom of the frame were cropped. */}
+      <BlendVideo
+        ref={videoRef}
+        loop
+        wrapperClassName="countdown-video-wrap"
+        className="countdown-section-video"
+        src={videoUrl}
+        style={{ display: 'block', width: '100%' }}
+      />
+
       <div
         className="countdown-section-timer"
         style={bgImage ? { backgroundImage: `url(${bgImage})` } : undefined}
       >
-        <div className="countdown-section-content" style={{ paddingBottom: 0 }}>
-          <p style={{
-            fontFamily: 'var(--font-body)', fontSize: '0.62rem',
-            letterSpacing: '0.25em', textTransform: 'uppercase',
-            opacity: 0.6, marginBottom: '1rem',
-          }}>
-            FALTAN
-          </p>
+        <div className="countdown-section-content">
           <div className="countdown" aria-label="Cuenta regresiva">
             {[
               ['días', days],
@@ -61,14 +71,6 @@ export default function CountdownSection({ shouldPlay }) {
           </div>
         </div>
       </div>
-
-      <BlendVideo
-        ref={videoRef}
-        loop
-        className="countdown-section-video"
-        src={videoUrl}
-        style={{ display: 'block', width: '100%' }}
-      />
     </div>
   )
 }

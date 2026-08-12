@@ -5,7 +5,9 @@ import { normalizeImageUrl } from './utils/imageUrl.js'
 import Nav from './components/Nav'
 import WelcomeModal from './components/WelcomeModal'
 import MusicPlayer from './components/MusicPlayer'
+import SectionDivider from './components/SectionDivider'
 import Home from './components/sections/Home'
+import DateSection from './components/sections/DateSection'
 import CountdownSection from './components/sections/CountdownSection'
 import WeddingInfo from './components/sections/WeddingInfo'
 import OurStory from './components/sections/OurStory'
@@ -116,17 +118,6 @@ function FlowerFooter() {
   )
 }
 
-function Ornament() {
-  return (
-    <div style={{ textAlign: 'center', padding: '0.5rem 0', color: 'var(--color-accent)', opacity: 0.5, pointerEvents: 'none' }}>
-      <svg width="140" height="24" viewBox="0 0 140 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M0 12 H55 M85 12 H140" stroke="currentColor" strokeWidth="0.8"/>
-        <circle cx="70" cy="12" r="4" fill="none" stroke="currentColor" strokeWidth="0.8"/>
-      </svg>
-    </div>
-  )
-}
-
 function MainApp({ token, guest, rsvp }) {
   const [adminOpen, setAdminOpen] = useState(false)
   const [welcomed, setWelcomed] = useState(() => {
@@ -204,19 +195,21 @@ function MainApp({ token, guest, rsvp }) {
 
           {/* ── Content ── */}
           <Home />
-          <Ornament />
+          <SectionDivider />
+          <DateSection />
+          <SectionDivider />
           <CountdownSection shouldPlay={welcomed} />
-          <Ornament />
+          <SectionDivider />
           <WeddingInfo shouldPlay={welcomed} />
-          <Ornament />
+          <SectionDivider />
           <OurStory />
-          <Ornament />
+          <SectionDivider />
           <Contact />
-          <Ornament />
+          <SectionDivider />
           <RSVP initialRsvp={rsvp} />
-          <Ornament />
+          <SectionDivider />
           <Gifts />
-          <Ornament />
+          <SectionDivider />
           <FAQ />
           <FlowerFooter />
         </main>

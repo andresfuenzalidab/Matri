@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS invitations (
   email TEXT,
   phone TEXT,
   nickname TEXT,
+  companion_name TEXT,
   is_admin INTEGER DEFAULT 0,
   invitation_sent INTEGER DEFAULT 0,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP

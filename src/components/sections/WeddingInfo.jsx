@@ -1,16 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useApp } from '../../context/AppContext'
 import { normalizeImageUrl } from '../../utils/imageUrl.js'
+import { parseTimelineItems, DEFAULT_TIMELINE_ITEMS } from '../../utils/timelineItems.js'
 import PhotoPlaceholder from '../PhotoPlaceholder'
 import BlendVideo from '../BlendVideo'
-
-const MapPinIcon = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-    <circle cx="12" cy="10" r="3" />
-  </svg>
-)
+import Timeline from '../Timeline'
 
 function VenueCarousel({ photos, landscape }) {
   const [current, setCurrent] = useState(0)
@@ -90,52 +84,31 @@ export default function WeddingInfo({ shouldPlay }) {
   const mapsUrl = get('venue_maps_url')
   const isPartyOnly = guest?.invitationType === 'party_only'
   const dressCodeImage = get('dress_code_image')
-  const timelineImage = get('timeline_image')
+  const venueMapImage = normalizeImageUrl(get('venue_map_image') || '')
+
+  const savedTimeline = parseTimelineItems(get('timeline_items'))
+  const timelineItems = savedTimeline.length ? savedTimeline : DEFAULT_TIMELINE_ITEMS
 
   return (
     <section id="boda" className="section">
-      <h2 className="section-title reveal-on-scroll">Detalles del matrimonio</h2>
-      <p className="reveal-on-scroll" style={{
-        fontFamily: 'var(--font-heading)', fontStyle: 'italic', fontWeight: 400,
-        fontSize: 'clamp(1.25rem, 3.5vw, 1.9rem)', color: 'var(--color-accent)',
-        opacity: 0.75, letterSpacing: '0.04em', marginBottom: '2.5rem',
-      }}>{get('hero_date', 'Viernes 6 de noviembre de 2026')}</p>
+      <h2 className="section-title reveal-on-scroll">El lugar</h2>
+      <p className="section-subtitle reveal-on-scroll">
+        {get('venue_name', 'Altos del Paico')}
+      </p>
 
-      <div className="wedding-cards reveal-on-scroll">
-        {!isPartyOnly && (
-          <div className="card wedding-event-card">
-            <div className="wedding-event-type">Hora de citación</div>
-            <div className="wedding-event-time">{get('ceremony_time', '17:00')} hrs</div>
-            <div className="wedding-event-name">{get('venue_name', 'Altos del Paico')}</div>
-          </div>
-        )}
-        {isPartyOnly && (
-          <div className="card wedding-event-card">
-            <div className="wedding-event-type">Hora de citación</div>
-            <div className="wedding-event-time">{get('reception_time', '19:30')} hrs</div>
-            <div className="wedding-event-name">{get('venue_name', 'Altos del Paico')}</div>
-          </div>
-        )}
-      </div>
-
-      {get('wedding_day_off_tip') && (
-        <p className="reveal-on-scroll" style={{ textAlign: 'center', fontFamily: 'var(--font-heading)', fontStyle: 'italic', fontSize: 'clamp(1rem, 2.5vw, 1.2rem)', fontWeight: 400, opacity: 0.72, marginTop: '0.5rem', color: 'var(--color-accent)' }}>
-          {get('wedding_day_off_tip')}
-        </p>
-      )}
-
+      {/* ── General info video + how to get there ── */}
       <div className="card venue-card reveal-on-scroll">
         <BlendVideo
           ref={descVideoRef}
           loop
-          wrapperStyle={{ borderRadius: 6, marginTop: '0.75rem', overflow: 'hidden' }}
+          wrapperStyle={{ borderRadius: 6, overflow: 'hidden' }}
           style={{ width: '100%', display: 'block' }}
           src={get('description_video_url') || '/description_dog.mp4'}
         />
         {mapsUrl && (
           <a href={mapsUrl} target="_blank" rel="noopener noreferrer"
             className="btn btn-secondary"
-            style={{ alignSelf: 'center', marginTop: '0.75rem' }}>
+            style={{ alignSelf: 'center', marginTop: '1rem' }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
               style={{ marginRight: 6, verticalAlign: 'middle' }}>
               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
@@ -145,10 +118,36 @@ export default function WeddingInfo({ shouldPlay }) {
         )}
       </div>
 
-      {/* Dress code */}
+      {/* ── Photos of the venue ── */}
+      {venuePhotos.length > 0 && (
+        <div className="reveal-on-scroll" style={{ marginTop: '2.5rem', textAlign: 'center' }}>
+          <VenueCarousel photos={venuePhotos} landscape />
+        </div>
+      )}
+
+      {/* ── Programme of the day — full-day guests only ── */}
+      {!isPartyOnly && timelineItems.length > 0 && (
+        <div className="wedding-detail-block reveal-on-scroll">
+          <h3 className="wedding-detail-title">{get('timeline_title', 'Programa del día')}</h3>
+          <Timeline items={timelineItems} />
+        </div>
+      )}
+
+      {/* ── Map / diagram of the grounds ── */}
+      <div className="wedding-detail-block wedding-map-slot reveal-on-scroll">
+        <h3 className="wedding-detail-title">{get('venue_map_title', 'Plano del lugar')}</h3>
+        {venueMapImage ? (
+          <img src={venueMapImage} alt="Plano del lugar" className="wedding-detail-img"
+            onError={e => e.target.style.display = 'none'} />
+        ) : (
+          <PhotoPlaceholder size="lg" label="Sube aquí el plano o mapa del lugar" />
+        )}
+      </div>
+
+      {/* ── Dress code ── */}
       <div className="wedding-detail-block reveal-on-scroll">
         <h3 className="wedding-detail-title">Código de vestimenta</h3>
-        <div style={{ display: 'flex', borderRadius: 6, overflow: 'hidden', maxWidth: 600 }}>
+        <div style={{ display: 'flex', borderRadius: 6, overflow: 'hidden', maxWidth: 600, margin: '0 auto' }}>
           <BlendVideo
             ref={dressVideoRef}
             loop
@@ -167,26 +166,6 @@ export default function WeddingInfo({ shouldPlay }) {
           )}
         </div>
       </div>
-
-      {/* Timeline */}
-      {!isPartyOnly && (
-        <div className="wedding-detail-block reveal-on-scroll">
-          {timelineImage ? (
-            <img src={normalizeImageUrl(timelineImage)} alt="Programa del día"
-              className="wedding-detail-img"
-              onError={e => e.target.style.display = 'none'} />
-          ) : (
-            <PhotoPlaceholder size="md" label="Imagen del programa / timeline" />
-          )}
-        </div>
-      )}
-
-      {/* Venue photos carousel */}
-      {venuePhotos.length > 0 && (
-        <div className="reveal-on-scroll" style={{ marginTop: '2rem', textAlign: 'center' }}>
-          <VenueCarousel photos={venuePhotos} landscape />
-        </div>
-      )}
     </section>
   )
 }

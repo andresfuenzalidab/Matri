@@ -24,6 +24,7 @@ export async function onRequestGet({ request, env }) {
       email: inv.email,
       phone: inv.phone || null,
       nickname: inv.nickname || null,
+      companionName: inv.companion_name || null,
       isAdmin: Boolean(inv.is_admin),
       welcomeMessage: inv.welcome_message || null,
       maxAdditionalGuests: inv.max_additional_guests ?? null,

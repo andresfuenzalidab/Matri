@@ -20,6 +20,10 @@ export async function onRequestPost({ request, env }) {
 
     const { attending, numGuests = 1, message = '', dietaryRestriction = '', companionName = '', email = '' } = body
 
+    // An invitation can name its companion up front — greet both if so.
+    const namedCompanion = (inv.companion_name || '').trim()
+    const greetName = namedCompanion ? `${inv.name} y ${namedCompanion}` : inv.name
+
     await env.DB.prepare(
       'INSERT INTO rsvp_responses (invitation_id, attending, num_guests, message, dietary_restriction, companion_name, email) VALUES (?, ?, ?, ?, ?, ?, ?)'
     ).bind(
@@ -44,7 +48,7 @@ export async function onRequestPost({ request, env }) {
           to: email,
           subject: 'Confirmación de asistencia — Matrimonio Cata & Andrés',
           html: `<div style="font-family:sans-serif;max-width:500px;margin:0 auto">
-            <h2 style="color:#8B7355">¡Hola ${inv.name}!</h2>
+            <h2 style="color:#8B7355">¡Hola ${greetName}!</h2>
             <p>Hemos recibido tu confirmación de asistencia a nuestro matrimonio. ♡</p>
             <p><strong>Fecha:</strong> Viernes 6 de noviembre de 2026</p>
             <p><strong>Hora de citación:</strong> ${ceremonyTime} hrs</p>
@@ -58,9 +62,9 @@ export async function onRequestPost({ request, env }) {
         await sendEmail(env, {
           from: emailFrom,
           to: emailTo,
-          subject: `RSVP: ${inv.name} — ${attending ? `Confirmó (${numGuests} personas)` : 'No puede asistir'}`,
+          subject: `RSVP: ${greetName} — ${attending ? `Confirmó (${numGuests} personas)` : 'No puede asistir'}`,
           html: `<div style="font-family:sans-serif">
-            <p><strong>${inv.name}</strong> ${attending ? `confirmó asistencia (${numGuests} persona${numGuests > 1 ? 's' : ''})` : 'indicó que no puede asistir'}.</p>
+            <p><strong>${greetName}</strong> ${attending ? `confirmó asistencia (${numGuests} persona${numGuests > 1 ? 's' : ''})` : 'indicó que no puede asistir'}.</p>
             ${companionName ? `<p>Acompañante: ${companionName}</p>` : ''}
             ${dietaryRestriction ? `<p>Restricción alimenticia: ${dietaryRestriction}</p>` : ''}
             ${email ? `<p>Email: ${email}</p>` : ''}

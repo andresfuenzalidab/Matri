@@ -1,17 +1,25 @@
 import { useState } from 'react'
 import { useApp } from '../../context/AppContext'
+import { normalizeImageUrl } from '../../utils/imageUrl.js'
+import { guestDisplayName, isPairInvite, pick } from '../../utils/guestName.js'
+import { weddingInstant } from '../../utils/weddingDate.js'
 
-function AddToCalendar({ venueName, ceremonyTime, isPartyOnly, receptionTime, eventEndTime }) {
+function AddToCalendar({ venueName, ceremonyTime, isPartyOnly, receptionTime, eventEndTime, weddingDate }) {
   const startTime = isPartyOnly ? (receptionTime || '19:30') : (ceremonyTime || '17:00')
   const [sh, sm] = startTime.split(':').map(Number)
   const [eh, em] = (eventEndTime || '03:00').split(':').map(Number)
 
-  // Use local floating times (no UTC suffix) so calendar shows the exact local hours
+  const day = weddingInstant(weddingDate, startTime)
+  const y = day.getFullYear()
   const pad = n => String(n).padStart(2, '0')
-  const dtStart = `20261106T${pad(sh)}${pad(sm)}00`
-  // If end hour < start hour the party crossed midnight → Nov 7
-  const endDay = eh < sh ? '20261107' : '20261106'
-  const dtEnd = `${endDay}T${pad(eh)}${pad(em)}00`
+  const dayStamp = `${y}${pad(day.getMonth() + 1)}${pad(day.getDate())}`
+  const nextDay = new Date(day.getTime() + 86400000)
+  const nextStamp = `${nextDay.getFullYear()}${pad(nextDay.getMonth() + 1)}${pad(nextDay.getDate())}`
+
+  // Use local floating times (no UTC suffix) so calendar shows the exact local hours
+  const dtStart = `${dayStamp}T${pad(sh)}${pad(sm)}00`
+  // If end hour < start hour the party crossed midnight → next day
+  const dtEnd = `${eh < sh ? nextStamp : dayStamp}T${pad(eh)}${pad(em)}00`
 
   const title = 'Matrimonio Cata & Andrés'
   const gcUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE` +
@@ -47,24 +55,52 @@ function AddToCalendar({ venueName, ceremonyTime, isPartyOnly, receptionTime, ev
   )
 }
 
+/** The little wave rule under the RSVP heading. */
+const WaveRule = () => (
+  <svg className="rsvp-wave" viewBox="0 0 120 10" fill="none" stroke="currentColor"
+    strokeWidth="1.1" strokeLinecap="round" aria-hidden="true">
+    <path d="M2 6c8-6 16 4 24 0s16-6 24 0 16 4 24 0 16-6 24 0" />
+  </svg>
+)
+
+/** Envelope the answered card slides into once it is sent. */
+const EnvelopeGraphic = ({ image }) => (
+  image ? (
+    <img src={image} alt="" className="rsvp-envelope-img"
+      onError={e => { e.target.style.display = 'none' }} />
+  ) : (
+    <svg className="rsvp-envelope-art" viewBox="0 0 320 210" aria-hidden="true">
+      <rect x="4" y="34" width="312" height="172" rx="6" fill="var(--paper)" stroke="currentColor" strokeWidth="1.2" />
+      <path d="M4 40 160 148 316 40" fill="none" stroke="currentColor" strokeWidth="1.2" opacity="0.55" />
+      <path d="M4 206 132 118M316 206 188 118" fill="none" stroke="currentColor" strokeWidth="1.2" opacity="0.35" />
+    </svg>
+  )
+)
+
 export default function RSVP({ initialRsvp }) {
   const { token, guest, get } = useApp()
   const isPartyOnly = guest?.invitationType === 'party_only'
   const maxAdditional = guest?.maxAdditionalGuests ?? null
+  const knownCompanion = (guest?.companionName || '').trim()
 
   const [rsvp, setRsvp] = useState(initialRsvp)
-  const [attending, setAttending] = useState('1')
+  const [attending, setAttending] = useState('')
   const [companionAttending, setCompanionAttending] = useState(true)
-  const [companionName, setCompanionName] = useState('')
+  const [companionName, setCompanionName] = useState(knownCompanion)
   const [numGuests, setNumGuests] = useState(1)
   const [dietaryRestriction, setDietaryRestriction] = useState('')
   const [email, setEmail] = useState('')
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
+  const [sealing, setSealing] = useState(false)
   const [error, setError] = useState('')
 
   const isSolo = maxAdditional === 0
-  const isCouple = maxAdditional === 1
+  // A named companion implies a pair even when no explicit limit was set.
+  const isCouple = maxAdditional === 1 || Boolean(knownCompanion && maxAdditional == null)
+
+  const cardImage = normalizeImageUrl(get('rsvp_card_image') || '')
+  const envelopeImage = normalizeImageUrl(get('rsvp_envelope_image') || '')
 
   // Deadline check
   const deadlineStr = get('rsvp_deadline')
@@ -79,6 +115,10 @@ export default function RSVP({ initialRsvp }) {
 
   async function handleSubmit(e) {
     e.preventDefault()
+    if (!attending) {
+      setError('Marca una de las dos opciones para responder.')
+      return
+    }
     if (attending === '1' && !email.trim()) {
       setError('El email es requerido.')
       return
@@ -99,19 +139,22 @@ export default function RSVP({ initialRsvp }) {
         }),
       })
       if (res.ok) {
-        setRsvp({
+        const saved = {
           attending: Number(attending),
           numGuests: getNumGuests(),
           message,
           dietaryRestriction: dietaryRestriction.trim(),
-        })
+        }
+        // Let the card slip into the envelope before the thanks takes over.
+        setSealing(true)
+        setTimeout(() => setRsvp(saved), 1700)
       } else {
         const d = await res.json().catch(() => ({}))
         setError(d.error || 'Error al enviar. Por favor intenta de nuevo.')
+        setLoading(false)
       }
     } catch {
       setError('Error de conexión. Verifica tu internet e intenta de nuevo.')
-    } finally {
       setLoading(false)
     }
   }
@@ -119,25 +162,49 @@ export default function RSVP({ initialRsvp }) {
   const venueName = get('venue_name', 'Altos del Paico')
   const ceremonyTime = get('ceremony_time', '17:00')
   const receptionTime = get('reception_time', '19:30')
+  const displayName = guestDisplayName(guest)
+  const plural = isPairInvite(guest)
 
+  // ── Sealing animation: the answered card drops into the envelope ──
+  if (sealing) {
+    return (
+      <section id="rsvp" className="section-compact">
+        <div className="rsvp-sealing">
+          <div className="rsvp-sealing-stage">
+            <div className="rsvp-sealing-letter">
+              <p className="rsvp-sealing-letter-label">RSVP</p>
+              <p className="rsvp-sealing-letter-name">{displayName}</p>
+              <p className="rsvp-sealing-letter-answer">
+                {attending === '1' ? 'Con mucho gusto' : 'No podremos'}
+              </p>
+            </div>
+            <EnvelopeGraphic image={envelopeImage} />
+          </div>
+          <p className="rsvp-sealing-caption">Enviando tu respuesta…</p>
+        </div>
+      </section>
+    )
+  }
+
+  // ── Already answered ──
   if (rsvp) {
     const companions = rsvp.numGuests > 1 ? rsvp.numGuests - 1 : 0
-    const displayName = guest?.nickname || guest?.name || ''
 
     const defaultAttendingMsg = isPartyOnly
-      ? `¡Nos alegra que puedas celebrar con nosotros!${companions > 0 ? ` Esperamos a ${companions + 1} personas de tu parte.` : ''} Los esperamos a partir de las ${receptionTime} en ${venueName}.`
-      : `¡Nos alegra saber que estarás con nosotros!${companions > 0 ? ` Esperamos a ${companions + 1} personas de tu parte.` : ''} Te esperamos a las ${ceremonyTime} en ${venueName}.`
-    const defaultDeclinedMsg = 'Lamentamos que no puedas acompañarnos. Te tendremos en el corazón ese día especial.'
+      ? `¡Nos alegra que ${plural ? 'puedan' : 'puedas'} celebrar con nosotros!${companions > 0 ? ` Esperamos a ${companions + 1} personas de tu parte.` : ''} Los esperamos a partir de las ${receptionTime} en ${venueName}.`
+      : `¡Nos alegra saber que ${plural ? 'estarán' : 'estarás'} con nosotros!${companions > 0 ? ` Esperamos a ${companions + 1} personas de tu parte.` : ''} ${plural ? 'Los' : 'Te'} esperamos a las ${ceremonyTime} en ${venueName}.`
+    const defaultDeclinedMsg = `Lamentamos que no ${plural ? 'puedan' : 'puedas'} acompañarnos. ${plural ? 'Los' : 'Te'} tendremos en el corazón ese día especial.`
 
     const attendingMsg = (get('rsvp_thanks_attending') || defaultAttendingMsg).replace(/\{NOMBRE\}/gi, displayName)
     const declinedMsg = (get('rsvp_thanks_declined') || defaultDeclinedMsg).replace(/\{NOMBRE\}/gi, displayName)
 
     return (
       <section id="rsvp" className="section-compact">
-        <div className="rsvp-submitted">
-          <div className="rsvp-check">{rsvp.attending ? '♡' : '✦'}</div>
-          <h2>Gracias, {displayName}</h2>
-          <p>{rsvp.attending ? attendingMsg : declinedMsg}</p>
+        <div className="rsvp-thanks">
+          <div className="rsvp-thanks-seal">{rsvp.attending ? '♡' : '✦'}</div>
+          <h2 className="rsvp-thanks-title">Gracias, {displayName}</h2>
+          <WaveRule />
+          <p className="rsvp-thanks-body">{rsvp.attending ? attendingMsg : declinedMsg}</p>
           {rsvp.attending && (
             <AddToCalendar
               venueName={venueName}
@@ -145,6 +212,7 @@ export default function RSVP({ initialRsvp }) {
               receptionTime={receptionTime}
               isPartyOnly={isPartyOnly}
               eventEndTime={get('wedding_end_time')}
+              weddingDate={get('wedding_date')}
             />
           )}
           {rsvp.attending ? (
@@ -162,7 +230,9 @@ export default function RSVP({ initialRsvp }) {
   }
 
   const dietaryQuestion = get('rsvp_dietary_question')
-  const companionQuestion = get('rsvp_companion_question', '¿Confirmas la asistencia de tu acompañante?')
+  const companionQuestion = knownCompanion
+    ? `¿Confirmas la asistencia de ${knownCompanion}?`
+    : get('rsvp_companion_question', '¿Confirmas la asistencia de tu acompañante?')
   const deadlineLabel = deadlineStr
     ? new Date(deadlineStr + 'T00:00:00').toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric' })
     : null
@@ -170,110 +240,137 @@ export default function RSVP({ initialRsvp }) {
   if (isPastDeadline) {
     return (
       <section id="rsvp" className="section-compact">
-        <div className="rsvp-submitted">
-          <div className="rsvp-check">✦</div>
-          <h2>Plazo cerrado</h2>
-          <p>El plazo para confirmar asistencia venció el {deadlineLabel}. Si tienes alguna duda, escríbenos directamente.</p>
+        <div className="rsvp-thanks">
+          <div className="rsvp-thanks-seal">✦</div>
+          <h2 className="rsvp-thanks-title">Plazo cerrado</h2>
+          <WaveRule />
+          <p className="rsvp-thanks-body">
+            El plazo para confirmar asistencia venció el {deadlineLabel}. Si tienes alguna duda, escríbenos directamente.
+          </p>
         </div>
       </section>
     )
   }
 
+  // ── The open letter ──
   return (
-    <section id="rsvp" className="section">
-      <h2 className="section-title reveal-on-scroll">RSVP</h2>
-      <p className="section-subtitle reveal-on-scroll">
-        {isPartyOnly
-          ? `Confírmanos si podrás celebrar con nosotros — te esperamos en la fiesta a las ${receptionTime}.`
-          : deadlineLabel
-            ? `Confírmanos tu asistencia antes del ${deadlineLabel}.`
-            : 'Confírmanos tu asistencia.'}
-      </p>
+    <section id="rsvp" className="section rsvp-section">
+      <form className="rsvp-letter reveal-on-scroll" onSubmit={handleSubmit} noValidate>
+        {cardImage && (
+          <img src={cardImage} alt="" className="rsvp-letter-decor" aria-hidden="true"
+            onError={e => { e.target.style.display = 'none' }} />
+        )}
 
-      <form className="rsvp-container" onSubmit={handleSubmit} noValidate>
-        <div className="form-field">
-          <label className="form-label">Nombre</label>
-          <div className="rsvp-guest-name">{guest?.name}</div>
-        </div>
+        <div className="rsvp-letter-inner">
+          <p className="rsvp-letter-heading">RSVP</p>
+          <WaveRule />
 
-        <div className="form-field">
-          <label className="form-label">¿Asistirás?</label>
-          <div className="rsvp-attending-row">
-            <label className="rsvp-radio-label">
+          {/* The addressee, written on the line — "M ______" on stationery */}
+          <div className="rsvp-letter-line">
+            <span className="rsvp-letter-line-mark" aria-hidden="true">M</span>
+            <span className="rsvp-letter-line-name">{displayName}</span>
+          </div>
+
+          <p className="rsvp-letter-prompt">
+            {isPartyOnly
+              ? `${plural ? 'Cuéntennos' : 'Cuéntanos'} si ${plural ? 'podrán' : 'podrás'} celebrar con nosotros — la fiesta comienza a las ${receptionTime}.`
+              : `${plural ? 'Cuéntennos' : 'Cuéntanos'} si ${plural ? 'nos acompañarán' : 'nos acompañarás'} ese día.`}
+          </p>
+
+          {/* ── The two answers, as tick boxes on the card ── */}
+          <div className="rsvp-choices">
+            <label className={`rsvp-choice ${attending === '1' ? 'is-picked' : ''}`}>
               <input type="radio" name="attending" value="1"
                 checked={attending === '1'}
                 onChange={e => setAttending(e.target.value)} />
-              Sí, con mucho gusto
+              <span className="rsvp-choice-box" aria-hidden="true">✓</span>
+              <span className="rsvp-choice-text">
+                {pick(guest, 'Asistiré con mucho gusto', 'Asistiremos con mucho gusto')}
+              </span>
             </label>
-            <label className="rsvp-radio-label">
+            <label className={`rsvp-choice ${attending === '0' ? 'is-picked' : ''}`}>
               <input type="radio" name="attending" value="0"
                 checked={attending === '0'}
                 onChange={e => setAttending(e.target.value)} />
-              No podré asistir
+              <span className="rsvp-choice-box" aria-hidden="true">✓</span>
+              <span className="rsvp-choice-text">
+                {pick(guest, 'Lamentablemente no podré', 'Lamentablemente no podremos')}
+              </span>
             </label>
           </div>
-        </div>
 
-        {attending === '1' && isCouple && (
-          <div className="form-field">
-            <label className="rsvp-checkbox-label">
+          {/* ── Follow-up questions, written as lines on the card ── */}
+          {attending === '1' && isCouple && (
+            <label className="rsvp-note-check">
               <input type="checkbox" checked={companionAttending}
                 onChange={e => setCompanionAttending(e.target.checked)} />
-              {companionQuestion}
+              <span>{companionQuestion}</span>
             </label>
-          </div>
-        )}
+          )}
 
-        {attending === '1' && isCouple && companionAttending && (
-          <div className="form-field">
-            <label className="form-label" htmlFor="companion-name">Nombre de tu acompañante</label>
-            <input id="companion-name" className="input" type="text"
-              value={companionName} onChange={e => setCompanionName(e.target.value)}
-              placeholder="Nombre completo..." />
-          </div>
-        )}
+          {attending === '1' && isCouple && companionAttending && !knownCompanion && (
+            <div className="rsvp-field">
+              <label className="rsvp-field-label" htmlFor="companion-name">Nombre de tu acompañante</label>
+              <input id="companion-name" className="rsvp-input" type="text"
+                value={companionName} onChange={e => setCompanionName(e.target.value)}
+                placeholder="Nombre completo…" />
+            </div>
+          )}
 
-        {attending === '1' && !isSolo && !isCouple && (
-          <div className="form-field">
-            <label className="form-label" htmlFor="num-guests">¿Cuántos asistirán (incluyéndote)?</label>
-            <input id="num-guests" className="input" type="number" min="1"
-              max={maxAdditional != null ? maxAdditional + 1 : 20}
-              value={numGuests} onChange={e => setNumGuests(e.target.value)}
-              style={{ width: 100 }} />
-          </div>
-        )}
+          {attending === '1' && !isSolo && !isCouple && (
+            <div className="rsvp-field">
+              <label className="rsvp-field-label" htmlFor="num-guests">¿Cuántos asistirán (incluyéndote)?</label>
+              <input id="num-guests" className="rsvp-input" type="number" min="1"
+                max={maxAdditional != null ? maxAdditional + 1 : 20}
+                value={numGuests} onChange={e => setNumGuests(e.target.value)}
+                style={{ maxWidth: 90 }} />
+            </div>
+          )}
 
-        {dietaryQuestion && attending === '1' && !isPartyOnly && (
-          <div className="form-field">
-            <label className="form-label" htmlFor="dietary">{dietaryQuestion}</label>
-            <input id="dietary" className="input" type="text"
-              value={dietaryRestriction} onChange={e => setDietaryRestriction(e.target.value)}
-              placeholder="Escribe aquí si tienes alguna restricción..." />
-          </div>
-        )}
+          {dietaryQuestion && attending === '1' && !isPartyOnly && (
+            <div className="rsvp-field">
+              <label className="rsvp-field-label" htmlFor="dietary">{dietaryQuestion}</label>
+              <input id="dietary" className="rsvp-input" type="text"
+                value={dietaryRestriction} onChange={e => setDietaryRestriction(e.target.value)}
+                placeholder="Escribe aquí si hay alguna restricción…" />
+            </div>
+          )}
 
-        <div className="form-field">
-          <label className="form-label" htmlFor="rsvp-email">
-            Email {attending === '1' ? '*' : '(opcional)'}
-          </label>
-          <input id="rsvp-email" className="input" type="email"
-            value={email} onChange={e => setEmail(e.target.value)}
-            placeholder="tu@email.com" />
-          {attending === '1' && <span style={{ fontSize: '0.75rem', opacity: 0.55 }}>Te enviaremos una confirmación.</span>}
+          {attending !== '' && (
+            <div className="rsvp-field">
+              <label className="rsvp-field-label" htmlFor="rsvp-email">
+                Email {attending === '1' ? '*' : '(opcional)'}
+              </label>
+              <input id="rsvp-email" className="rsvp-input" type="email"
+                value={email} onChange={e => setEmail(e.target.value)}
+                placeholder="tu@email.com" />
+              {attending === '1' && (
+                <span className="rsvp-field-hint">Te enviaremos una confirmación.</span>
+              )}
+            </div>
+          )}
+
+          {attending !== '' && (
+            <div className="rsvp-field">
+              <label className="rsvp-field-label" htmlFor="rsvp-message">Un mensaje para los novios (opcional)</label>
+              <textarea id="rsvp-message" className="rsvp-input rsvp-textarea" rows={3}
+                value={message} onChange={e => setMessage(e.target.value)}
+                placeholder="Escribe unas líneas…" />
+            </div>
+          )}
+
+          {error && <p className="form-error" style={{ textAlign: 'center' }}>{error}</p>}
+
+          {deadlineLabel && (
+            <p className="rsvp-letter-deadline">
+              Por favor {plural ? 'respondan' : 'responde'} antes del {deadlineLabel}
+            </p>
+          )}
+
+          <button className="rsvp-send" type="submit" disabled={loading}>
+            {loading ? 'Enviando…' : 'Sellar y enviar'}
+          </button>
         </div>
-
-        <div className="form-field">
-          <label className="form-label" htmlFor="rsvp-message">Mensaje para los novios (opcional)</label>
-          <textarea id="rsvp-message" className="input" rows={3}
-            value={message} onChange={e => setMessage(e.target.value)}
-            placeholder="Escribe un mensaje..." />
-        </div>
-
-        {error && <p className="form-error">{error}</p>}
-
-        <button className="btn btn-primary btn-block" type="submit" disabled={loading}>
-          {loading ? 'Enviando...' : 'Confirmar asistencia'}
-        </button>
       </form>
     </section>
   )

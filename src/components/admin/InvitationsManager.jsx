@@ -15,6 +15,7 @@ export default function InvitationsManager() {
   const [newEmail, setNewEmail] = useState('')
   const [newPhone, setNewPhone] = useState('')
   const [newNickname, setNewNickname] = useState('')
+  const [newCompanion, setNewCompanion] = useState('')
   const [newIsAdmin, setNewIsAdmin] = useState(false)
   const [newWelcomeMsg, setNewWelcomeMsg] = useState('')
   const [newMaxGuests, setNewMaxGuests] = useState('0')
@@ -32,6 +33,7 @@ export default function InvitationsManager() {
   const [editNotes, setEditNotes] = useState('')
   const [editPhone, setEditPhone] = useState('')
   const [editNickname, setEditNickname] = useState('')
+  const [editCompanion, setEditCompanion] = useState('')
   const [editSaving, setEditSaving] = useState(false)
 
   const [copiedId, setCopiedId] = useState(null)
@@ -61,6 +63,7 @@ export default function InvitationsManager() {
           email: newEmail.trim(),
           phone: newPhone.trim(),
           nickname: newNickname.trim(),
+          companionName: newCompanion.trim(),
           isAdmin: newIsAdmin,
           welcomeMessage: newWelcomeMsg.trim(),
           maxAdditionalGuests: newMaxGuests !== '' ? Number(newMaxGuests) : null,
@@ -73,7 +76,7 @@ export default function InvitationsManager() {
         setInvitations(prev => [inv, ...prev])
         setCreatedInv({ ...inv, welcome_message: newWelcomeMsg.trim() || null })
         setNewName(''); setNewEmail(''); setNewPhone(''); setNewNickname('')
-        setNewIsAdmin(false); setNewWelcomeMsg('')
+        setNewCompanion(''); setNewIsAdmin(false); setNewWelcomeMsg('')
         setNewMaxGuests(''); setNewInvType('all_in'); setNewNotes('')
         setShowCreate(false)
       } else {
@@ -153,6 +156,7 @@ export default function InvitationsManager() {
     setEditNotes(inv.notes || '')
     setEditPhone(inv.phone || '')
     setEditNickname(inv.nickname || '')
+    setEditCompanion(inv.companion_name || '')
   }
 
   async function saveEdit(id) {
@@ -169,6 +173,7 @@ export default function InvitationsManager() {
           notes: editNotes.trim(),
           phone: editPhone.trim(),
           nickname: editNickname.trim(),
+          companionName: editCompanion.trim(),
         }),
       })
       if (res.ok) {
@@ -180,6 +185,7 @@ export default function InvitationsManager() {
           notes: editNotes.trim() || null,
           phone: editPhone.trim() || null,
           nickname: editNickname.trim() || null,
+          companion_name: editCompanion.trim() || null,
         } : i))
         setEditId(null)
       } else { setError('Error al guardar.') }
@@ -250,6 +256,7 @@ export default function InvitationsManager() {
               return [
                 inv.name,
                 inv.nickname || '',
+                inv.companion_name || '',
                 inv.email || '',
                 inv.phone || '',
                 inv.invitation_type === 'party_only' ? 'Solo fiesta' : 'Completa',
@@ -260,7 +267,7 @@ export default function InvitationsManager() {
                 inv.token,
               ]
             }),
-            ['Nombre', 'Apodo', 'Email', 'Teléfono', 'Tipo', 'RSVP', 'N° personas', 'Regalos', 'Total regalos (CLP)', 'Token']
+            ['Nombre', 'Apodo', 'Acompañante', 'Email', 'Teléfono', 'Tipo', 'RSVP', 'N° personas', 'Regalos', 'Total regalos (CLP)', 'Token']
           )}
         >
           Exportar CSV
@@ -276,6 +283,7 @@ export default function InvitationsManager() {
           <div className="create-form-fields">
             <input className="input" placeholder="Nombre formal *" value={newName} onChange={e => setNewName(e.target.value)} required />
             <input className="input" placeholder="Apodo (nombre informal, opcional)" value={newNickname} onChange={e => setNewNickname(e.target.value)} />
+            <input className="input" placeholder="Acompañante / pareja (opcional)" value={newCompanion} onChange={e => setNewCompanion(e.target.value)} />
             <input className="input" placeholder="Email (opcional)" value={newEmail} onChange={e => setNewEmail(e.target.value)} type="email" />
             <input className="input" placeholder="Teléfono (opcional)" value={newPhone} onChange={e => setNewPhone(e.target.value)} type="tel" />
             <label className="admin-checkbox-label">
@@ -352,6 +360,9 @@ export default function InvitationsManager() {
                     {inv.nickname && (
                       <div style={{ fontSize: '0.75rem', opacity: 0.6, fontStyle: 'italic' }}>"{inv.nickname}"</div>
                     )}
+                    {inv.companion_name && (
+                      <div style={{ fontSize: '0.72rem', opacity: 0.6 }}>+ {inv.companion_name}</div>
+                    )}
                     {inv.is_admin && <span className="tag tag-accent" style={{ fontSize: '0.65rem', marginTop: 2 }}>Admin</span>}
                   </td>
                   <td style={{ opacity: 0.7, fontSize: '0.8rem' }}>
@@ -399,6 +410,9 @@ export default function InvitationsManager() {
                         <input className="input" style={{ fontSize: '0.8rem' }}
                           placeholder="Apodo / nombre informal"
                           value={editNickname} onChange={e => setEditNickname(e.target.value)} />
+                        <input className="input" style={{ fontSize: '0.8rem' }}
+                          placeholder="Acompañante / pareja"
+                          value={editCompanion} onChange={e => setEditCompanion(e.target.value)} />
                         <input className="input" style={{ fontSize: '0.8rem' }}
                           placeholder="Teléfono"
                           value={editPhone} onChange={e => setEditPhone(e.target.value)} />

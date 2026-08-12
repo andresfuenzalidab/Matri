@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useApp } from '../../context/AppContext'
 import GiftModal from '../GiftModal'
 import { normalizeImageUrl } from '../../utils/imageUrl.js'
+import { guestDisplayName } from '../../utils/guestName.js'
 
 function formatCLP(n) {
   if (n == null) return 'Próximamente'
@@ -112,7 +113,7 @@ export default function Gifts() {
   const cartItems = Array.from(cart.values())
   const cartTotal = cartItems.reduce((sum, { gift, quantity }) => sum + (gift.price || 0) * quantity, 0)
   const thanksMsg = get('gifts_thanks_message', '¡Gracias!')
-  const displayName = guest?.nickname || guest?.name
+  const displayName = guestDisplayName(guest)
 
   if (purchased) {
     const purchasedTotal = purchasedGifts.reduce((sum, g) => sum + (g.price || 0) * (g.quantity || 1), 0)
@@ -240,8 +241,9 @@ export default function Gifts() {
         </div>
       ))}
 
-      {/* Cart bar */}
-      {cartItems.length > 0 && (
+      {/* Cart bar — steps aside while the payment dialog is open, and comes
+          back if the guest closes it without paying. */}
+      {cartItems.length > 0 && !modalOpen && (
         <div id="gift-cart" className="gift-cart-bar">
           <div className="gift-cart-info">
             <span className="gift-cart-label">Tu selección</span>

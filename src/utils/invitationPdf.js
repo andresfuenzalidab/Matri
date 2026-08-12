@@ -3,7 +3,8 @@ import { normalizeImageUrl } from './imageUrl.js'
 export function downloadInvitationPDF(inv, content = {}) {
   const base = (content.site_url || '').trim() || window.location.origin
   const link = `${base}/?token=${inv.token}`
-  const guestName = inv.name
+  const companion = (inv.companion_name || '').trim()
+  const guestName = companion ? `${inv.name} y ${companion}` : inv.name
   const isPartyOnly = (inv.invitation_type || 'all_in') === 'party_only'
 
   const coupleNames = content.hero_title || 'Andrés & Catalina'
@@ -126,7 +127,7 @@ body{font-family:'Lora',Georgia,serif;color:#2d2520}
     <p class="to-label">Para</p>
     <div class="guest-name">${guestName}</div>
 
-    <p class="intro">Con todo nuestro amor, tenemos el placer de invitarte a celebrar con nosotros el día más especial de nuestras vidas. Tu presencia hará de este momento algo aún más mágico.</p>
+    <p class="intro">Con todo nuestro amor, tenemos el placer de ${companion ? 'invitarlos' : 'invitarte'} a celebrar con nosotros el día más especial de nuestras vidas. ${companion ? 'Su' : 'Tu'} presencia hará de este momento algo aún más mágico.</p>
 
     <div class="wedding-box">
       <div class="wd-date">${weddingDate}</div>
