@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useApp } from '../../context/AppContext'
-import { downloadInvitationPDF } from '../../utils/invitationPdf.js'
+import { downloadInvitationPDF, inviteLink } from '../../utils/invitationPdf.js'
 import { downloadCSV } from '../../utils/exportCsv.js'
 
 export default function InvitationsManager() {
@@ -118,8 +118,7 @@ export default function InvitationsManager() {
   }
 
   function getLink(inv) {
-    const base = (content.site_url || '').trim() || window.location.origin
-    return `${base}/?token=${inv.token}`
+    return inviteLink(inv, content)
   }
 
   function copyLink(inv) {

@@ -19,7 +19,6 @@ const SECTIONS = [
     fields: [
       { key: 'hero_title', label: 'Título (nombres)', type: 'text' },
       { key: 'hero_date', label: 'Fecha en texto (ej. Viernes 6 de noviembre de 2026)', type: 'text' },
-      { key: 'hero_image', label: 'Foto principal (para el PDF de la invitación)', type: 'image' },
       { key: 'hero_video', label: 'Video de portada (MP4)', type: 'video' },
       { key: 'countdown_bg_image', label: 'Imagen de fondo del contador', type: 'image' },
       { key: 'flower_vine_left', label: 'Flores laterales (PNG fondo blanco o transparente)', type: 'image' },

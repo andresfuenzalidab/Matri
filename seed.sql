@@ -30,7 +30,6 @@ INSERT OR IGNORE INTO gifts (id, trip_id, name, price, order_idx) VALUES
 INSERT OR IGNORE INTO site_content (key, value) VALUES
   ('hero_title', 'Andrés & Catalina'),
   ('hero_date', 'Viernes 6 de noviembre de 2026'),
-  ('hero_image', ''),
   ('wedding_date', '2026-11-06'),
   ('ceremony_time', '17:00'),
   ('reception_time', '19:30'),
