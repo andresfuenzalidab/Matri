@@ -59,7 +59,7 @@ export default function RSVPDashboard() {
               r.message || '',
               r.submitted_at ? new Date(r.submitted_at).toLocaleDateString('es-CL') : '',
             ]),
-            ['Nombre', 'Asistencia', 'N° invitados', 'Acompañante', 'Restricción alimenticia', 'Mensaje', 'Enviado']
+            ['Nombre', 'Asistencia', 'N° invitados', 'Quiénes asisten', 'Restricción alimenticia', 'Mensaje', 'Enviado']
           )}
         >
           Exportar CSV
@@ -73,7 +73,7 @@ export default function RSVPDashboard() {
               <th>Nombre</th>
               <th>Asistencia</th>
               <th>Invitados</th>
-              <th>Acompañante</th>
+              <th>Quiénes asisten</th>
               <th>Mensaje</th>
               <th>Restricción dieta</th>
               <th>Enviado</th>

@@ -104,18 +104,14 @@ function SideVines() {
 
 function FlowerFooter() {
   const { get } = useApp()
-  // Its own key first — this used to read `flower_vine_left`, so anything
-  // uploaded as the footer image was silently ignored.
-  const img = normalizeImageUrl(get('flower_footer') || get('flower_vine_left') || '')
+  // Only its own key: the footer shows the uploaded image as it is, so falling
+  // back to the tall side-vine art would render it sideways and stretched.
+  const img = normalizeImageUrl(get('flower_footer') || '')
   if (!img) return null
   return (
     <div className="flower-footer" aria-hidden="true">
-      {/* Left half: image rotated 90° CW, flowers spread from left */}
-      <div className="flower-footer-half flower-footer-l"
-        style={{ backgroundImage: `url(${img})` }} />
-      {/* Right half: same image mirrored → flowers spread from right */}
-      <div className="flower-footer-half flower-footer-r"
-        style={{ backgroundImage: `url(${img})` }} />
+      <img src={img} alt="" className="flower-footer-img"
+        onError={e => { e.target.style.display = 'none' }} />
     </div>
   )
 }

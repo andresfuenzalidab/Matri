@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useApp } from '../../context/AppContext'
 import { normalizeImageUrl } from '../../utils/imageUrl.js'
-import { guestDisplayName, isPairInvite, pick } from '../../utils/guestName.js'
+import { guestDisplayName, guestFormalName, isPairInvite, pick } from '../../utils/guestName.js'
 
 /** The little wave rule under the RSVP heading. */
 const WaveRule = () => (
@@ -34,6 +34,11 @@ export default function RSVP({ initialRsvp }) {
   const [rsvp, setRsvp] = useState(initialRsvp)
   const [attending, setAttending] = useState('')
   const [companionName, setCompanionName] = useState(knownCompanion)
+  // One box per person on a pair invitation, both ticked to start with, so
+  // either of them can be unticked without the other being treated as the
+  // "main" guest.
+  const [mainComing, setMainComing] = useState(true)
+  const [companionComing, setCompanionComing] = useState(true)
   const [numGuests, setNumGuests] = useState(1)
   const [dietaryRestriction, setDietaryRestriction] = useState('')
   const [email, setEmail] = useState('')
@@ -53,19 +58,35 @@ export default function RSVP({ initialRsvp }) {
   const deadlineStr = get('rsvp_deadline')
   const isPastDeadline = deadlineStr ? new Date() > new Date(deadlineStr) : false
 
+  // Formal names — the RSVP card is the formal half of the correspondence.
+  const mainFormalName = (guest?.name || '').trim()
+  const companionFormalName = knownCompanion || companionName.trim()
+
   function getNumGuests() {
     if (!attending || attending === '0') return 1
     if (isSolo) return 1
-    // A pair answers as one: the single yes/no covers both people, with no
-    // separate question for the companion.
-    if (isCouple) return 2
+    if (isCouple) return (mainComing ? 1 : 0) + (companionComing ? 1 : 0)
     return Number(numGuests) || 1
+  }
+
+  /** Who is actually coming — recorded so we know which of the two it is. */
+  function getAttendeeNames() {
+    if (!attending || attending === '0') return ''
+    if (!isCouple) return mainFormalName
+    return [
+      mainComing ? mainFormalName : null,
+      companionComing ? (companionFormalName || 'Acompañante') : null,
+    ].filter(Boolean).join(' y ')
   }
 
   async function handleSubmit(e) {
     e.preventDefault()
     if (!attending) {
       setError('Marca una de las dos opciones para responder.')
+      return
+    }
+    if (attending === '1' && isCouple && !mainComing && !companionComing) {
+      setError('Si ninguno de los dos puede asistir, marca «Lamentablemente no podremos».')
       return
     }
     if (attending === '1' && !email.trim()) {
@@ -83,7 +104,7 @@ export default function RSVP({ initialRsvp }) {
           numGuests: getNumGuests(),
           message,
           dietaryRestriction: dietaryRestriction.trim(),
-          companionName: companionName.trim(),
+          companionName: getAttendeeNames(),
           email: email.trim(),
         }),
       })
@@ -113,8 +134,10 @@ export default function RSVP({ initialRsvp }) {
   const venueName = get('venue_name', 'Altos del Paico')
   const ceremonyTime = get('ceremony_time', '17:00')
   const receptionTime = get('reception_time', '19:30')
+  // The card itself is formal; the thank-you note that follows is informal.
+  const formalName = guestFormalName(guest) || mainFormalName
   const displayName = guestDisplayName(guest)
-  const plural = isPairInvite(guest)
+  const pairInvite = isPairInvite(guest)
 
   // ── Sealing animation: the answered card drops into the envelope ──
   if (sealing && !rsvp) {
@@ -124,7 +147,7 @@ export default function RSVP({ initialRsvp }) {
           <div className="rsvp-sealing-stage">
             <div className="rsvp-sealing-letter">
               <p className="rsvp-sealing-letter-label">RSVP</p>
-              <p className="rsvp-sealing-letter-name">{displayName}</p>
+              <p className="rsvp-sealing-letter-name">{formalName}</p>
               <p className="rsvp-sealing-letter-answer">
                 {attending === '1' ? 'Con mucho gusto' : 'No podremos'}
               </p>
@@ -140,6 +163,8 @@ export default function RSVP({ initialRsvp }) {
   // ── Already answered ──
   if (rsvp) {
     const companions = rsvp.numGuests > 1 ? rsvp.numGuests - 1 : 0
+    // Follow who actually confirmed: one of a pair coming alone is singular.
+    const plural = rsvp.attending ? rsvp.numGuests > 1 : pairInvite
 
     const defaultAttendingMsg = isPartyOnly
       ? `¡Nos alegra que ${plural ? 'puedan' : 'puedas'} celebrar con nosotros!${companions > 0 ? ` Esperamos a ${companions + 1} personas de tu parte.` : ''} Los esperamos a partir de las ${receptionTime} en ${venueName}.`
@@ -204,16 +229,17 @@ export default function RSVP({ initialRsvp }) {
           <p className="rsvp-letter-heading">RSVP</p>
           <WaveRule />
 
-          {/* The addressee, written on the line — "M ______" on stationery */}
+          {/* The addressee, written on the line — "M ______" on stationery.
+              Formal names here, as on a printed reply card. */}
           <div className="rsvp-letter-line">
             <span className="rsvp-letter-line-mark" aria-hidden="true">M</span>
-            <span className="rsvp-letter-line-name">{displayName}</span>
+            <span className="rsvp-letter-line-name">{formalName}</span>
           </div>
 
           <p className="rsvp-letter-prompt">
             {isPartyOnly
-              ? `${plural ? 'Cuéntennos' : 'Cuéntanos'} si ${plural ? 'podrán' : 'podrás'} celebrar con nosotros — la fiesta comienza a las ${receptionTime}.`
-              : `${plural ? 'Cuéntennos' : 'Cuéntanos'} si ${plural ? 'nos acompañarán' : 'nos acompañarás'} ese día.`}
+              ? `${pairInvite ? 'Cuéntennos' : 'Cuéntanos'} si ${pairInvite ? 'podrán' : 'podrás'} celebrar con nosotros — la fiesta comienza a las ${receptionTime}.`
+              : `${pairInvite ? 'Cuéntennos' : 'Cuéntanos'} si ${pairInvite ? 'nos acompañarán' : 'nos acompañarás'} ese día.`}
           </p>
 
           {/* ── The two answers, as tick boxes on the card ── */}
@@ -238,8 +264,31 @@ export default function RSVP({ initialRsvp }) {
             </label>
           </div>
 
-          {/* ── Follow-up questions, written as lines on the card ── */}
-          {attending === '1' && isCouple && !knownCompanion && (
+          {/* ── Who is coming: one box per person, both ticked by default ── */}
+          {attending === '1' && isCouple && (
+            <div className="rsvp-attendees">
+              <p className="rsvp-field-label">Confirmamos la asistencia de</p>
+              <label className={`rsvp-attendee ${mainComing ? 'is-coming' : ''}`}>
+                <input type="checkbox" checked={mainComing}
+                  onChange={e => setMainComing(e.target.checked)} />
+                <span className="rsvp-attendee-box" aria-hidden="true">✓</span>
+                <span className="rsvp-attendee-name">{mainFormalName}</span>
+              </label>
+              <label className={`rsvp-attendee ${companionComing ? 'is-coming' : ''}`}>
+                <input type="checkbox" checked={companionComing}
+                  onChange={e => setCompanionComing(e.target.checked)} />
+                <span className="rsvp-attendee-box" aria-hidden="true">✓</span>
+                <span className="rsvp-attendee-name">
+                  {knownCompanion || companionName.trim() || 'Mi acompañante'}
+                </span>
+              </label>
+              <p className="rsvp-field-hint">
+                Desmarca a quien no pueda acompañarnos.
+              </p>
+            </div>
+          )}
+
+          {attending === '1' && isCouple && companionComing && !knownCompanion && (
             <div className="rsvp-field">
               <label className="rsvp-field-label" htmlFor="companion-name">Nombre de tu acompañante</label>
               <input id="companion-name" className="rsvp-input" type="text"
@@ -294,7 +343,7 @@ export default function RSVP({ initialRsvp }) {
 
           {deadlineLabel && (
             <p className="rsvp-letter-deadline">
-              Por favor {plural ? 'respondan' : 'responde'} antes del {deadlineLabel}
+              Por favor {pairInvite ? 'respondan' : 'responde'} antes del {deadlineLabel}
             </p>
           )}
 

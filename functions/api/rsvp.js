@@ -68,7 +68,7 @@ export async function onRequestPost({ request, env }) {
           subject: `RSVP: ${formalName} — ${attending ? `Confirmó (${numGuests} personas)` : 'No puede asistir'}`,
           html: `<div style="font-family:sans-serif">
             <p><strong>${formalName}</strong> ${attending ? `confirmó asistencia (${numGuests} persona${numGuests > 1 ? 's' : ''})` : 'indicó que no puede asistir'}.</p>
-            ${companionName ? `<p>Acompañante: ${companionName}</p>` : ''}
+            ${companionName ? `<p>Asisten: ${companionName}</p>` : ''}
             ${dietaryRestriction ? `<p>Restricción alimenticia: ${dietaryRestriction}</p>` : ''}
             ${email ? `<p>Email: ${email}</p>` : ''}
             ${message ? `<p>Mensaje: "${message}"</p>` : ''}

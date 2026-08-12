@@ -643,6 +643,51 @@
 }
 .rsvp-choice:focus-within { outline: 2px solid var(--color-accent); outline-offset: 2px; }
 
+/* One tick box per person on a pair invitation */
+.rsvp-attendees {
+  text-align: left;
+  margin-bottom: clamp(0.9rem, 3vw, 1.3rem);
+}
+.rsvp-attendees .rsvp-field-label { display: block; margin-bottom: 0.5rem; }
+.rsvp-attendees .rsvp-field-hint { display: block; margin-top: 0.45rem; }
+.rsvp-attendee {
+  position: relative;
+  display: flex; align-items: center;
+  gap: 0.7rem;
+  padding: 0.55rem 0.15rem;
+  cursor: pointer;
+  border-bottom: 1px solid var(--paper-edge);
+}
+.rsvp-attendee:last-of-type { border-bottom: none; }
+.rsvp-attendee input { position: absolute; opacity: 0; pointer-events: none; }
+.rsvp-attendee-box {
+  flex-shrink: 0;
+  width: 19px; height: 19px;
+  border: 1px solid var(--color-accent);
+  border-radius: 2px;
+  display: grid; place-items: center;
+  font-size: 0.72rem; line-height: 1;
+  color: transparent;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+.rsvp-attendee.is-coming .rsvp-attendee-box {
+  background: var(--color-accent);
+  color: #fdf9f0;
+}
+.rsvp-attendee-name {
+  font-family: var(--font-heading);
+  font-size: clamp(0.98rem, 3.2vw, 1.15rem);
+  line-height: 1.35;
+  transition: opacity 0.15s ease;
+}
+/* Unticked reads as struck from the guest list */
+.rsvp-attendee:not(.is-coming) .rsvp-attendee-name {
+  opacity: 0.45;
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+.rsvp-attendee:focus-within { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+
 .rsvp-note-check {
   display: flex; align-items: flex-start;
   gap: 0.6rem;
@@ -860,6 +905,52 @@
 }
 .faq-answer-open { padding: 0 1.1rem 1.1rem; }
 .faq-answer { padding-inline: 1.1rem; }
+
+/* ── 6c. The two bars pinned to the bottom, in deep gold ──
+   Both sit on the cream page, so they carry cream type: gold-on-gold text was
+   the thing that made the old bar's labels hard to read. Nothing inside them
+   is gold. */
+
+/* The gift cart: dark gold */
+.gift-cart-bar {
+  background: linear-gradient(170deg, #6d4a12 0%, var(--color-accent-800) 58%, #48300a 100%);
+  color: #fdf9f0;
+  border: 1px solid rgba(255, 248, 232, 0.22);
+  box-shadow: 0 8px 28px rgba(45, 30, 8, 0.45);
+}
+.gift-cart-label { color: rgba(255, 248, 232, 0.72); }
+.gift-cart-name { color: #fdf9f0; }
+.gift-cart-price { color: rgba(255, 248, 232, 0.88); }
+.gift-cart-bar .btn-ghost {
+  color: rgba(255, 248, 232, 0.82);
+  border-color: transparent;
+}
+.gift-cart-bar .btn-ghost:hover:not(:disabled) {
+  background: rgba(255, 248, 232, 0.16);
+  color: #fff;
+}
+.gift-cart-bar .btn-primary {
+  color: #fdf9f0;
+  border-color: rgba(255, 248, 232, 0.72);
+  background: rgba(255, 248, 232, 0.1);
+}
+/* Inverts on hover — cream fill, deep gold type */
+.gift-cart-bar .btn-primary:hover:not(:disabled) {
+  background: #fdf9f0;
+  color: var(--color-accent-800);
+  border-color: #fdf9f0;
+}
+
+/* The pill nav: the deepest gold, so it reads as the layer underneath */
+.bottom-nav {
+  background: rgba(58, 39, 13, 0.93);
+  box-shadow: 0 4px 24px rgba(35, 24, 8, 0.45);
+}
+.bottom-nav-tab { color: rgba(255, 248, 232, 0.72); }
+.bottom-nav-tab.active {
+  background: rgba(255, 248, 232, 0.2);
+  color: #fff8e8;
+}
 
 /* ── 7. Admin: timeline editor rows ── */
 .timeline-editor-row {
