@@ -150,6 +150,25 @@
 }
 .envelope-cta:hover { color: var(--color-accent); }
 
+/* ── 1b. Loading spinner ──
+   Same sheet of cream as the cover and the page, so the hand-off between
+   spinner → cover → page never flashes a different background. */
+.app-loader {
+  position: fixed; inset: 0; z-index: 9999;
+  background: var(--color-bg);
+  display: flex; align-items: center; justify-content: center;
+}
+.app-loader-spinner {
+  width: 36px; height: 36px;
+  border: 3px solid color-mix(in srgb, var(--color-text) 12%, transparent);
+  border-top-color: var(--color-accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-loader-spinner { animation-duration: 2s; }
+}
+
 /* ── 2. Section dividers ── */
 .section-divider {
   display: flex;

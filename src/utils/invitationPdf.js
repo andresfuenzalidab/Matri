@@ -38,6 +38,14 @@ const FLOURISH = `
   <circle cx="150" cy="20" r="1.6" fill="currentColor" stroke="none"/>
 </svg>`
 
+/** The arrow from the cover, pointing down at the seal you press. */
+const POINTER_ARROW = `
+<svg class="pointer" viewBox="0 0 24 30" fill="none" stroke="currentColor"
+  stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <path d="M12 3v20"/>
+  <path d="M5.5 16.5 12 23l6.5-6.5"/>
+</svg>`
+
 const SEAL_SPRIG = `
 <svg class="seal-art" viewBox="0 0 40 40" aria-hidden="true">
   <g fill="none" stroke="#f4f1e4" stroke-width="1.1" stroke-linecap="round">
@@ -84,14 +92,18 @@ export function downloadInvitationPDF(inv, content = {}) {
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 @page{size:A4 portrait;margin:0}
-html,body{width:210mm;min-height:297mm;background:#f7f3ea}
+/* Exactly one sheet. 296mm rather than a full 297mm because a block the same
+   height as the page rounds up by a fraction and spills into a blank second
+   page; `overflow:hidden` is the hard guarantee behind that. */
+html,body{width:210mm;height:296mm;overflow:hidden;background:#f7f3ea}
 body{font-family:'Lora',Georgia,serif;color:#4a4038}
 
 .page{
-  width:210mm;min-height:297mm;
+  width:210mm;height:296mm;overflow:hidden;
   background:linear-gradient(158deg,#faf6ee 0%,#f7f3ea 48%,#f0eadd 100%);
   position:relative;display:flex;flex-direction:column;align-items:center;
-  text-align:center;padding:26mm 24mm 16mm;
+  text-align:center;padding:20mm 22mm 12mm;
+  break-inside:avoid;page-break-inside:avoid;
 }
 /* Double hairline frame, matching the card borders on the site */
 .frame{position:absolute;inset:9mm;border:1px solid #c09045;pointer-events:none}
@@ -106,63 +118,63 @@ body{font-family:'Lora',Georgia,serif;color:#4a4038}
 
 .kicker{
   font-size:7.5pt;letter-spacing:.24em;text-transform:uppercase;
-  color:#b68235;margin-bottom:7mm
+  color:#b68235;margin-bottom:5mm
 }
-.logo{width:44mm;height:auto;margin:0 auto 5mm;display:block}
+/* Capped in both directions: a portrait logo would otherwise grow the page. */
+.logo{
+  width:38mm;max-width:38mm;max-height:32mm;height:auto;
+  object-fit:contain;margin:0 auto 4mm;display:block
+}
 /* No logo uploaded → the names take the oval frame from the cover */
 .names{
   position:relative;display:inline-block;
-  font-family:'Cormorant Garamond',serif;font-size:30pt;font-style:italic;
+  font-family:'Cormorant Garamond',serif;font-size:27pt;font-style:italic;
   font-weight:400;letter-spacing:.04em;color:#b68235;line-height:1.15;
-  margin-bottom:2mm
+  margin-bottom:1.5mm
 }
-.names.framed{padding:7mm 10mm}
+.names.framed{padding:6mm 9mm}
 .ring{
   position:absolute;inset:0;border:1px solid rgba(192,144,69,0.4);
   border-radius:50% / 42%
 }
 
-.flourish{width:72mm;height:auto;color:#b68235;opacity:.6;margin:6mm auto}
+.flourish{width:66mm;height:auto;color:#b68235;opacity:.6;margin:4.5mm auto}
 
-.to-label{font-size:7pt;letter-spacing:.2em;text-transform:uppercase;color:#b68235;margin-bottom:2.5mm}
+.to-label{font-size:7pt;letter-spacing:.2em;text-transform:uppercase;color:#b68235;margin-bottom:2mm}
 .guest-name{
-  font-family:'Cormorant Garamond',serif;font-size:24pt;font-style:italic;
+  font-family:'Cormorant Garamond',serif;font-size:22pt;font-style:italic;
   font-weight:400;color:#4a4038;line-height:1.25
 }
 .intro{
-  font-family:'Cormorant Garamond',serif;font-size:13pt;font-style:italic;
-  line-height:1.75;color:#5a5048;max-width:118mm;margin:5mm auto 0
+  font-family:'Cormorant Garamond',serif;font-size:12pt;font-style:italic;
+  line-height:1.7;color:#5a5048;max-width:114mm;margin:4mm auto 0
 }
 
-.details{display:flex;flex-direction:column;align-items:center;gap:2mm}
-.wd-date{font-family:'Cormorant Garamond',serif;font-size:19pt;font-weight:600;color:#4a4038;letter-spacing:.03em}
+.details{display:flex;flex-direction:column;align-items:center;gap:1.5mm}
+.wd-date{font-family:'Cormorant Garamond',serif;font-size:18pt;font-weight:600;color:#4a4038;letter-spacing:.03em}
 .wd-times{font-size:9pt;color:#b68235;letter-spacing:.05em}
-.wd-venue{font-family:'Cormorant Garamond',serif;font-size:14pt;font-weight:600;color:#4a4038}
+.wd-venue{font-family:'Cormorant Garamond',serif;font-size:13.5pt;font-weight:600;color:#4a4038}
 .wd-address{font-size:8.5pt;color:#8a7a68;font-style:italic}
 
 /* The wax seal, as on the envelope cover — the thing you press to open */
 .seal-block{display:flex;flex-direction:column;align-items:center}
+.pointer{width:5.5mm;height:auto;color:#b68235;margin-bottom:2mm;display:block}
 .seal{
-  width:22mm;height:22mm;border-radius:50%;
+  width:22mm;height:22mm;flex:0 0 auto;border-radius:50%;
   background:radial-gradient(circle at 34% 30%, #6d7355 0%, #565c42 72%);
   display:flex;align-items:center;justify-content:center;
-  text-decoration:none;margin-bottom:4mm;
+  text-decoration:none;margin-bottom:3.5mm;
   box-shadow:0 1mm 3mm rgba(40,44,30,0.32);
 }
 .seal-art{width:66%;height:66%}
 .seal img{width:100%;height:100%;object-fit:contain;border-radius:50%}
 .cta{
   font-family:'Cormorant Garamond',serif;font-size:15pt;font-style:italic;
-  color:#565c42;max-width:80mm;line-height:1.5;margin-bottom:5mm
-}
-.fallback-label{font-size:8pt;color:#9a8a7a;font-style:italic;margin-bottom:1.5mm}
-.link-url{
-  font-family:monospace;font-size:8pt;color:#7a6a5a;word-break:break-all;
-  line-height:1.5;max-width:130mm
+  color:#565c42;max-width:78mm;line-height:1.45
 }
 
 .footer{
-  margin-top:auto;padding-top:8mm;font-size:8pt;color:#a09080;
+  margin-top:auto;padding-top:5mm;font-size:8pt;color:#a09080;
   letter-spacing:.06em
 }
 
@@ -206,12 +218,11 @@ body{font-family:'Lora',Georgia,serif;color:#4a4038}
     ${FLOURISH}
 
     <div class="seal-block">
+      ${POINTER_ARROW}
       <a href="${link}" class="seal">
         ${sealImage ? `<img src="${sealImage}" alt="">` : SEAL_SPRIG}
       </a>
       <p class="cta">${cta}</p>
-      <p class="fallback-label">O ingresa este enlace en tu navegador:</p>
-      <p class="link-url">${link}</p>
     </div>
   </div>
 

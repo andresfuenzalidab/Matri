@@ -2,7 +2,9 @@ import { useState, useEffect, useRef, forwardRef } from 'react'
 import { AppProvider, useApp } from './context/AppContext'
 import { useScrollReveal } from './utils/useScrollReveal'
 import { normalizeImageUrl } from './utils/imageUrl.js'
+import { useImagesReady, usePageAssetsReady } from './utils/useAssetsReady'
 import Nav from './components/Nav'
+import Loader from './components/Loader'
 import WelcomeModal from './components/WelcomeModal'
 import MusicPlayer from './components/MusicPlayer'
 import SectionDivider from './components/SectionDivider'
@@ -28,7 +30,7 @@ function getToken() {
 }
 
 // Rendered inside AppProvider so it can access useApp()
-const SharedHeroVideo = forwardRef(function SharedHeroVideo({ onCanPlay }, ref) {
+const SharedHeroVideo = forwardRef(function SharedHeroVideo({ onCanPlay, onError }, ref) {
   const { get } = useApp()
   const src = get('hero_video') || '/hero.mp4'
   return (
@@ -43,6 +45,7 @@ const SharedHeroVideo = forwardRef(function SharedHeroVideo({ onCanPlay }, ref) 
         zIndex: 0,
       }}
       onCanPlay={onCanPlay}
+      onError={onError}
     />
   )
 })
@@ -116,6 +119,20 @@ function FlowerFooter() {
   )
 }
 
+/**
+ * Holds the spinner until the cover's own art is in, then shows the cover.
+ * Lives inside AppProvider so it can see which images the cover actually uses.
+ */
+function CoverLayer({ guest, onEnter }) {
+  const { get, contentLoaded } = useApp()
+  const logo = normalizeImageUrl(get('envelope_logo_image') || '')
+  const seal = normalizeImageUrl(get('envelope_seal_image') || '')
+  const artReady = useImagesReady([logo, seal], contentLoaded)
+
+  if (!contentLoaded || !artReady) return <Loader />
+  return <WelcomeModal guest={guest} onEnter={onEnter} />
+}
+
 function MainApp({ token, guest, rsvp }) {
   const [adminOpen, setAdminOpen] = useState(false)
   const [welcomed, setWelcomed] = useState(() => {
@@ -132,7 +149,18 @@ function MainApp({ token, guest, rsvp }) {
   const heroVideoRef = useRef(null)
   const musicPlayerRef = useRef(null)
 
+  // Images and webfonts of the page behind the cover.
+  const pageAssetsReady = usePageAssetsReady(welcomed)
+  const pageReady = videoReady && pageAssetsReady
+
   useScrollReveal(welcomed)
+
+  // A hero video that never fires `canplay` (offline, bad encode) must not
+  // strand the guest on the spinner.
+  useEffect(() => {
+    const t = setTimeout(() => setVideoReady(true), 9000)
+    return () => clearTimeout(t)
+  }, [])
 
   function handleVideoReady() {
     if (welcomed) heroVideoRef.current?.play().catch(() => {})
@@ -149,29 +177,18 @@ function MainApp({ token, guest, rsvp }) {
   return (
     <AppProvider token={token} guest={guest} rsvp={rsvp}>
       {/* Single hero video — always in DOM, loads once */}
-      <SharedHeroVideo ref={heroVideoRef} onCanPlay={handleVideoReady} />
+      <SharedHeroVideo
+        ref={heroVideoRef}
+        onCanPlay={handleVideoReady}
+        onError={() => setVideoReady(true)}
+      />
 
-      {/* Spinner only once the cover is out of the way — the cover paints its
-          own opaque background, so it no longer waits on the hero video. */}
-      {!videoReady && welcomed && (
-        <div style={{
-          position: 'fixed', inset: 0, zIndex: 9999,
-          background: 'var(--color-bg, #faf8f5)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-          <div style={{
-            width: 36, height: 36,
-            border: '3px solid rgba(0,0,0,0.1)',
-            borderTopColor: 'var(--color-accent)',
-            borderRadius: '50%',
-            animation: 'spin 0.8s linear infinite',
-          }} />
-        </div>
-      )}
+      {/* Spinner over the page until its video, images and fonts are in */}
+      {welcomed && !pageReady && <Loader />}
 
-      {/* The envelope cover — shown straight away, on its own cream sheet */}
+      {/* Before that, the cover — itself behind a spinner until its art is in */}
       {!welcomed && (
-        <WelcomeModal guest={guest} onEnter={handleWelcomed} />
+        <CoverLayer guest={guest} onEnter={handleWelcomed} />
       )}
 
       <div style={{
@@ -250,7 +267,7 @@ export default function App() {
   }, [token])
 
   if (status === 'loading') {
-    return <div className="loading"><span>Cargando...</span></div>
+    return <Loader />
   }
 
   if (status === 'invalid') {
