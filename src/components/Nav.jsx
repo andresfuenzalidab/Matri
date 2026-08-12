@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 
+/** In document order — the active-section maths below depends on it. */
 const LINKS = [
   { id: 'inicio',   label: 'Inicio' },
   { id: 'boda',     label: 'Lugar' },
@@ -13,17 +14,45 @@ export default function Nav() {
   const [active, setActive] = useState('inicio')
 
   useEffect(() => {
-    const observers = LINKS.map(({ id }) => {
-      const el = document.getElementById(id)
-      if (!el) return null
-      const obs = new IntersectionObserver(
-        ([entry]) => { if (entry.isIntersecting) setActive(id) },
-        { threshold: 0.05, rootMargin: '-40px 0px -40% 0px' }
-      )
-      obs.observe(el)
-      return obs
-    })
-    return () => observers.forEach(o => o?.disconnect())
+    let raf = 0
+
+    /**
+     * One observer per section let whichever callback happened to fire last
+     * win, so short sections near the bottom (FAQ) never lit up. Instead pick
+     * the last section whose top has crossed a reading line — a single,
+     * deterministic answer for any scroll position.
+     */
+    function measure() {
+      raf = 0
+      const line = window.innerHeight * 0.35
+      const present = LINKS.filter(({ id }) => document.getElementById(id))
+      if (!present.length) return
+
+      let current = present[0].id
+      for (const { id } of present) {
+        if (document.getElementById(id).getBoundingClientRect().top <= line) current = id
+      }
+
+      // The final section can be too short to ever reach the line, so once the
+      // page bottom is in view it is always the active one.
+      const atBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 8
+      if (atBottom) current = present[present.length - 1].id
+
+      setActive(current)
+    }
+
+    function onScroll() {
+      if (!raf) raf = requestAnimationFrame(measure)
+    }
+
+    measure()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll)
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+      if (raf) cancelAnimationFrame(raf)
+    }
   }, [])
 
   function handleLinkClick(e, id) {

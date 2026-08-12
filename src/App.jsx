@@ -104,7 +104,9 @@ function SideVines() {
 
 function FlowerFooter() {
   const { get } = useApp()
-  const img = normalizeImageUrl(get('flower_vine_left') || '')
+  // Its own key first — this used to read `flower_vine_left`, so anything
+  // uploaded as the footer image was silently ignored.
+  const img = normalizeImageUrl(get('flower_footer') || get('flower_vine_left') || '')
   if (!img) return null
   return (
     <div className="flower-footer" aria-hidden="true">
@@ -153,8 +155,9 @@ function MainApp({ token, guest, rsvp }) {
       {/* Single hero video — always in DOM, loads once */}
       <SharedHeroVideo ref={heroVideoRef} onCanPlay={handleVideoReady} />
 
-      {/* Spinner until video is ready */}
-      {!videoReady && (
+      {/* Spinner only once the cover is out of the way — the cover paints its
+          own opaque background, so it no longer waits on the hero video. */}
+      {!videoReady && welcomed && (
         <div style={{
           position: 'fixed', inset: 0, zIndex: 9999,
           background: 'var(--color-bg, #faf8f5)',
@@ -170,8 +173,8 @@ function MainApp({ token, guest, rsvp }) {
         </div>
       )}
 
-      {/* WelcomeModal — shown only once video is ready, no video inside */}
-      {!welcomed && videoReady && (
+      {/* The envelope cover — shown straight away, on its own cream sheet */}
+      {!welcomed && (
         <WelcomeModal guest={guest} onEnter={handleWelcomed} />
       )}
 
@@ -204,13 +207,14 @@ function MainApp({ token, guest, rsvp }) {
           <SectionDivider />
           <OurStory />
           <SectionDivider />
-          <Contact />
-          <SectionDivider />
           <RSVP initialRsvp={rsvp} />
           <SectionDivider />
           <Gifts />
           <SectionDivider />
           <FAQ />
+          <SectionDivider />
+          {/* Closing note — the last thing on the page */}
+          <Contact />
           <FlowerFooter />
         </main>
         {guest?.isAdmin && (

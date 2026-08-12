@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useApp } from '../context/AppContext'
+import { guestFormalName } from '../utils/guestName.js'
 
 function formatCLP(n) {
   return `$${Number(n).toLocaleString('es-CL')} CLP`
@@ -87,7 +88,9 @@ export default function GiftModal({ cartItems, onClose, onReserved }) {
   }, [onClose])
 
   const total = cartItems.reduce((sum, { gift, quantity }) => sum + (gift.price || 0) * quantity, 0)
-  const defaultBankMsg = `Regalo Matrimonio Cata y Andrés — ${guest?.name || ''}`
+  // Formal names here — this ends up on a bank transfer and in our records.
+  const formalName = guestFormalName(guest)
+  const defaultBankMsg = `Regalo Matrimonio Cata y Andrés — ${formalName}`
 
   async function handleTransferConfirm() {
     if (!confirmed || loading) return
@@ -99,7 +102,7 @@ export default function GiftModal({ cartItems, onClose, onReserved }) {
         headers: { 'Content-Type': 'application/json', 'X-Invite-Token': token },
         body: JSON.stringify({
           gifts: cartItems.map(({ gift, quantity }) => ({ id: gift.id, quantity })),
-          guestName: guest?.name,
+          guestName: formalName,
           confirmedPayment: 1,
           congratulationsMessage: congratsMsg.trim(),
         }),
@@ -127,7 +130,7 @@ export default function GiftModal({ cartItems, onClose, onReserved }) {
         headers: { 'Content-Type': 'application/json', 'X-Invite-Token': token },
         body: JSON.stringify({
           gifts: cartItems.map(({ gift, quantity }) => ({ id: gift.id, quantity })),
-          guestName: guest?.name,
+          guestName: formalName,
           congratulationsMessage: congratsMsg.trim(),
         }),
       })

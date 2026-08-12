@@ -2,58 +2,6 @@ import { useState } from 'react'
 import { useApp } from '../../context/AppContext'
 import { normalizeImageUrl } from '../../utils/imageUrl.js'
 import { guestDisplayName, isPairInvite, pick } from '../../utils/guestName.js'
-import { weddingInstant } from '../../utils/weddingDate.js'
-
-function AddToCalendar({ venueName, ceremonyTime, isPartyOnly, receptionTime, eventEndTime, weddingDate }) {
-  const startTime = isPartyOnly ? (receptionTime || '19:30') : (ceremonyTime || '17:00')
-  const [sh, sm] = startTime.split(':').map(Number)
-  const [eh, em] = (eventEndTime || '03:00').split(':').map(Number)
-
-  const day = weddingInstant(weddingDate, startTime)
-  const y = day.getFullYear()
-  const pad = n => String(n).padStart(2, '0')
-  const dayStamp = `${y}${pad(day.getMonth() + 1)}${pad(day.getDate())}`
-  const nextDay = new Date(day.getTime() + 86400000)
-  const nextStamp = `${nextDay.getFullYear()}${pad(nextDay.getMonth() + 1)}${pad(nextDay.getDate())}`
-
-  // Use local floating times (no UTC suffix) so calendar shows the exact local hours
-  const dtStart = `${dayStamp}T${pad(sh)}${pad(sm)}00`
-  // If end hour < start hour the party crossed midnight → next day
-  const dtEnd = `${eh < sh ? nextStamp : dayStamp}T${pad(eh)}${pad(em)}00`
-
-  const title = 'Matrimonio Cata & Andrés'
-  const gcUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE` +
-    `&text=${encodeURIComponent(title)}` +
-    `&dates=${dtStart}/${dtEnd}` +
-    `&location=${encodeURIComponent(venueName || 'Altos del Paico')}`
-
-  function downloadIcs() {
-    const ics = [
-      'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Matrimonio//ES',
-      'BEGIN:VEVENT',
-      `DTSTART:${dtStart}`, `DTEND:${dtEnd}`,
-      `SUMMARY:${title}`,
-      `LOCATION:${venueName || 'Altos del Paico'}`,
-      'END:VEVENT', 'END:VCALENDAR',
-    ].join('\r\n')
-    const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url; a.download = 'matrimonio-cata-andres.ics'; a.click()
-    URL.revokeObjectURL(url)
-  }
-
-  return (
-    <div style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'center' }}>
-      <a href={gcUrl} target="_blank" rel="noopener noreferrer" className="btn btn-secondary" style={{ fontSize: '0.85rem' }}>
-        + Google Calendar
-      </a>
-      <button className="btn btn-ghost" style={{ fontSize: '0.85rem' }} onClick={downloadIcs}>
-        + Apple / Outlook
-      </button>
-    </div>
-  )
-}
 
 /** The little wave rule under the RSVP heading. */
 const WaveRule = () => (
@@ -85,7 +33,6 @@ export default function RSVP({ initialRsvp }) {
 
   const [rsvp, setRsvp] = useState(initialRsvp)
   const [attending, setAttending] = useState('')
-  const [companionAttending, setCompanionAttending] = useState(true)
   const [companionName, setCompanionName] = useState(knownCompanion)
   const [numGuests, setNumGuests] = useState(1)
   const [dietaryRestriction, setDietaryRestriction] = useState('')
@@ -109,7 +56,9 @@ export default function RSVP({ initialRsvp }) {
   function getNumGuests() {
     if (!attending || attending === '0') return 1
     if (isSolo) return 1
-    if (isCouple) return companionAttending ? 2 : 1
+    // A pair answers as one: the single yes/no covers both people, with no
+    // separate question for the companion.
+    if (isCouple) return 2
     return Number(numGuests) || 1
   }
 
@@ -145,9 +94,11 @@ export default function RSVP({ initialRsvp }) {
           message,
           dietaryRestriction: dietaryRestriction.trim(),
         }
-        // Let the card slip into the envelope before the thanks takes over.
+        // Let the card slip into the envelope, then hand over to the thanks.
+        // `sealing` has to be cleared here: the sealing view is checked before
+        // `rsvp` below, so leaving it set pins the section on "Enviando…".
         setSealing(true)
-        setTimeout(() => setRsvp(saved), 1700)
+        setTimeout(() => { setSealing(false); setRsvp(saved) }, 1700)
       } else {
         const d = await res.json().catch(() => ({}))
         setError(d.error || 'Error al enviar. Por favor intenta de nuevo.')
@@ -166,7 +117,7 @@ export default function RSVP({ initialRsvp }) {
   const plural = isPairInvite(guest)
 
   // ── Sealing animation: the answered card drops into the envelope ──
-  if (sealing) {
+  if (sealing && !rsvp) {
     return (
       <section id="rsvp" className="section-compact">
         <div className="rsvp-sealing">
@@ -205,16 +156,7 @@ export default function RSVP({ initialRsvp }) {
           <h2 className="rsvp-thanks-title">Gracias, {displayName}</h2>
           <WaveRule />
           <p className="rsvp-thanks-body">{rsvp.attending ? attendingMsg : declinedMsg}</p>
-          {rsvp.attending && (
-            <AddToCalendar
-              venueName={venueName}
-              ceremonyTime={ceremonyTime}
-              receptionTime={receptionTime}
-              isPartyOnly={isPartyOnly}
-              eventEndTime={get('wedding_end_time')}
-              weddingDate={get('wedding_date')}
-            />
-          )}
+          {/* The calendar buttons live on the date card further up the page. */}
           {rsvp.attending ? (
             <button
               className="btn btn-secondary"
@@ -230,9 +172,6 @@ export default function RSVP({ initialRsvp }) {
   }
 
   const dietaryQuestion = get('rsvp_dietary_question')
-  const companionQuestion = knownCompanion
-    ? `¿Confirmas la asistencia de ${knownCompanion}?`
-    : get('rsvp_companion_question', '¿Confirmas la asistencia de tu acompañante?')
   const deadlineLabel = deadlineStr
     ? new Date(deadlineStr + 'T00:00:00').toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric' })
     : null
@@ -300,15 +239,7 @@ export default function RSVP({ initialRsvp }) {
           </div>
 
           {/* ── Follow-up questions, written as lines on the card ── */}
-          {attending === '1' && isCouple && (
-            <label className="rsvp-note-check">
-              <input type="checkbox" checked={companionAttending}
-                onChange={e => setCompanionAttending(e.target.checked)} />
-              <span>{companionQuestion}</span>
-            </label>
-          )}
-
-          {attending === '1' && isCouple && companionAttending && !knownCompanion && (
+          {attending === '1' && isCouple && !knownCompanion && (
             <div className="rsvp-field">
               <label className="rsvp-field-label" htmlFor="companion-name">Nombre de tu acompañante</label>
               <input id="companion-name" className="rsvp-input" type="text"

@@ -9,6 +9,7 @@ const SECTIONS = [
     label: 'Sobre de entrada (lo primero que se ve)',
     fields: [
       { key: 'envelope_logo_image', label: 'Logo del sobre (PNG con fondo transparente)', type: 'image' },
+      { key: 'envelope_names', label: 'Nombres bajo el logo (ej. Cata & Andrés)', type: 'text' },
       { key: 'envelope_seal_image', label: 'Sello de cera (PNG con fondo transparente, opcional)', type: 'image' },
       { key: 'envelope_cta_text', label: 'Texto del botón para abrir', type: 'text' },
     ],
@@ -22,6 +23,7 @@ const SECTIONS = [
       { key: 'hero_video', label: 'Video de portada (MP4)', type: 'video' },
       { key: 'countdown_bg_image', label: 'Imagen de fondo del contador', type: 'image' },
       { key: 'flower_vine_left', label: 'Flores laterales (PNG fondo blanco o transparente)', type: 'image' },
+      { key: 'flower_footer', label: 'Flores del cierre / footer (PNG ancho, fondo blanco o transparente)', type: 'image' },
       { key: 'section_divider_image', label: 'Separador entre secciones (PNG sin fondo — si está vacío se usa un adorno dibujado)', type: 'image' },
     ],
   },
@@ -81,7 +83,6 @@ const SECTIONS = [
       { key: 'rsvp_card_image', label: 'Imagen decorativa de la tarjeta RSVP (PNG sin fondo)', type: 'image' },
       { key: 'rsvp_envelope_image', label: 'Sobre donde se deposita la respuesta (PNG sin fondo, opcional)', type: 'image' },
       { key: 'rsvp_dietary_question', label: 'Pregunta restricción alimenticia (vacío = no mostrar)', type: 'text' },
-      { key: 'rsvp_companion_question', label: 'Pregunta para acompañante (si la invitación no nombra uno)', type: 'text' },
       { key: 'rsvp_deadline', label: 'Fecha límite para confirmar (YYYY-MM-DD, ej. 2026-10-15)', type: 'text' },
       { key: 'rsvp_thanks_attending', label: 'Mensaje confirmación asistencia (usa {NOMBRE})', type: 'textarea' },
       { key: 'rsvp_thanks_declined', label: 'Mensaje confirmación no asistencia (usa {NOMBRE})', type: 'textarea' },
@@ -381,45 +382,110 @@ function TextField({ fieldKey, label, type, value, onSave, token }) {
   )
 }
 
+/**
+ * Image field with a real upload. It used to accept a URL only, which meant
+ * ornaments like the section divider and the footer flowers could not actually
+ * be uploaded from the panel — the file goes to R2 and is served back through
+ * /api/images/:key.
+ */
 function ImageField({ fieldKey, label, currentUrl, onSave, token }) {
   const [val, setVal] = useState(currentUrl || '')
   const [saved, setSaved] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [error, setError] = useState('')
+  const fileRef = useRef(null)
 
   useEffect(() => { setVal(currentUrl || '') }, [currentUrl])
 
-  async function save() {
+  async function persist(value) {
     setSaving(true)
-    const normalized = normalizeImageUrl(val.trim())
-    setVal(normalized)
+    setError('')
     try {
       await fetch('/api/admin/content', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'X-Invite-Token': token },
-        body: JSON.stringify({ key: fieldKey, value: normalized }),
+        body: JSON.stringify({ key: fieldKey, value }),
       })
-      onSave(fieldKey, normalized)
+      onSave(fieldKey, value)
       setSaved(true)
       setTimeout(() => setSaved(false), 2500)
     } finally { setSaving(false) }
   }
 
+  async function save() {
+    const normalized = normalizeImageUrl(val.trim())
+    setVal(normalized)
+    await persist(normalized)
+  }
+
+  async function handleFile(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    setError('')
+    try {
+      const form = new FormData()
+      form.append('file', file)
+      const res = await fetch('/api/admin/upload', {
+        method: 'POST',
+        headers: { 'X-Invite-Token': token },
+        body: form,
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setVal(data.url)
+        await persist(data.url)
+      } else {
+        const d = await res.json().catch(() => ({}))
+        setError(d.error || 'No se pudo subir la imagen.')
+      }
+    } catch {
+      setError('Error de conexión al subir la imagen.')
+    } finally {
+      setUploading(false)
+      if (fileRef.current) fileRef.current.value = ''
+    }
+  }
+
   const preview = normalizeImageUrl(val)
   return (
     <div className="content-field">
-      <label className="form-label">{label} — URL de imagen</label>
-      {preview && <img src={preview} className="upload-preview" alt={label} onError={e => e.target.style.display = 'none'} />}
-      <div className="content-field-row">
+      <label className="form-label">{label}</label>
+      {preview && (
+        <img src={preview} className="upload-preview" alt={label}
+          onError={e => e.target.style.display = 'none'} />
+      )}
+
+      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+        <label className="btn btn-secondary" style={{ cursor: uploading ? 'wait' : 'pointer' }}>
+          {uploading ? 'Subiendo...' : preview ? 'Cambiar imagen' : 'Subir imagen'}
+          <input ref={fileRef} type="file" accept="image/*"
+            style={{ display: 'none' }} onChange={handleFile} disabled={uploading} />
+        </label>
+        {preview && (
+          <button className="btn btn-ghost" style={{ fontSize: '0.75rem' }}
+            onClick={() => { setVal(''); persist('') }} disabled={saving || uploading}>
+            Quitar
+          </button>
+        )}
+      </div>
+
+      <div className="content-field-row" style={{ marginTop: '0.5rem' }}>
         <input className="input" type="text"
-          placeholder="https:// o link de Google Drive"
+          placeholder="…o pega una URL / link de Google Drive"
           value={val} onChange={e => setVal(e.target.value)} />
         <button className="btn btn-secondary save-btn-inline" onClick={save}
-          disabled={saving || val.trim() === (currentUrl || '')}>
+          disabled={saving || uploading || val.trim() === (currentUrl || '')}>
           {saving ? '...' : 'Guardar'}
         </button>
       </div>
+
+      {error && <p className="form-error">{error}</p>}
       {saved && <span className="saved-indicator">✓ Guardado</span>}
-      <span style={{ fontSize: '0.7rem', opacity: 0.5 }}>Acepta URLs directas o links de Google Drive</span>
+      <span style={{ fontSize: '0.7rem', opacity: 0.5 }}>
+        Sube un archivo (PNG con fondo transparente para adornos) o pega una URL directa.
+      </span>
     </div>
   )
 }

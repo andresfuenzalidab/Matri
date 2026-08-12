@@ -282,8 +282,8 @@ export default function InvitationsManager() {
           <div className="create-form-title">Nueva invitación</div>
           <div className="create-form-fields">
             <input className="input" placeholder="Nombre formal *" value={newName} onChange={e => setNewName(e.target.value)} required />
-            <input className="input" placeholder="Apodo (nombre informal, opcional)" value={newNickname} onChange={e => setNewNickname(e.target.value)} />
-            <input className="input" placeholder="Acompañante / pareja (opcional)" value={newCompanion} onChange={e => setNewCompanion(e.target.value)} />
+            <input className="input" placeholder="Nombre formal del acompañante (opcional)" value={newCompanion} onChange={e => setNewCompanion(e.target.value)} />
+            <input className="input" placeholder="Apodo global (ej. Andrés y Cata)" value={newNickname} onChange={e => setNewNickname(e.target.value)} />
             <input className="input" placeholder="Email (opcional)" value={newEmail} onChange={e => setNewEmail(e.target.value)} type="email" />
             <input className="input" placeholder="Teléfono (opcional)" value={newPhone} onChange={e => setNewPhone(e.target.value)} type="tel" />
             <label className="admin-checkbox-label">
@@ -291,6 +291,11 @@ export default function InvitationsManager() {
               Admin
             </label>
           </div>
+          <p style={{ fontSize: '0.72rem', opacity: 0.55, marginTop: '0.5rem', lineHeight: 1.6 }}>
+            El <strong>apodo global</strong> se usa tal cual en todos los mensajes personalizados — escríbelo
+            cubriendo a las dos personas si van juntas. Si lo dejas vacío se usan los nombres formales unidos con
+            «y». El <strong>acompañante</strong> es lo que hace que los textos hablen en plural.
+          </p>
           <div style={{ marginTop: '0.75rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
             <div style={{ flex: 1, minWidth: 200 }}>
               <label className="form-label">Mensaje de bienvenida personalizado (opcional)</label>
@@ -408,10 +413,10 @@ export default function InvitationsManager() {
                     {editId === inv.id ? (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', minWidth: 220 }}>
                         <input className="input" style={{ fontSize: '0.8rem' }}
-                          placeholder="Apodo / nombre informal"
+                          placeholder="Apodo global (ej. Andrés y Cata)"
                           value={editNickname} onChange={e => setEditNickname(e.target.value)} />
                         <input className="input" style={{ fontSize: '0.8rem' }}
-                          placeholder="Acompañante / pareja"
+                          placeholder="Nombre formal del acompañante"
                           value={editCompanion} onChange={e => setEditCompanion(e.target.value)} />
                         <input className="input" style={{ fontSize: '0.8rem' }}
                           placeholder="Teléfono"

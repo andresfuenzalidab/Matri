@@ -1,22 +1,37 @@
 /**
  * How we address a guest across the site.
  *
- * An invitation can name a companion up front (`companion_name` on the
- * invitation row). When it does, every personalised line — welcome message,
- * RSVP, gift thanks — talks to both of them, so the wording has to switch to
- * plural too.
+ * Two independent fields on the invitation:
+ *
+ * - `nickname` is a *global* informal label, written to already cover everyone
+ *   on the invitation ("Andrés y Cata", "Los Fuenzalida"). When it is set it is
+ *   used verbatim — never combined with the companion's name.
+ * - `name` + `companion_name` are the formal names. When a companion is named,
+ *   the two formal names are joined with "y".
+ *
+ * `companion_name` is also the signal that the invitation covers two people,
+ * so it drives the singular/plural wording regardless of the nickname.
  */
 
-export function guestDisplayName(guest) {
+/** Formal name(s): "Andrés Fuenzalida y Catalina Pérez". */
+export function guestFormalName(guest) {
   if (!guest) return ''
-  const base = (guest.nickname || guest.name || '').trim()
+  const base = (guest.name || '').trim()
   const companion = (guest.companionName || '').trim()
   if (!companion) return base
   if (!base) return companion
   return `${base} y ${companion}`
 }
 
-/** True when the invitation already names a companion → address both. */
+/** How we speak to them: the nickname as written, else the formal name(s). */
+export function guestDisplayName(guest) {
+  if (!guest) return ''
+  const nickname = (guest.nickname || '').trim()
+  if (nickname) return nickname
+  return guestFormalName(guest)
+}
+
+/** True when the invitation names a companion → address both. */
 export function isPairInvite(guest) {
   return Boolean((guest?.companionName || '').trim())
 }

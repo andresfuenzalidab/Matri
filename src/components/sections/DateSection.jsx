@@ -1,5 +1,6 @@
 import { useApp } from '../../context/AppContext'
 import { normalizeImageUrl } from '../../utils/imageUrl.js'
+import AddToCalendar from '../AddToCalendar'
 import {
   MONTH_NAMES, WEEKDAY_LABELS, monthMatrix, weddingDateParts, longDateLabel,
 } from '../../utils/weddingDate.js'
@@ -66,6 +67,7 @@ function CitationTag({ rows, title }) {
             {row.hint && <p className="paper-tag-hint">{row.hint}</p>}
           </div>
         ))}
+        <AddToCalendar />
       </div>
     </div>
   )

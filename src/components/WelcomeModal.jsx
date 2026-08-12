@@ -44,6 +44,9 @@ export default function WelcomeModal({ guest, onEnter }) {
   const sealImage = normalizeImageUrl(get('envelope_seal_image') || '')
   const cta = get('envelope_cta_text', 'Toca aquí para abrir la invitación')
   const dateLabel = get('hero_date') || longDateLabel(get('wedding_date'))
+  // Own key so the envelope can read "Cata & Andrés" while the rest of the
+  // site keeps whatever `hero_title` says.
+  const names = get('envelope_names') || get('hero_title', 'Cata & Andrés')
 
   const displayName = guestDisplayName(guest)
   const message = guest?.welcomeMessage
@@ -71,15 +74,16 @@ export default function WelcomeModal({ guest, onEnter }) {
           </svg>
 
           <div className="envelope-top-content">
-            {logo ? (
+            {/* Order: logo → names → date → personalised message */}
+            {logo && (
               <img src={logo} alt="" className="envelope-logo"
                 onError={e => { e.target.style.display = 'none' }} />
-            ) : (
-              <div className="envelope-monogram" aria-hidden="true">
-                <span className="envelope-monogram-ring" />
-                A&nbsp;&amp;&nbsp;C
-              </div>
             )}
+
+            <p className={`envelope-names ${logo ? '' : 'envelope-names-framed'}`}>
+              {!logo && <span className="envelope-monogram-ring" aria-hidden="true" />}
+              {names}
+            </p>
 
             <p className="envelope-date">{dateLabel}</p>
 

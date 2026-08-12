@@ -15,24 +15,35 @@ export default function FAQ() {
       <span className="kicker">Preguntas frecuentes</span>
       <h2 className="section-title">{get('faq_heading', '¿Tienes dudas?')}</h2>
 
-      <div style={{ maxWidth: 640, margin: '2rem auto 0', textAlign: 'left' }}>
-        {items.map((item, i) => (
-          <div key={i} className="faq-item">
-            <button
-              className="faq-question"
-              onClick={() => setOpen(open === i ? null : i)}
-              aria-expanded={open === i}
-            >
-              <span>{item.q}</span>
-              <span className="faq-chevron" style={{
-                transform: open === i ? 'rotate(180deg)' : 'rotate(0deg)',
-              }}>▾</span>
-            </button>
-            <div className={`faq-answer ${open === i ? 'faq-answer-open' : ''}`}>
-              <p>{item.a}</p>
+      <p className="faq-hint">Toca cada pregunta para ver la respuesta</p>
+
+      <div className="faq-list">
+        {items.map((item, i) => {
+          const isOpen = open === i
+          return (
+            <div key={i} className={`faq-item ${isOpen ? 'is-open' : ''}`}>
+              <button
+                className="faq-question"
+                onClick={() => setOpen(isOpen ? null : i)}
+                aria-expanded={isOpen}
+                aria-controls={`faq-answer-${i}`}
+              >
+                <span className="faq-question-text">{item.q}</span>
+                <span className="faq-toggle" aria-hidden="true">
+                  <span className="faq-toggle-bar" />
+                  <span className="faq-toggle-bar faq-toggle-bar-v" />
+                </span>
+              </button>
+              <div
+                id={`faq-answer-${i}`}
+                className={`faq-answer ${isOpen ? 'faq-answer-open' : ''}`}
+                role="region"
+              >
+                <p>{item.a}</p>
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </section>
   )

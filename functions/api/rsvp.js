@@ -20,9 +20,12 @@ export async function onRequestPost({ request, env }) {
 
     const { attending, numGuests = 1, message = '', dietaryRestriction = '', companionName = '', email = '' } = body
 
-    // An invitation can name its companion up front — greet both if so.
+    // The nickname is a global informal label already covering everyone on the
+    // invitation, so it is used as-is. Otherwise fall back to the formal
+    // name(s), joined with "y" when a companion is named up front.
     const namedCompanion = (inv.companion_name || '').trim()
-    const greetName = namedCompanion ? `${inv.name} y ${namedCompanion}` : inv.name
+    const formalName = namedCompanion ? `${inv.name} y ${namedCompanion}` : inv.name
+    const greetName = (inv.nickname || '').trim() || formalName
 
     await env.DB.prepare(
       'INSERT INTO rsvp_responses (invitation_id, attending, num_guests, message, dietary_restriction, companion_name, email) VALUES (?, ?, ?, ?, ?, ?, ?)'
@@ -62,9 +65,9 @@ export async function onRequestPost({ request, env }) {
         await sendEmail(env, {
           from: emailFrom,
           to: emailTo,
-          subject: `RSVP: ${greetName} — ${attending ? `Confirmó (${numGuests} personas)` : 'No puede asistir'}`,
+          subject: `RSVP: ${formalName} — ${attending ? `Confirmó (${numGuests} personas)` : 'No puede asistir'}`,
           html: `<div style="font-family:sans-serif">
-            <p><strong>${greetName}</strong> ${attending ? `confirmó asistencia (${numGuests} persona${numGuests > 1 ? 's' : ''})` : 'indicó que no puede asistir'}.</p>
+            <p><strong>${formalName}</strong> ${attending ? `confirmó asistencia (${numGuests} persona${numGuests > 1 ? 's' : ''})` : 'indicó que no puede asistir'}.</p>
             ${companionName ? `<p>Acompañante: ${companionName}</p>` : ''}
             ${dietaryRestriction ? `<p>Restricción alimenticia: ${dietaryRestriction}</p>` : ''}
             ${email ? `<p>Email: ${email}</p>` : ''}
