@@ -5,6 +5,7 @@ import { normalizeImageUrl } from './utils/imageUrl.js'
 import { useImagesReady, usePageAssetsReady } from './utils/useAssetsReady'
 import Nav from './components/Nav'
 import Loader from './components/Loader'
+import ThemeInjector from './components/ThemeInjector'
 import WelcomeModal from './components/WelcomeModal'
 import MusicPlayer from './components/MusicPlayer'
 import SectionDivider from './components/SectionDivider'
@@ -50,26 +51,29 @@ const SharedHeroVideo = forwardRef(function SharedHeroVideo({ onCanPlay, onError
   )
 })
 
-const VINE_STOPS = [
-  { top: '0%',  opacity: 0.88 },
-  { top: '13%', opacity: 0.72 },
-  { top: '26%', opacity: 0.60 },
-  { top: '39%', opacity: 0.50 },
-  { top: '52%', opacity: 0.42 },
-  { top: '65%', opacity: 0.34 },
-  { top: '78%', opacity: 0.26 },
-  { top: '91%', opacity: 0.20 },
-]
+/**
+ * Repeats of the uploaded vine image down each side, fading out with depth.
+ * `count` used to be fixed at 8 — now it comes from `flower_vine_frequency`
+ * in admin, so a sparser or denser repeat is just a number, not a code change.
+ */
+function buildVineStops(count) {
+  const n = Math.max(2, Math.min(20, Math.round(count) || 8))
+  return Array.from({ length: n }, (_, i) => {
+    const t = i / n
+    return { top: `${(t * 100).toFixed(2)}%`, opacity: Math.max(0.15, 0.9 - t * 0.75) }
+  })
+}
 
 function SideVines() {
   const { get } = useApp()
   const img = normalizeImageUrl(get('flower_vine_left') || '')
+  const stops = buildVineStops(Number(get('flower_vine_frequency', 8)))
 
   if (img) {
     return (
       <>
         <div className="side-vine side-vine-left" aria-hidden="true">
-          {VINE_STOPS.map((s, i) => (
+          {stops.map((s, i) => (
             <img key={i} src={img} alt="" style={{
               position: 'absolute', top: s.top, left: 0,
               width: '100%', opacity: s.opacity, mixBlendMode: 'multiply',
@@ -77,7 +81,7 @@ function SideVines() {
           ))}
         </div>
         <div className="side-vine side-vine-right" aria-hidden="true">
-          {VINE_STOPS.map((s, i) => (
+          {stops.map((s, i) => (
             <img key={i} src={img} alt="" style={{
               position: 'absolute', top: s.top, right: 0,
               width: '100%', opacity: s.opacity, mixBlendMode: 'multiply',
@@ -176,6 +180,9 @@ function MainApp({ token, guest, rsvp }) {
 
   return (
     <AppProvider token={token} guest={guest} rsvp={rsvp}>
+      {/* Admin's site-wide colors/fonts, applied as a CSS override */}
+      <ThemeInjector />
+
       {/* Single hero video — always in DOM, loads once */}
       <SharedHeroVideo
         ref={heroVideoRef}

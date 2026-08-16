@@ -2,14 +2,8 @@ import { useState } from 'react'
 import { useApp } from '../../context/AppContext'
 import { normalizeImageUrl } from '../../utils/imageUrl.js'
 import { guestDisplayName, guestFormalName, isPairInvite, pick } from '../../utils/guestName.js'
-
-/** The little wave rule under the RSVP heading. */
-const WaveRule = () => (
-  <svg className="rsvp-wave" viewBox="0 0 120 10" fill="none" stroke="currentColor"
-    strokeWidth="1.1" strokeLinecap="round" aria-hidden="true">
-    <path d="M2 6c8-6 16 4 24 0s16-6 24 0 16 4 24 0 16-6 24 0" />
-  </svg>
-)
+import WaveRule from '../WaveRule'
+import ThanksCard from '../ThanksCard'
 
 /** Envelope the answered card slides into once it is sent. */
 const EnvelopeGraphic = ({ image }) => (
@@ -176,11 +170,8 @@ export default function RSVP({ initialRsvp }) {
 
     return (
       <section id="rsvp" className="section-compact">
-        <div className="rsvp-thanks">
-          <div className="rsvp-thanks-seal">{rsvp.attending ? '♡' : '✦'}</div>
-          <h2 className="rsvp-thanks-title">Gracias, {displayName}</h2>
-          <WaveRule />
-          <p className="rsvp-thanks-body">{rsvp.attending ? attendingMsg : declinedMsg}</p>
+        <ThanksCard symbol={rsvp.attending ? '♡' : '✦'} title={`Gracias, ${displayName}`}>
+          <p className="thanks-message">{rsvp.attending ? attendingMsg : declinedMsg}</p>
           {/* The calendar buttons live on the date card further up the page. */}
           {rsvp.attending ? (
             <button
@@ -191,7 +182,7 @@ export default function RSVP({ initialRsvp }) {
               Ver lista de regalos →
             </button>
           ) : null}
-        </div>
+        </ThanksCard>
       </section>
     )
   }
@@ -204,14 +195,11 @@ export default function RSVP({ initialRsvp }) {
   if (isPastDeadline) {
     return (
       <section id="rsvp" className="section-compact">
-        <div className="rsvp-thanks">
-          <div className="rsvp-thanks-seal">✦</div>
-          <h2 className="rsvp-thanks-title">Plazo cerrado</h2>
-          <WaveRule />
-          <p className="rsvp-thanks-body">
+        <ThanksCard symbol="✦" title="Plazo cerrado">
+          <p className="thanks-message">
             El plazo para confirmar asistencia venció el {deadlineLabel}. Si tienes alguna duda, escríbenos directamente.
           </p>
-        </div>
+        </ThanksCard>
       </section>
     )
   }

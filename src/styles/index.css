@@ -65,7 +65,10 @@
 
   /* Stationery: the cream of the envelope, cards and tags, plus the wax seal. */
   --paper: #f7f3ea;
-  --paper-edge: color-mix(in srgb, #b68235 22%, transparent);
+  /* Was a hardcoded hex, not a reference to --color-accent — an admin-set
+     accent color would have moved every title but left every thin gold rule
+     and border (envelope, calendar, RSVP letter, paper tag) at the old gold. */
+  --paper-edge: color-mix(in srgb, var(--color-accent) 22%, transparent);
   --paper-ink: #4a4038;
   --seal: #6d7355;
   --seal-deep: #565c42;

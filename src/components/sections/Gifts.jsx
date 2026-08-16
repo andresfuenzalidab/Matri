@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useApp } from '../../context/AppContext'
 import GiftModal from '../GiftModal'
+import ThanksCard from '../ThanksCard'
 import { normalizeImageUrl } from '../../utils/imageUrl.js'
 import { guestDisplayName } from '../../utils/guestName.js'
 
@@ -119,11 +120,7 @@ export default function Gifts() {
     const purchasedTotal = purchasedGifts.reduce((sum, g) => sum + (g.price || 0) * (g.quantity || 1), 0)
     return (
       <section id="regalos" className="section-compact">
-        <div className="card" style={{ textAlign: 'center', maxWidth: 480, margin: '0 auto' }}>
-          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'clamp(1.8rem, 5vw, 2.5rem)', color: 'var(--color-accent)', marginBottom: '0.5rem' }}>♡</div>
-          <h2 style={{ fontFamily: 'var(--font-heading)', marginBottom: '1rem' }}>
-            {thanksMsg.replace(/\{nombre\}/gi, displayName)}
-          </h2>
+        <ThanksCard symbol="♡" title={thanksMsg.replace(/\{nombre\}/gi, displayName)}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginBottom: '0.75rem' }}>
             {purchasedGifts.map((g, i) => (
               <span key={i} style={{ fontFamily: 'var(--font-heading)', fontStyle: 'italic', fontSize: 'clamp(1rem, 2.5vw, 1.15rem)', fontWeight: 400 }}>
@@ -138,10 +135,10 @@ export default function Gifts() {
               Total: {formatCLP(purchasedTotal)}
             </div>
           )}
-          <p style={{ fontFamily: 'var(--font-heading)', fontStyle: 'italic', fontSize: 'clamp(1rem, 2.5vw, 1.1rem)', fontWeight: 400, opacity: 0.72, margin: 0 }}>
+          <p className="thanks-message" style={{ margin: 0 }}>
             Tu(s) regalo(s) ha(n) quedado reservado(s). ¡Nos hace muy felices!
           </p>
-        </div>
+        </ThanksCard>
       </section>
     )
   }

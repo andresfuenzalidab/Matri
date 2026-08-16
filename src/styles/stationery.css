@@ -169,6 +169,36 @@
   .app-loader-spinner { animation-duration: 2s; }
 }
 
+/* ── 1c. Replaceable stationery backgrounds ──
+   Three surfaces are drawn with a plain CSS gradient by default: the
+   envelope, the calendar card and the citation tag. Each accepts an
+   admin-uploaded photo that replaces the gradient outright — laid under a
+   translucent wash of the same paper color so the existing text stays
+   legible over whatever is uploaded. The URL rides in on a custom property
+   so the wash itself stays defined in CSS (and follows the paper color if
+   that is themed too), rather than being rebuilt in JS. */
+.envelope.has-custom-bg {
+  background-image:
+    linear-gradient(160deg, color-mix(in srgb, var(--paper) 80%, transparent) 0%, color-mix(in srgb, var(--paper) 88%, transparent) 100%),
+    var(--custom-bg-image);
+  background-size: cover;
+  background-position: center;
+}
+.cal-card.has-custom-bg {
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--paper) 80%, transparent), color-mix(in srgb, var(--paper) 80%, transparent)),
+    var(--custom-bg-image);
+  background-size: cover;
+  background-position: center;
+}
+.paper-tag.has-custom-bg {
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--paper) 82%, transparent), color-mix(in srgb, var(--paper) 82%, transparent)),
+    var(--custom-bg-image);
+  background-size: cover;
+  background-position: center;
+}
+
 /* ── 2. Section dividers ── */
 .section-divider {
   display: flex;
@@ -579,7 +609,7 @@
   color: var(--paper-ink);
   margin: 0;
 }
-.rsvp-wave {
+.wave-rule {
   width: clamp(90px, 26vw, 130px);
   height: auto;
   color: var(--color-accent);
@@ -828,13 +858,14 @@
   margin-top: 1.25rem;
 }
 
-/* Thank-you card once the answer is filed */
-.rsvp-thanks {
+/* Thank-you card — shared by RSVP and Gifts once each is filed, via
+   ThanksCard.jsx, so both close out with the same seal and voice. */
+.thanks-card {
   width: min(100%, 520px);
   margin: 0 auto;
   text-align: center;
 }
-.rsvp-thanks-seal {
+.thanks-seal {
   width: clamp(46px, 13vw, 60px);
   aspect-ratio: 1;
   margin: 0 auto 1rem;
@@ -845,14 +876,14 @@
   font-size: 1.35rem;
   box-shadow: 0 4px 14px rgba(40,44,30,0.34);
 }
-.rsvp-thanks-title {
+.thanks-title {
   font-family: var(--font-heading);
   font-size: clamp(1.8rem, 6vw, 2.8rem);
   font-style: italic; font-weight: 400;
   color: var(--color-accent);
   margin: 0;
 }
-.rsvp-thanks-body {
+.thanks-message {
   font-family: var(--font-heading);
   font-style: italic;
   font-size: clamp(1rem, 3.2vw, 1.2rem);
@@ -969,6 +1000,24 @@
 .bottom-nav-tab.active {
   background: rgba(255, 248, 232, 0.2);
   color: #fff8e8;
+}
+
+/* ── 6d. Admin: Apariencia tab (colors + fonts) ── */
+.appearance-color-row {
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--color-divider);
+}
+.appearance-color-swatch {
+  width: 40px; height: 40px; flex-shrink: 0;
+  padding: 0; border: 1px solid var(--color-divider); border-radius: 6px;
+  cursor: pointer; background: none;
+}
+.appearance-color-info {
+  display: flex; flex-direction: column; gap: 0.1rem; flex: 1; min-width: 0;
+}
+.appearance-color-hex {
+  font-family: monospace; font-size: 0.72rem; opacity: 0.55; text-transform: uppercase;
 }
 
 /* ── 7. Admin: timeline editor rows ── */

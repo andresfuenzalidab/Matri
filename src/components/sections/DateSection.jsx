@@ -15,12 +15,15 @@ const DayHeart = () => (
   </svg>
 )
 
-function Calendar({ dateStr }) {
+function Calendar({ dateStr, bgImage }) {
   const { year, month, day } = weddingDateParts(dateStr)
   const weeks = monthMatrix(year, month)
 
   return (
-    <div className="cal-card">
+    <div
+      className={`cal-card ${bgImage ? 'has-custom-bg' : ''}`}
+      style={bgImage ? { '--custom-bg-image': `url("${bgImage}")` } : undefined}
+    >
       <p className="cal-month">{MONTH_NAMES[month]}</p>
       <p className="cal-year">{year}</p>
 
@@ -51,9 +54,12 @@ function Calendar({ dateStr }) {
 }
 
 /** Punched paper tag with the practical details of the day. */
-function CitationTag({ rows, title }) {
+function CitationTag({ rows, title, bgImage }) {
   return (
-    <div className="paper-tag">
+    <div
+      className={`paper-tag ${bgImage ? 'has-custom-bg' : ''}`}
+      style={bgImage ? { '--custom-bg-image': `url("${bgImage}")` } : undefined}
+    >
       <div className="paper-tag-holes" aria-hidden="true">
         <span /><span /><span />
       </div>
@@ -79,6 +85,8 @@ export default function DateSection() {
 
   const dateStr = get('wedding_date')
   const decor = normalizeImageUrl(get('calendar_decor_image') || '')
+  const calendarBg = normalizeImageUrl(get('calendar_card_background_image') || '')
+  const citationBg = normalizeImageUrl(get('citation_card_background_image') || '')
 
   const citationTime = isPartyOnly
     ? get('reception_time', '19:30')
@@ -118,12 +126,12 @@ export default function DateSection() {
             onError={e => { e.target.style.display = 'none' }} />
         )}
         <div className="cal-envelope">
-          <Calendar dateStr={dateStr} />
+          <Calendar dateStr={dateStr} bgImage={calendarBg} />
         </div>
       </div>
 
       <div className="reveal-on-scroll">
-        <CitationTag rows={rows} title={get('citation_card_title', 'La citación')} />
+        <CitationTag rows={rows} title={get('citation_card_title', 'La citación')} bgImage={citationBg} />
       </div>
     </section>
   )

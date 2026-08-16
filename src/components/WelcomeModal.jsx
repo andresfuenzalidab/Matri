@@ -42,6 +42,7 @@ export default function WelcomeModal({ guest, onEnter }) {
 
   const logo = normalizeImageUrl(get('envelope_logo_image') || '')
   const sealImage = normalizeImageUrl(get('envelope_seal_image') || '')
+  const coverBg = normalizeImageUrl(get('envelope_background_image') || '')
   const cta = get('envelope_cta_text', 'Toca aquí para abrir la invitación')
   const dateLabel = get('hero_date') || longDateLabel(get('wedding_date'))
   // Own key so the envelope can read "Cata & Andrés" while the rest of the
@@ -66,7 +67,10 @@ export default function WelcomeModal({ guest, onEnter }) {
       className="envelope-overlay"
       style={{ opacity: visible ? 1 : 0 }}
     >
-      <div className={`envelope ${opening ? 'is-opening' : ''}`}>
+      <div
+        className={`envelope ${opening ? 'is-opening' : ''} ${coverBg ? 'has-custom-bg' : ''}`}
+        style={coverBg ? { '--custom-bg-image': `url("${coverBg}")` } : undefined}
+      >
         {/* ── Upper half: logo + personalised message ── */}
         <div className="envelope-top">
           <svg className="envelope-fold" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">

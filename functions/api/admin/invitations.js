@@ -93,14 +93,21 @@ export async function onRequestDelete({ request, env }) {
   try {
     await requireAdmin(request, env)
     const url = new URL(request.url)
-    const id = url.searchParams.get('id')
-    if (!id) return err('ID requerido.')
+    // `ids` (comma-separated) for bulk deletes, `id` kept for the single case.
+    const idsParam = url.searchParams.get('ids')
+    const singleId = url.searchParams.get('id')
+    const ids = (idsParam ? idsParam.split(',') : singleId ? [singleId] : [])
+      .map(s => s.trim()).filter(Boolean)
+    if (!ids.length) return err('ID requerido.')
 
-    await env.DB.prepare('DELETE FROM gift_reservations WHERE invitation_id = ?').bind(id).run()
-    await env.DB.prepare('DELETE FROM rsvp_responses WHERE invitation_id = ?').bind(id).run()
-    await env.DB.prepare('DELETE FROM invitations WHERE id = ?').bind(id).run()
+    const placeholders = ids.map(() => '?').join(',')
+    await env.DB.batch([
+      env.DB.prepare(`DELETE FROM gift_reservations WHERE invitation_id IN (${placeholders})`).bind(...ids),
+      env.DB.prepare(`DELETE FROM rsvp_responses WHERE invitation_id IN (${placeholders})`).bind(...ids),
+      env.DB.prepare(`DELETE FROM invitations WHERE id IN (${placeholders})`).bind(...ids),
+    ])
 
-    return json({ success: true })
+    return json({ success: true, deleted: ids.length })
   } catch (e) {
     return handleAuthError(e) || err('Error interno.', 500)
   }

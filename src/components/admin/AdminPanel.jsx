@@ -3,6 +3,7 @@ import InvitationsManager from './InvitationsManager'
 import RSVPDashboard from './RSVPDashboard'
 import GiftsDashboard from './GiftsDashboard'
 import ContentEditor from './ContentEditor'
+import AppearanceEditor from './AppearanceEditor'
 import StoryManager from './StoryManager'
 import StoryPhotosManager from './StoryPhotosManager'
 import VenuePhotosManager from './VenuePhotosManager'
@@ -15,6 +16,7 @@ const TABS = [
   { id: 'story-photos', label: 'Carrusel' },
   { id: 'venue', label: 'Lugar' },
   { id: 'content', label: 'Contenido' },
+  { id: 'appearance', label: 'Apariencia' },
 ]
 
 export default function AdminPanel({ onClose }) {
@@ -56,6 +58,7 @@ export default function AdminPanel({ onClose }) {
           {tab === 'story-photos' && <StoryPhotosManager />}
           {tab === 'venue' && <VenuePhotosManager />}
           {tab === 'content' && <ContentEditor />}
+          {tab === 'appearance' && <AppearanceEditor />}
         </div>
       </div>
     </div>

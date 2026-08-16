@@ -37,6 +37,8 @@ export default function InvitationsManager() {
   const [editSaving, setEditSaving] = useState(false)
 
   const [copiedId, setCopiedId] = useState(null)
+  const [selected, setSelected] = useState(() => new Set())
+  const [bulkDeleting, setBulkDeleting] = useState(false)
 
   async function load() {
     setLoading(true)
@@ -93,8 +95,44 @@ export default function InvitationsManager() {
       const res = await fetch(`/api/admin/invitations?id=${id}`, {
         method: 'DELETE', headers: { 'X-Invite-Token': token }
       })
-      if (res.ok) setInvitations(prev => prev.filter(i => i.id !== id))
+      if (res.ok) {
+        setInvitations(prev => prev.filter(i => i.id !== id))
+        setSelected(prev => { const next = new Set(prev); next.delete(id); return next })
+      }
     } catch { setError('Error al eliminar.') }
+  }
+
+  function toggleSelect(id) {
+    setSelected(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id); else next.add(id)
+      return next
+    })
+  }
+
+  function toggleSelectAll() {
+    setSelected(prev =>
+      prev.size === invitations.length ? new Set() : new Set(invitations.map(i => i.id))
+    )
+  }
+
+  async function handleBulkDelete() {
+    const ids = Array.from(selected)
+    if (!ids.length) return
+    if (!window.confirm(`¿Eliminar ${ids.length} invitación${ids.length > 1 ? 'es' : ''}? Se borrará también su RSVP y reserva de regalo.`)) return
+    setBulkDeleting(true)
+    try {
+      const res = await fetch(`/api/admin/invitations?ids=${ids.join(',')}`, {
+        method: 'DELETE', headers: { 'X-Invite-Token': token }
+      })
+      if (res.ok) {
+        setInvitations(prev => prev.filter(i => !selected.has(i.id)))
+        setSelected(new Set())
+      } else {
+        setError('No se pudieron eliminar las invitaciones seleccionadas.')
+      }
+    } catch { setError('Error al eliminar.') }
+    finally { setBulkDeleting(false) }
   }
 
   async function handleResetRsvp(id) {
@@ -244,7 +282,17 @@ export default function InvitationsManager() {
         </div>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginBottom: '1rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+        {selected.size > 0 && (
+          <button
+            className="btn btn-ghost"
+            style={{ color: '#c0392b', borderColor: 'rgba(192,57,43,0.4)' }}
+            onClick={handleBulkDelete}
+            disabled={bulkDeleting}
+          >
+            {bulkDeleting ? 'Eliminando...' : `Eliminar seleccionados (${selected.size})`}
+          </button>
+        )}
         <button
           className="btn btn-ghost"
           onClick={() => downloadCSV('invitaciones.csv',
@@ -345,6 +393,16 @@ export default function InvitationsManager() {
           <table className="admin-table">
             <thead>
               <tr>
+                <th style={{ width: 32 }}>
+                  <input
+                    type="checkbox"
+                    checked={invitations.length > 0 && selected.size === invitations.length}
+                    ref={el => { if (el) el.indeterminate = selected.size > 0 && selected.size < invitations.length }}
+                    onChange={toggleSelectAll}
+                    title="Seleccionar todo"
+                    style={{ width: 16, height: 16, accentColor: 'var(--color-accent)', cursor: 'pointer' }}
+                  />
+                </th>
                 <th>Nombre / Apodo</th>
                 <th>Contacto</th>
                 <th>Tipo</th>
@@ -358,7 +416,15 @@ export default function InvitationsManager() {
             </thead>
             <tbody>
               {invitations.map(inv => (
-                <tr key={inv.id}>
+                <tr key={inv.id} style={selected.has(inv.id) ? { background: 'rgba(182,130,53,0.08)' } : undefined}>
+                  <td>
+                    <input
+                      type="checkbox"
+                      checked={selected.has(inv.id)}
+                      onChange={() => toggleSelect(inv.id)}
+                      style={{ width: 16, height: 16, accentColor: 'var(--color-accent)', cursor: 'pointer' }}
+                    />
+                  </td>
                   <td>
                     <strong>{inv.name}</strong>
                     {inv.nickname && (

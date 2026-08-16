@@ -64,14 +64,10 @@ function VenueCarousel({ photos, landscape }) {
 export default function WeddingInfo({ shouldPlay }) {
   const { get, token, guest } = useApp()
   const [venuePhotos, setVenuePhotos] = useState([])
-  const descVideoRef = useRef(null)
   const dressVideoRef = useRef(null)
 
   useEffect(() => {
-    if (shouldPlay) {
-      descVideoRef.current?.play().catch(() => {})
-      dressVideoRef.current?.play().catch(() => {})
-    }
+    if (shouldPlay) dressVideoRef.current?.play().catch(() => {})
   }, [shouldPlay])
 
   useEffect(() => {
@@ -85,26 +81,27 @@ export default function WeddingInfo({ shouldPlay }) {
   const isPartyOnly = guest?.invitationType === 'party_only'
   const dressCodeImage = get('dress_code_image')
   const venueMapImage = normalizeImageUrl(get('venue_map_image') || '')
+  const descriptionImage = normalizeImageUrl(get('description_image') || '')
 
   const savedTimeline = parseTimelineItems(get('timeline_items'))
   const timelineItems = savedTimeline.length ? savedTimeline : DEFAULT_TIMELINE_ITEMS
 
   return (
     <section id="boda" className="section">
-      <h2 className="section-title reveal-on-scroll">El lugar</h2>
-      <p className="section-subtitle reveal-on-scroll">
+      <h2 className="section-title reveal-on-scroll" style={{ textAlign: 'center' }}>El lugar</h2>
+      <p className="section-subtitle reveal-on-scroll" style={{ textAlign: 'center' }}>
         {get('venue_name', 'Altos del Paico')}
       </p>
 
-      {/* ── General info video + how to get there ── */}
+      {/* ── General info image + how to get there ── */}
       <div className="card venue-card reveal-on-scroll">
-        <BlendVideo
-          ref={descVideoRef}
-          loop
-          wrapperStyle={{ borderRadius: 6, overflow: 'hidden' }}
-          style={{ width: '100%', display: 'block' }}
-          src={get('description_video_url') || '/description_dog.mp4'}
-        />
+        {descriptionImage ? (
+          <img src={descriptionImage} alt="El lugar"
+            style={{ width: '100%', borderRadius: 6, display: 'block', objectFit: 'cover' }}
+            onError={e => e.target.style.display = 'none'} />
+        ) : (
+          <PhotoPlaceholder size="lg" label="Sube aquí una foto del lugar" />
+        )}
         {mapsUrl && (
           <a href={mapsUrl} target="_blank" rel="noopener noreferrer"
             className="btn btn-secondary"
@@ -148,13 +145,6 @@ export default function WeddingInfo({ shouldPlay }) {
       <div className="wedding-detail-block reveal-on-scroll">
         <h3 className="wedding-detail-title">Código de vestimenta</h3>
         <div style={{ display: 'flex', borderRadius: 6, overflow: 'hidden', maxWidth: 600, margin: '0 auto' }}>
-          <BlendVideo
-            ref={dressVideoRef}
-            loop
-            wrapperStyle={{ flex: '0 0 50%', width: '50%' }}
-            style={{ width: '100%', height: '100%', display: 'block', objectFit: 'cover' }}
-            src={get('dresscode_video_url') || '/dresscode_cat.mp4'}
-          />
           {dressCodeImage ? (
             <img src={normalizeImageUrl(dressCodeImage)} alt="Código de vestimenta"
               style={{ flex: '0 0 50%', width: '50%', objectFit: 'cover', display: 'block' }}
@@ -164,6 +154,13 @@ export default function WeddingInfo({ shouldPlay }) {
               <PhotoPlaceholder size="md" label="Imagen de código de vestimenta" />
             </div>
           )}
+          <BlendVideo
+            ref={dressVideoRef}
+            loop
+            wrapperStyle={{ flex: '0 0 50%', width: '50%' }}
+            style={{ width: '100%', height: '100%', display: 'block', objectFit: 'cover' }}
+            src={get('dresscode_video_url') || '/dresscode_cat.mp4'}
+          />
         </div>
       </div>
     </section>

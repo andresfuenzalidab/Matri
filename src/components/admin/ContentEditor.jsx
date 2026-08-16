@@ -12,6 +12,7 @@ const SECTIONS = [
       { key: 'envelope_names', label: 'Nombres bajo el logo (ej. Cata & Andrés)', type: 'text' },
       { key: 'envelope_seal_image', label: 'Sello de cera (PNG con fondo transparente, opcional)', type: 'image' },
       { key: 'envelope_cta_text', label: 'Texto del botón para abrir', type: 'text' },
+      { key: 'envelope_background_image', label: 'Fondo del sobre (reemplaza el color de fondo por tu foto)', type: 'image' },
     ],
   },
   {
@@ -22,6 +23,7 @@ const SECTIONS = [
       { key: 'hero_video', label: 'Video de portada (MP4)', type: 'video' },
       { key: 'countdown_bg_image', label: 'Imagen de fondo del contador', type: 'image' },
       { key: 'flower_vine_left', label: 'Flores laterales (PNG fondo blanco o transparente)', type: 'image' },
+      { key: 'flower_vine_frequency', label: 'Frecuencia de flores laterales (repeticiones de arriba a abajo, 2-20)', type: 'number' },
       { key: 'flower_footer', label: 'Flores del cierre / footer (PNG ancho, fondo blanco o transparente)', type: 'image' },
       { key: 'section_divider_image', label: 'Separador entre secciones (PNG sin fondo — si está vacío se usa un adorno dibujado)', type: 'image' },
     ],
@@ -31,8 +33,10 @@ const SECTIONS = [
     fields: [
       { key: 'wedding_date', label: 'Fecha del matrimonio (YYYY-MM-DD) — usada por el calendario y la cuenta regresiva', type: 'text' },
       { key: 'calendar_decor_image', label: 'Imagen decorativa junto al calendario (PNG sin fondo, opcional)', type: 'image' },
+      { key: 'calendar_card_background_image', label: 'Fondo de la tarjeta del calendario (reemplaza el papel por tu foto)', type: 'image' },
       { key: 'citation_card_title', label: 'Título de la tarjeta de citación', type: 'text' },
       { key: 'citation_note', label: 'Nota extra en la tarjeta (para todos los invitados)', type: 'textarea' },
+      { key: 'citation_card_background_image', label: 'Fondo de la tarjeta de citación (reemplaza el papel por tu foto)', type: 'image' },
     ],
   },
   {
@@ -64,6 +68,7 @@ const SECTIONS = [
       { key: 'wedding_day_off_tip', label: 'Recomendación (solo se muestra a invitados a todo el día)', type: 'text' },
       { key: 'wedding_end_time', label: 'Hora de término del evento (HH:MM, ej. 03:00 — para el calendario)', type: 'text' },
       { key: 'venue_maps_url', label: 'Link de Google Maps', type: 'text' },
+      { key: 'description_image', label: 'Foto general del lugar', type: 'image' },
       { key: 'venue_map_title', label: 'Título del plano del lugar', type: 'text' },
       { key: 'venue_map_image', label: 'Imagen del plano / mapa del lugar', type: 'image' },
       { key: 'dress_code_image', label: 'Imagen código de vestimenta', type: 'image' },
@@ -138,7 +143,6 @@ const SECTIONS = [
     label: 'Videos de las secciones',
     fields: [
       { key: 'background_video_url', label: 'Video del contador (gato del timer)', type: 'video' },
-      { key: 'description_video_url', label: 'Video de información del lugar (perro)', type: 'video' },
       { key: 'dresscode_video_url', label: 'Video del código de vestimenta', type: 'video' },
     ],
   },
@@ -369,7 +373,8 @@ function TextField({ fieldKey, label, type, value, onSave, token }) {
         {type === 'textarea' ? (
           <textarea className="input" rows={3} value={val} onChange={e => setVal(e.target.value)} />
         ) : (
-          <input className="input" type="text" value={val} onChange={e => setVal(e.target.value)} />
+          <input className="input" type={type === 'number' ? 'number' : 'text'}
+            value={val} onChange={e => setVal(e.target.value)} />
         )}
         <button className="btn btn-secondary save-btn-inline" onClick={save}
           disabled={saving || val === value}>
@@ -546,7 +551,11 @@ function VideoUploadField({ fieldKey, label, currentUrl, onSave, token }) {
       <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
         <label className="btn btn-secondary" style={{ cursor: 'pointer' }}>
           {uploading ? 'Subiendo...' : url ? 'Cambiar video' : 'Subir video'}
-          <input ref={fileRef} type="file" accept="video/mp4,video/webm,video/mov"
+          {/* MP4 (H.264/AAC) only — every video on the site is rendered as a
+              white-matte clip blended onto the page, which needs a plain MP4.
+              WebM does not play at all on iPhone/Safari, and MOV support is
+              inconsistent in-browser; either would silently break on iOS. */}
+          <input ref={fileRef} type="file" accept="video/mp4"
             style={{ display: 'none' }} onChange={handleFile} disabled={uploading} />
         </label>
         {url && (
@@ -558,7 +567,7 @@ function VideoUploadField({ fieldKey, label, currentUrl, onSave, token }) {
       </div>
       {saved && <span className="saved-indicator">✓ Guardado</span>}
       <span style={{ fontSize: '0.7rem', opacity: 0.5 }}>
-        MP4 para portada. WebM (con alpha) para el video de fondo de mascotas.
+        Sube un MP4 (H.264/AAC) — es el único formato que reproduce en todos los navegadores, incluido iPhone.
       </span>
     </div>
   )
