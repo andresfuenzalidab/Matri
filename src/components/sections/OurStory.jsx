@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useApp } from '../../context/AppContext'
-import StoryCarousel from '../StoryCarousel'
+import PhotoCardCarousel from '../PhotoCardCarousel'
 
 export default function OurStory() {
   const { token, get } = useApp()
@@ -43,7 +43,7 @@ export default function OurStory() {
 
       {photos.length > 0 && (
         <div style={{ marginTop: '2rem' }}>
-          <StoryCarousel photos={photos} />
+          <PhotoCardCarousel photos={photos} />
         </div>
       )}
     </section>

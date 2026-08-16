@@ -29,6 +29,27 @@ export async function onRequestPost({ request, env }) {
   }
 }
 
+export async function onRequestPut({ request, env }) {
+  try {
+    await requireAdmin(request, env)
+    const body = await request.json().catch(() => null)
+    if (!body?.id) return err('ID requerido.')
+
+    await env.DB.prepare(
+      'UPDATE venue_photos SET image_url = ?, caption = ?, order_idx = ? WHERE id = ?'
+    ).bind(
+      body.image_url?.trim() || '',
+      body.caption?.trim() || null,
+      body.order_idx ?? 0,
+      body.id
+    ).run()
+
+    return json({ success: true })
+  } catch (e) {
+    return handleAuthError(e) || err('Error interno.', 500)
+  }
+}
+
 export async function onRequestDelete({ request, env }) {
   try {
     await requireAdmin(request, env)

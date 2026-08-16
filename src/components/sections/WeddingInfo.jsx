@@ -1,65 +1,11 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useApp } from '../../context/AppContext'
 import { normalizeImageUrl } from '../../utils/imageUrl.js'
 import { parseTimelineItems, DEFAULT_TIMELINE_ITEMS } from '../../utils/timelineItems.js'
 import PhotoPlaceholder from '../PhotoPlaceholder'
+import PhotoCardCarousel from '../PhotoCardCarousel'
 import BlendVideo from '../BlendVideo'
 import Timeline from '../Timeline'
-
-function VenueCarousel({ photos, landscape }) {
-  const [current, setCurrent] = useState(0)
-  const [fading, setFading] = useState(false)
-
-  const go = useCallback((idx) => {
-    setFading(true)
-    setTimeout(() => { setCurrent(idx); setFading(false) }, 280)
-  }, [])
-
-  const prev = () => go((current - 1 + photos.length) % photos.length)
-  const next = useCallback(() => go((current + 1) % photos.length), [current, go, photos.length])
-
-  useEffect(() => {
-    if (photos.length <= 1) return
-    const t = setInterval(next, 5000)
-    return () => clearInterval(t)
-  }, [next, photos.length])
-
-  if (!photos.length) return null
-  const photo = photos[current]
-  const src = normalizeImageUrl(photo.image_url)
-
-  const parts = (photo.caption || '').split('|')
-  const title = parts[0]?.trim()
-  const badge = parts[1]?.trim()
-
-  return (
-    <div className="photo-card-carousel">
-      <div className={`photo-card ${landscape ? 'photo-card--landscape' : ''} ${fading ? 'photo-card-fading' : ''}`}>
-        <img src={src} alt={title || 'Foto del lugar'}
-          onError={e => e.target.style.display = 'none'} />
-        {title && (
-          <div className="photo-card-overlay">
-            <p className="photo-card-title">{title}</p>
-            {badge && <span className="photo-card-badge">{badge}</span>}
-          </div>
-        )}
-      </div>
-      {photos.length > 1 && (
-        <div className="photo-card-controls">
-          <button className="photo-card-arrow" onClick={prev} aria-label="Anterior">‹</button>
-          <div className="photo-card-dots">
-            {photos.map((_, i) => (
-              <button key={i}
-                className={`photo-card-dot ${i === current ? 'active' : ''}`}
-                onClick={() => go(i)} aria-label={`Foto ${i + 1}`} />
-            ))}
-          </div>
-          <button className="photo-card-arrow" onClick={next} aria-label="Siguiente">›</button>
-        </div>
-      )}
-    </div>
-  )
-}
 
 export default function WeddingInfo({ shouldPlay }) {
   const { get, token, guest } = useApp()
@@ -118,7 +64,7 @@ export default function WeddingInfo({ shouldPlay }) {
       {/* ── Photos of the venue ── */}
       {venuePhotos.length > 0 && (
         <div className="reveal-on-scroll" style={{ marginTop: '2.5rem', textAlign: 'center' }}>
-          <VenueCarousel photos={venuePhotos} landscape />
+          <PhotoCardCarousel photos={venuePhotos} landscape />
         </div>
       )}
 

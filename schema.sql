@@ -55,6 +55,20 @@ CREATE TABLE IF NOT EXISTS site_content (
   updated_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS story_photos (
+  id TEXT PRIMARY KEY,
+  image_url TEXT NOT NULL,
+  caption TEXT,
+  order_idx INTEGER DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS venue_photos (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  image_url TEXT NOT NULL,
+  caption TEXT,
+  order_idx INTEGER DEFAULT 0
+);
+
 CREATE INDEX IF NOT EXISTS idx_gifts_trip_id ON gifts(trip_id);
 CREATE INDEX IF NOT EXISTS idx_gifts_active ON gifts(active);
 CREATE INDEX IF NOT EXISTS idx_gift_res_gift_id ON gift_reservations(gift_id);
