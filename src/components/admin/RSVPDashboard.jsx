@@ -19,13 +19,15 @@ export default function RSVPDashboard() {
   if (error) return <p className="form-error">{error}</p>
 
   const { responses = [], summary = {} } = data || {}
-  const noResponse = (summary.total || 0) - (summary.attending || 0) - (summary.declined || 0)
+  // Rows, not people — matches attending/declined below, which are also
+  // per-invitation, not per-headcount.
+  const noResponse = (summary.totalInvitations || 0) - (summary.attending || 0) - (summary.declined || 0)
 
   return (
     <div>
       <div className="stats-row">
         <div className="stat-card">
-          <span className="stat-number">{summary.total ?? 0}</span>
+          <span className="stat-number">{summary.totalPeople ?? 0}</span>
           <span className="stat-label">Invitados</span>
         </div>
         <div className="stat-card">

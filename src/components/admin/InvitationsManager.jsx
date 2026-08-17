@@ -3,6 +3,7 @@ import { useApp } from '../../context/AppContext'
 import { downloadInvitationPDF, inviteLink } from '../../utils/invitationPdf.js'
 import { downloadCSV } from '../../utils/exportCsv.js'
 import { parseCSV, cell } from '../../utils/parseCsv.js'
+import { totalInvitedHeadcount } from '../../utils/inviteCount.js'
 
 // The single source of truth for the invitations CSV shape — used for both
 // export and import, so a file downloaded here always re-imports cleanly.
@@ -327,7 +328,8 @@ export default function InvitationsManager() {
     finally { setEditSaving(false) }
   }
 
-  const total = invitations.length
+  // People invited, companions included — not just invitation rows.
+  const total = totalInvitedHeadcount(invitations)
   const admins = invitations.filter(i => i.is_admin).length
 
   return (

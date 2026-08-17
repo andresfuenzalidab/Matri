@@ -1,4 +1,5 @@
 import { requireAdmin, json, err, handleAuthError } from '../_auth.js'
+import { totalInvitedHeadcount } from '../../../src/utils/inviteCount.js'
 
 export async function onRequestGet({ request, env }) {
   try {
@@ -11,7 +12,7 @@ export async function onRequestGet({ request, env }) {
         JOIN invitations i ON r.invitation_id = i.id
         ORDER BY r.submitted_at DESC
       `).all(),
-      env.DB.prepare('SELECT COUNT(*) AS total FROM invitations').first(),
+      env.DB.prepare('SELECT max_additional_guests, companion_name FROM invitations').all(),
     ])
 
     const responses = responsesResult.results
@@ -24,7 +25,12 @@ export async function onRequestGet({ request, env }) {
     return json({
       responses,
       summary: {
-        total: invitationsResult?.total ?? 0,
+        // Rows, kept separate from the people-count below — "Sin respuesta"
+        // is `totalInvitations - attending - declined`, all three in the
+        // same (row) unit. Mixing that with a headcount would be wrong.
+        totalInvitations: invitationsResult.results?.length ?? 0,
+        // People invited, companions included — what "Invitados" now shows.
+        totalPeople: totalInvitedHeadcount(invitationsResult.results || []),
         attending,
         declined,
         totalGuests,
