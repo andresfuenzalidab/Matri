@@ -62,10 +62,20 @@ export async function onRequestDelete({ request, env }) {
     const id = url.searchParams.get('id')
     if (!id) return err('ID requerido.')
 
-    const hasGifts = await env.DB.prepare(
-      'SELECT id FROM gifts WHERE trip_id = ? AND active = 1 LIMIT 1'
-    ).bind(id).first()
-    if (hasGifts) return err('No se puede eliminar un destino que tiene regalos activos.', 409)
+    // Cascade rather than block: a trip with gifts could never be deleted
+    // before, and the seed data ships every trip with several — the admin
+    // had no way to remove one short of deleting each gift under it first.
+    // Mirrors how deleting an invitation clears its RSVP and gift
+    // reservations instead of refusing.
+    const giftRows = await env.DB.prepare('SELECT id FROM gifts WHERE trip_id = ?').bind(id).all()
+    const giftIds = giftRows.results.map(g => g.id)
+    if (giftIds.length) {
+      const placeholders = giftIds.map(() => '?').join(',')
+      await env.DB.batch([
+        env.DB.prepare(`DELETE FROM gift_reservations WHERE gift_id IN (${placeholders})`).bind(...giftIds),
+        env.DB.prepare('UPDATE gifts SET active = 0 WHERE trip_id = ?').bind(id),
+      ])
+    }
 
     await env.DB.prepare('DELETE FROM trips WHERE id = ?').bind(id).run()
     return json({ success: true })

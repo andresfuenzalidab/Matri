@@ -96,14 +96,32 @@ export default function GiftsDashboard() {
     finally { setTripSaving(false) }
   }
 
-  async function deleteTrip(id) {
-    if (!window.confirm('¿Eliminar este destino? Solo es posible si no tiene regalos activos.')) return
+  async function deleteTrip(trip) {
+    const giftCount = trip.gifts.length
+    const confirmedGifts = trip.gifts.filter(g => g.confirmed_count > 0).length
+    const reservedGifts = trip.gifts.filter(g => g.reservation_count > 0).length
+    const confirmedTotal = trip.gifts.reduce(
+      (sum, g) => sum + (g.confirmed_count > 0 ? (g.price || 0) * g.confirmed_quantity : 0), 0
+    )
+
+    const msg = giftCount > 0
+      ? `"${trip.name}" tiene ${giftCount} regalo(s)${reservedGifts > 0 ? `, ${reservedGifts} con reserva` : ''}.\n\n¿Eliminar el destino de todas formas? Esto también eliminará sus regalos${reservedGifts > 0 ? ' y cancelará sus reservas' : ''}.`
+      : `¿Eliminar el destino "${trip.name}"?`
+    if (!window.confirm(msg)) return
+
     try {
-      const res = await fetch(`/api/admin/trips?id=${id}`, {
+      const res = await fetch(`/api/admin/trips?id=${trip.id}`, {
         method: 'DELETE', headers: { 'X-Invite-Token': token },
       })
       if (res.ok) {
-        setTrips(prev => prev.filter(t => t.id !== id))
+        setTrips(prev => prev.filter(t => t.id !== trip.id))
+        setSummary(s => ({
+          ...s,
+          total: Math.max(0, (s.total || 0) - giftCount),
+          reserved: Math.max(0, (s.reserved || 0) - confirmedGifts),
+          available: Math.max(0, (s.available || 0) - (giftCount - confirmedGifts)),
+          totalReceived: Math.max(0, (s.totalReceived || 0) - confirmedTotal),
+        }))
       } else {
         const d = await res.json().catch(() => ({}))
         setError(d.error || 'No se pudo eliminar.')
@@ -332,7 +350,7 @@ export default function GiftsDashboard() {
                   <button className="btn btn-ghost" style={{ padding: '2px 6px' }} onClick={() => moveTrip(tripIdx, -1)} disabled={tripIdx === 0}>↑</button>
                   <button className="btn btn-ghost" style={{ padding: '2px 6px' }} onClick={() => moveTrip(tripIdx, 1)} disabled={tripIdx === trips.length - 1}>↓</button>
                   <button className="btn btn-ghost" style={{ fontSize: '0.75rem' }} onClick={() => { setEditTripId(trip.id); setEditTrip({ name: trip.name, image_url: trip.image_url || '', description: trip.description || '' }) }}>Editar</button>
-                  <button className="btn btn-ghost" style={{ color: '#c0392b', fontSize: '0.75rem' }} onClick={() => deleteTrip(trip.id)}>Eliminar</button>
+                  <button className="btn btn-ghost" style={{ color: '#c0392b', fontSize: '0.75rem' }} onClick={() => deleteTrip(trip)}>Eliminar</button>
                 </div>
               </div>
             )}
