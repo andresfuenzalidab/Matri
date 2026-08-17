@@ -160,7 +160,9 @@ export default function GiftModal({ cartItems, onClose, onReserved }) {
       {cartItems.map(({ gift, quantity }) => (
         <div key={gift.id} className="gift-modal-item">
           <div className="gift-modal-item-info">
-            <span className="gift-name" style={{ fontSize: '1rem' }}>{gift.name}</span>
+            <span className="gift-name" style={{ fontSize: '1rem' }}>
+              {gift.name}{gift.tripName ? ` (${gift.tripName})` : ''}
+            </span>
             {gift.description && (
               <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>{gift.description}</span>
             )}

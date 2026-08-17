@@ -131,6 +131,7 @@ export default function Gifts() {
             {purchasedGifts.map((g, i) => (
               <span key={i} style={{ fontFamily: 'var(--font-heading)', fontStyle: 'italic', fontSize: 'clamp(1rem, 2.5vw, 1.15rem)', fontWeight: 400 }}>
                 {g.name}
+                {g.tripName ? ` (${g.tripName})` : ''}
                 {(g.quantity || 1) > 1 ? ` ×${g.quantity}` : ''}
                 {g.price != null ? ` — ${formatCLP(g.price * (g.quantity || 1))}` : ''}
               </span>
@@ -182,8 +183,15 @@ export default function Gifts() {
 
       {/* One flat list — the destino becomes a small label on the card
           instead of a section header, so sorting can mix gifts from every
-          destino together. */}
-      <div className="gifts-grid reveal-on-scroll">
+          destino together.
+          Deliberately NOT `reveal-on-scroll`: this list depends on an async
+          fetch, so it's the one piece of content on the page that isn't
+          already there when the fade-in-on-scroll mechanism looks for it.
+          The `MutationObserver` fix meant it does eventually catch up and
+          reveal once it mounts, but the visible result is still "empty,
+          then pops in as you scroll near it" — exactly the look this avoids
+          by just rendering plainly the moment the data arrives. */}
+      <div className="gifts-grid">
         {sortGifts(allGifts, sortBy).map(gift => {
           const inCart = cart.has(gift.id)
           const canAdd = gift.price != null
@@ -243,9 +251,10 @@ export default function Gifts() {
           <div className="gift-cart-info">
             <span className="gift-cart-label">Tu selección</span>
             <span className="gift-cart-name">
-              {cartItems.map(({ gift, quantity }) =>
-                quantity > 1 ? `${gift.name} ×${quantity}` : gift.name
-              ).join(', ')}
+              {cartItems.map(({ gift, quantity }) => {
+                const label = gift.tripName ? `${gift.name} (${gift.tripName})` : gift.name
+                return quantity > 1 ? `${label} ×${quantity}` : label
+              }).join(', ')}
             </span>
             {cartTotal > 0 && (
               <span className="gift-cart-price">{formatCLP(cartTotal)}</span>
