@@ -29,7 +29,7 @@ export default function Gifts() {
   const [loading, setLoading] = useState(true)
   const [cart, setCart] = useState(new Map())
   const [modalOpen, setModalOpen] = useState(false)
-  const [sortBy, setSortBy] = useState('none')
+  const [sortBy, setSortBy] = useState('price-asc')
   const [purchased, setPurchased] = useState(false)
   const [purchasedGifts, setPurchasedGifts] = useState([])
 
@@ -68,7 +68,10 @@ export default function Gifts() {
   useEffect(() => {
     if (!loading && (purchased || sessionStorage.getItem('scrollToGifts'))) {
       sessionStorage.removeItem('scrollToGifts')
-      setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }), 100)
+      // The gifts section itself, not the bottom of the page — on the MP
+      // redirect this used to land past FAQ/Contact instead of showing the
+      // gift(s) that were just confirmed.
+      setTimeout(() => document.getElementById('regalos')?.scrollIntoView({ behavior: 'smooth' }), 100)
     }
   }, [loading, purchased])
 
@@ -115,6 +118,9 @@ export default function Gifts() {
   const cartTotal = cartItems.reduce((sum, { gift, quantity }) => sum + (gift.price || 0) * quantity, 0)
   const thanksMsg = get('gifts_thanks_message', '¡Gracias!')
   const displayName = guestDisplayName(guest)
+  // Flattened so the sort applies across every destino at once, with the
+  // destino kept only as a label on the card, not a grouping section.
+  const allGifts = trips.flatMap(trip => trip.gifts.map(gift => ({ ...gift, tripName: trip.name })))
 
   if (purchased) {
     const purchasedTotal = purchasedGifts.reduce((sum, g) => sum + (g.price || 0) * (g.quantity || 1), 0)
@@ -153,11 +159,12 @@ export default function Gifts() {
         </p>
       </div>
 
-      {/* Sort filter */}
+      {/* Sort filter — always applied to the single unified list below, so
+          "Precio ↑" (the default) genuinely orders every gift regardless of
+          which destino it belongs to, not just within each one's section. */}
       <div className="gift-filter-bar reveal-on-scroll">
         <span className="gift-filter-label">Ordenar por</span>
         {[
-          ['none', 'Por defecto'],
           ['price-asc', 'Precio ↑'],
           ['price-desc', 'Precio ↓'],
           ['name-asc', 'A → Z'],
@@ -173,70 +180,61 @@ export default function Gifts() {
         ))}
       </div>
 
-      {trips.map(trip => (
-        <div key={trip.id} className="trip-section reveal-on-scroll">
-          {normalizeImageUrl(trip.imageUrl) && (
-            <img
-              src={normalizeImageUrl(trip.imageUrl)}
-              alt={trip.name}
-              style={{ width: '100%', height: 200, objectFit: 'cover', borderRadius: 8, marginBottom: '1.25rem' }}
-              onError={e => e.target.style.display = 'none'}
-            />
-          )}
-          <div className="trip-title">{trip.name}</div>
-          <div className="gifts-grid">
-            {sortGifts(trip.gifts, sortBy).map(gift => {
-              const inCart = cart.has(gift.id)
-              const canAdd = gift.price != null
+      {/* One flat list — the destino becomes a small label on the card
+          instead of a section header, so sorting can mix gifts from every
+          destino together. */}
+      <div className="gifts-grid reveal-on-scroll">
+        {sortGifts(allGifts, sortBy).map(gift => {
+          const inCart = cart.has(gift.id)
+          const canAdd = gift.price != null
 
-              return (
-                <div
-                  key={gift.id}
-                  className={`card gift-card ${inCart ? 'gift-in-cart' : ''}`}
-                >
-                  {normalizeImageUrl(gift.imageUrl) && (
-                    <img
-                      src={normalizeImageUrl(gift.imageUrl)}
-                      alt={gift.name}
-                      style={{ width: '100%', height: 130, objectFit: 'cover', borderRadius: 4, marginBottom: '0.25rem' }}
-                      onError={e => e.target.style.display = 'none'}
-                    />
-                  )}
-                  <div className="gift-name">{gift.name}</div>
-                  {gift.description && (
-                    <div style={{ fontSize: '0.8rem', opacity: 0.65, lineHeight: 1.5 }}>{gift.description}</div>
-                  )}
-                  <div className="gift-price">{formatCLP(gift.price)}</div>
-                  <div className="gift-action">
-                    {!canAdd && <span className="tag tag-neutral">Próximamente</span>}
-                    {canAdd && !inCart && (
-                      <button className="btn btn-ghost" style={{ width: '100%', letterSpacing: '0.08em', fontSize: '0.78rem', textTransform: 'uppercase' }} onClick={() => addToCart(gift)}>
-                        Seleccionar
-                      </button>
-                    )}
-                    {canAdd && inCart && (
-                      <div className="gift-qty-control">
-                        <button className="btn btn-ghost gift-qty-btn"
-                          onClick={() => updateCartQty(gift.id, cart.get(gift.id).quantity - 1)}>
-                          −
-                        </button>
-                        <span className="gift-qty-value">{cart.get(gift.id).quantity}</span>
-                        <button className="btn btn-ghost gift-qty-btn"
-                          onClick={() => updateCartQty(gift.id, cart.get(gift.id).quantity + 1)}>
-                          +
-                        </button>
-                        <button className="btn btn-ghost gift-qty-remove"
-                          onClick={() => removeFromCart(gift.id)}
-                          title="Quitar">✕</button>
-                      </div>
-                    )}
+          return (
+            <div
+              key={gift.id}
+              className={`card gift-card ${inCart ? 'gift-in-cart' : ''}`}
+            >
+              {normalizeImageUrl(gift.imageUrl) && (
+                <img
+                  src={normalizeImageUrl(gift.imageUrl)}
+                  alt={gift.name}
+                  style={{ width: '100%', height: 130, objectFit: 'cover', borderRadius: 4, marginBottom: '0.25rem' }}
+                  onError={e => e.target.style.display = 'none'}
+                />
+              )}
+              {gift.tripName && <span className="kicker gift-card-category">{gift.tripName}</span>}
+              <div className="gift-name">{gift.name}</div>
+              {gift.description && (
+                <div style={{ fontSize: '0.8rem', opacity: 0.65, lineHeight: 1.5 }}>{gift.description}</div>
+              )}
+              <div className="gift-price">{formatCLP(gift.price)}</div>
+              <div className="gift-action">
+                {!canAdd && <span className="tag tag-neutral">Próximamente</span>}
+                {canAdd && !inCart && (
+                  <button className="btn btn-ghost" style={{ width: '100%', letterSpacing: '0.08em', fontSize: '0.78rem', textTransform: 'uppercase' }} onClick={() => addToCart(gift)}>
+                    Seleccionar
+                  </button>
+                )}
+                {canAdd && inCart && (
+                  <div className="gift-qty-control">
+                    <button className="btn btn-ghost gift-qty-btn"
+                      onClick={() => updateCartQty(gift.id, cart.get(gift.id).quantity - 1)}>
+                      −
+                    </button>
+                    <span className="gift-qty-value">{cart.get(gift.id).quantity}</span>
+                    <button className="btn btn-ghost gift-qty-btn"
+                      onClick={() => updateCartQty(gift.id, cart.get(gift.id).quantity + 1)}>
+                      +
+                    </button>
+                    <button className="btn btn-ghost gift-qty-remove"
+                      onClick={() => removeFromCart(gift.id)}
+                      title="Quitar">✕</button>
                   </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      ))}
+                )}
+              </div>
+            </div>
+          )
+        })}
+      </div>
 
       {/* Cart bar — steps aside while the payment dialog is open, and comes
           back if the guest closes it without paying. */}

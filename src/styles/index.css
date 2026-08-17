@@ -447,12 +447,6 @@ textarea.input { min-height: 90px; resize: vertical; }
   padding: 0.75rem 1.25rem; margin-bottom: 2rem;
   display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
 }
-.trip-section { margin-bottom: 3rem; }
-.trip-title {
-  font-family: var(--font-heading); font-size: 1.4rem; font-weight: 600;
-  margin-bottom: 1.25rem; padding-bottom: 0.6rem;
-  border-bottom: 1px solid var(--color-divider);
-}
 .gifts-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
@@ -465,6 +459,9 @@ textarea.input { min-height: 90px; resize: vertical; }
 }
 .gift-card:hover:not(.gift-unavailable) { box-shadow: var(--shadow-md); transform: translateY(-1px); }
 .gift-card.gift-unavailable { cursor: default; opacity: 0.72; }
+/* .gift-card is a flex column with its own `gap` — cancel the .kicker's own
+   margin so the category label doesn't double up that spacing. */
+.gift-card-category { margin-bottom: 0; }
 .gift-name { font-family: var(--font-heading); font-size: 1.05rem; font-weight: 600; }
 .gift-price { font-size: 0.95rem; color: var(--color-accent); }
 .gift-action { margin-top: auto; padding-top: 0.5rem; }

@@ -29,7 +29,10 @@ export default function AdminPanel({ onClose }) {
   }, [onClose])
 
   return (
-    <div className="admin-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+    // No click-outside-to-close: several tabs hold unsaved input (create
+    // forms, inline edits), and an accidental click on the backdrop used to
+    // discard it silently. Only the ✕ button (or Escape) closes the panel now.
+    <div className="admin-overlay">
       <div className="admin-panel" role="dialog" aria-modal="true" aria-label="Panel de administración">
         <div className="admin-header">
           <h2>Panel de administración</h2>
