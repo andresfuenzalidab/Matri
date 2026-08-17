@@ -12,7 +12,8 @@ export async function onRequestGet({ request, env }) {
         COUNT(gr.id) AS reservation_count,
         COALESCE(SUM(gr.quantity), 0) AS total_quantity,
         COUNT(CASE WHEN gr.confirmed_payment = 1 THEN 1 END) AS confirmed_count,
-        COALESCE(SUM(CASE WHEN gr.confirmed_payment = 1 THEN gr.quantity ELSE 0 END), 0) AS confirmed_quantity
+        COALESCE(SUM(CASE WHEN gr.confirmed_payment = 1 THEN gr.quantity ELSE 0 END), 0) AS confirmed_quantity,
+        GROUP_CONCAT(NULLIF(gr.congratulations_message, ''), ' | ') AS messages
       FROM gifts g
       LEFT JOIN gift_reservations gr ON g.id = gr.gift_id
       WHERE g.active = 1

@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useApp } from '../../context/AppContext'
 import { normalizeImageUrl } from '../../utils/imageUrl.js'
 import { downloadCSV } from '../../utils/exportCsv.js'
+import { parseCSV, cell } from '../../utils/parseCsv.js'
 
 function formatCLP(n) {
   if (n == null) return '—'
@@ -10,6 +11,18 @@ function formatCLP(n) {
 
 const EMPTY_GIFT = { name: '', price: '', description: '', image_url: '' }
 const EMPTY_TRIP = { name: '', description: '', image_url: '' }
+
+// Single source of truth for the gifts CSV shape, used by both export and
+// import. One row per gift; the trip (destino) it belongs to is named right
+// on the row and created automatically if it doesn't exist yet — most of the
+// bulk-editing work here is adding gifts, not destinations. The trailing
+// columns are guest-driven reservation data: exported for context, ignored
+// on import.
+const GIFT_HEADERS = [
+  'ID', 'Destino ID', 'Destino', 'Destino descripción', 'Destino URL imagen',
+  'Regalo', 'Precio', 'Descripción', 'URL de imagen',
+  'Reservas', 'Cantidad reservada', 'Confirmadas', 'Cantidad confirmada', 'Mensajes de felicitación',
+]
 
 export default function GiftsDashboard() {
   const { token } = useApp()
@@ -34,6 +47,11 @@ export default function GiftsDashboard() {
   const [newGiftTripId, setNewGiftTripId] = useState(null)
   const [newGift, setNewGift] = useState(EMPTY_GIFT)
   const [newGiftSaving, setNewGiftSaving] = useState(false)
+
+  // CSV import/export
+  const importFileRef = useRef(null)
+  const [importing, setImporting] = useState(false)
+  const [importResult, setImportResult] = useState(null)
 
   async function load() {
     setLoading(true)
@@ -241,6 +259,71 @@ export default function GiftsDashboard() {
     ])
   }
 
+  // ── CSV import/export ──────────────────────────────────────
+
+  function exportGifts() {
+    const rows = trips.flatMap(trip =>
+      trip.gifts.map(gift => [
+        gift.id,
+        trip.id,
+        trip.name,
+        trip.description || '',
+        trip.image_url || '',
+        gift.name,
+        gift.price ?? '',
+        gift.description || '',
+        gift.image_url || '',
+        gift.reservation_count || 0,
+        gift.total_quantity || 0,
+        gift.confirmed_count || 0,
+        gift.confirmed_quantity || 0,
+        gift.messages || '',
+      ])
+    )
+    downloadCSV('regalos.csv', rows, GIFT_HEADERS)
+  }
+
+  async function handleImportFile(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setImporting(true)
+    setImportResult(null)
+    setError('')
+    try {
+      const text = await file.text()
+      const parsed = parseCSV(text)
+      const rows = parsed.map(r => ({
+        id: cell(r, 'ID'),
+        tripId: cell(r, 'Destino ID'),
+        tripName: cell(r, 'Destino'),
+        tripDescription: cell(r, 'Destino descripción'),
+        tripImageUrl: cell(r, 'Destino URL imagen'),
+        giftName: cell(r, 'Regalo'),
+        price: cell(r, 'Precio'),
+        description: cell(r, 'Descripción'),
+        imageUrl: cell(r, 'URL de imagen'),
+      }))
+      const res = await fetch('/api/admin/gifts-import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Invite-Token': token },
+        body: JSON.stringify({ rows }),
+      })
+      if (res.ok) {
+        const result = await res.json()
+        setImportResult(result)
+        await load()
+      } else {
+        const d = await res.json().catch(() => ({}))
+        setError(d.error || 'Error al importar el archivo.')
+      }
+    } catch {
+      setError('No se pudo leer el archivo CSV.')
+    } finally {
+      setImporting(false)
+      if (importFileRef.current) importFileRef.current.value = ''
+    }
+  }
+
   if (loading) return <p className="text-muted">Cargando...</p>
 
   return (
@@ -267,29 +350,37 @@ export default function GiftsDashboard() {
         </div>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem', gap: '0.75rem' }}>
-        <button
-          className="btn btn-ghost"
-          onClick={() => downloadCSV('regalos.csv',
-            trips.flatMap(trip =>
-              trip.gifts.map(gift => [
-                trip.name,
-                gift.name,
-                gift.price ?? '',
-                gift.confirmed_count > 0 ? 'Confirmado' : (gift.reservation_count > 0 ? 'Pendiente' : 'No'),
-                gift.total_quantity || 0,
-              ])
-            ),
-            ['Destino', 'Regalo', 'Precio', 'Reservado', 'Cantidad total reservada']
-          )}
-        >
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem', gap: '0.75rem', flexWrap: 'wrap' }}>
+        <button className="btn btn-ghost" onClick={exportGifts}>
           Exportar CSV
         </button>
+        <label className="btn btn-ghost" style={{ cursor: importing ? 'wait' : 'pointer' }}>
+          {importing ? 'Importando...' : 'Importar CSV'}
+          <input ref={importFileRef} type="file" accept=".csv,text/csv" style={{ display: 'none' }}
+            onChange={handleImportFile} disabled={importing} />
+        </label>
         {/* New trip form */}
         <button className="btn btn-primary" onClick={() => { setShowNewTrip(s => !s); setNewTrip(EMPTY_TRIP) }}>
           {showNewTrip ? 'Cancelar' : '+ Nuevo destino'}
         </button>
       </div>
+
+      {importResult && (
+        <div className="create-form" style={{ marginBottom: '1.5rem' }}>
+          <div className="create-form-title">Resultado de la importación</div>
+          <p style={{ fontSize: '0.875rem', margin: 0 }}>
+            {importResult.created} regalo(s) creado(s), {importResult.updated} actualizado(s)
+            {importResult.tripsCreated > 0 ? `, ${importResult.tripsCreated} destino(s) nuevo(s)` : ''}
+            {importResult.errors?.length > 0 ? `, ${importResult.errors.length} con error` : ''}.
+          </p>
+          {importResult.errors?.length > 0 && (
+            <ul style={{ fontSize: '0.8rem', color: '#c0392b', marginTop: '0.5rem', paddingLeft: '1.2rem' }}>
+              {importResult.errors.map((e, i) => <li key={i}>{e}</li>)}
+            </ul>
+          )}
+          <button className="btn btn-ghost" style={{ marginTop: '0.5rem' }} onClick={() => setImportResult(null)}>Cerrar</button>
+        </div>
+      )}
 
       {showNewTrip && (
         <form className="create-form" onSubmit={createTrip} style={{ marginBottom: '1.5rem' }}>

@@ -1,7 +1,21 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useApp } from '../../context/AppContext'
 import { downloadInvitationPDF, inviteLink } from '../../utils/invitationPdf.js'
 import { downloadCSV } from '../../utils/exportCsv.js'
+import { parseCSV, cell } from '../../utils/parseCsv.js'
+
+// The single source of truth for the invitations CSV shape — used for both
+// export and import, so a file downloaded here always re-imports cleanly.
+// The RSVP/Regalos columns are guest-driven data: exported for context, but
+// read-only — importing never writes them back.
+const INVITATION_HEADERS = [
+  'Token', 'Nombre', 'Apodo', 'Acompañante', 'Email', 'Teléfono', 'Tipo',
+  'Máx acompañantes', 'Admin', 'Mensaje de bienvenida', 'Nota interna', 'Enviado',
+  'Creada',
+  'RSVP Asistencia', 'RSVP N° personas', 'RSVP Asistentes', 'RSVP Email',
+  'RSVP Restricción alimenticia', 'RSVP Mensaje', 'RSVP Fecha respuesta',
+  'Regalos', 'Total regalos (CLP)', 'Regalos mensajes',
+]
 
 export default function InvitationsManager() {
   const { token, content } = useApp()
@@ -39,6 +53,11 @@ export default function InvitationsManager() {
   const [copiedId, setCopiedId] = useState(null)
   const [selected, setSelected] = useState(() => new Set())
   const [bulkDeleting, setBulkDeleting] = useState(false)
+
+  // CSV import/export
+  const importFileRef = useRef(null)
+  const [importing, setImporting] = useState(false)
+  const [importResult, setImportResult] = useState(null)
 
   async function load() {
     setLoading(true)
@@ -185,6 +204,84 @@ export default function InvitationsManager() {
     }
   }
 
+  function exportInvitations() {
+    downloadCSV('invitaciones.csv', invitations.map(inv => {
+      const rsvp = inv.attending === null || inv.attending === undefined ? '' : inv.attending ? 'Sí' : 'No'
+      const giftNames = inv.gifts?.map(g => g.quantity > 1 ? `${g.name} ×${g.quantity}` : g.name).join(' | ') || ''
+      const giftTotal = inv.gifts?.reduce((s, g) => s + (g.price || 0) * (g.quantity || 1), 0) || 0
+      const giftMessages = inv.gifts?.map(g => g.message).filter(Boolean).join(' | ') || ''
+      return [
+        inv.token,
+        inv.name,
+        inv.nickname || '',
+        inv.companion_name || '',
+        inv.email || '',
+        inv.phone || '',
+        inv.invitation_type === 'party_only' ? 'Solo fiesta' : 'Completa',
+        inv.max_additional_guests ?? '',
+        inv.is_admin ? 'Sí' : 'No',
+        inv.welcome_message || '',
+        inv.notes || '',
+        inv.invitation_sent ? 'Sí' : 'No',
+        inv.created_at || '',
+        rsvp,
+        inv.attending ? inv.num_guests : '',
+        inv.rsvp_companion_name || '',
+        inv.rsvp_email || '',
+        inv.dietary_restriction || '',
+        inv.rsvp_message || '',
+        inv.submitted_at || '',
+        giftNames,
+        giftTotal > 0 ? giftTotal : '',
+        giftMessages,
+      ]
+    }), INVITATION_HEADERS)
+  }
+
+  async function handleImportFile(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setImporting(true)
+    setImportResult(null)
+    setError('')
+    try {
+      const text = await file.text()
+      const parsed = parseCSV(text)
+      const rows = parsed.map(r => ({
+        token: cell(r, 'Token'),
+        name: cell(r, 'Nombre'),
+        nickname: cell(r, 'Apodo'),
+        companionName: cell(r, 'Acompañante'),
+        email: cell(r, 'Email'),
+        phone: cell(r, 'Teléfono'),
+        invitationType: cell(r, 'Tipo'),
+        maxAdditionalGuests: cell(r, 'Máx acompañantes'),
+        isAdmin: cell(r, 'Admin'),
+        welcomeMessage: cell(r, 'Mensaje de bienvenida'),
+        notes: cell(r, 'Nota interna'),
+        invitationSent: cell(r, 'Enviado'),
+      }))
+      const res = await fetch('/api/admin/invitations-import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Invite-Token': token },
+        body: JSON.stringify({ rows }),
+      })
+      if (res.ok) {
+        const result = await res.json()
+        setImportResult(result)
+        await load()
+      } else {
+        const d = await res.json().catch(() => ({}))
+        setError(d.error || 'Error al importar el archivo.')
+      }
+    } catch {
+      setError('No se pudo leer el archivo CSV.')
+    } finally {
+      setImporting(false)
+      if (importFileRef.current) importFileRef.current.value = ''
+    }
+  }
+
   function startEdit(inv) {
     setEditId(inv.id)
     setEditWelcomeMsg(inv.welcome_message || '')
@@ -293,36 +390,34 @@ export default function InvitationsManager() {
             {bulkDeleting ? 'Eliminando...' : `Eliminar seleccionados (${selected.size})`}
           </button>
         )}
-        <button
-          className="btn btn-ghost"
-          onClick={() => downloadCSV('invitaciones.csv',
-            invitations.map(inv => {
-              const rsvp = inv.attending === null || inv.attending === undefined ? '' : inv.attending ? 'Sí' : 'No'
-              const giftNames = inv.gifts?.map(g => g.quantity > 1 ? `${g.name} ×${g.quantity}` : g.name).join(' | ') || ''
-              const giftTotal = inv.gifts?.reduce((s, g) => s + (g.price || 0) * (g.quantity || 1), 0) || 0
-              return [
-                inv.name,
-                inv.nickname || '',
-                inv.companion_name || '',
-                inv.email || '',
-                inv.phone || '',
-                inv.invitation_type === 'party_only' ? 'Solo fiesta' : 'Completa',
-                rsvp,
-                inv.attending ? inv.num_guests : '',
-                giftNames,
-                giftTotal > 0 ? giftTotal : '',
-                inv.token,
-              ]
-            }),
-            ['Nombre', 'Apodo', 'Acompañante', 'Email', 'Teléfono', 'Tipo', 'RSVP', 'N° personas', 'Regalos', 'Total regalos (CLP)', 'Token']
-          )}
-        >
+        <button className="btn btn-ghost" onClick={exportInvitations}>
           Exportar CSV
         </button>
+        <label className="btn btn-ghost" style={{ cursor: importing ? 'wait' : 'pointer' }}>
+          {importing ? 'Importando...' : 'Importar CSV'}
+          <input ref={importFileRef} type="file" accept=".csv,text/csv" style={{ display: 'none' }}
+            onChange={handleImportFile} disabled={importing} />
+        </label>
         <button className="btn btn-primary" onClick={() => setShowCreate(s => !s)}>
           {showCreate ? 'Cancelar' : '+ Nueva invitación'}
         </button>
       </div>
+
+      {importResult && (
+        <div className="create-form" style={{ marginBottom: '1rem' }}>
+          <div className="create-form-title">Resultado de la importación</div>
+          <p style={{ fontSize: '0.875rem', margin: 0 }}>
+            {importResult.created} creada(s), {importResult.updated} actualizada(s)
+            {importResult.errors.length > 0 ? `, ${importResult.errors.length} con error` : ''}.
+          </p>
+          {importResult.errors.length > 0 && (
+            <ul style={{ fontSize: '0.8rem', color: '#c0392b', marginTop: '0.5rem', paddingLeft: '1.2rem' }}>
+              {importResult.errors.map((e, i) => <li key={i}>{e}</li>)}
+            </ul>
+          )}
+          <button className="btn btn-ghost" style={{ marginTop: '0.5rem' }} onClick={() => setImportResult(null)}>Cerrar</button>
+        </div>
+      )}
 
       {showCreate && (
         <form className="create-form" onSubmit={handleCreate}>

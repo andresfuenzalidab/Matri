@@ -20,8 +20,8 @@ export async function onRequestPost({ request, env }) {
     const order = (maxRow?.max ?? -1) + 1
 
     const row = await env.DB.prepare(
-      'INSERT INTO venue_photos (image_url, caption, order_idx) VALUES (?, ?, ?) RETURNING *'
-    ).bind(body.image_url.trim(), body.caption || null, order).first()
+      'INSERT INTO venue_photos (image_url, caption, order_idx, focal_point) VALUES (?, ?, ?, ?) RETURNING *'
+    ).bind(body.image_url.trim(), body.caption || null, order, body.focal_point?.trim() || null).first()
 
     return json(row, 201)
   } catch (e) {
@@ -36,11 +36,12 @@ export async function onRequestPut({ request, env }) {
     if (!body?.id) return err('ID requerido.')
 
     await env.DB.prepare(
-      'UPDATE venue_photos SET image_url = ?, caption = ?, order_idx = ? WHERE id = ?'
+      'UPDATE venue_photos SET image_url = ?, caption = ?, order_idx = ?, focal_point = ? WHERE id = ?'
     ).bind(
       body.image_url?.trim() || '',
       body.caption?.trim() || null,
       body.order_idx ?? 0,
+      body.focal_point?.trim() || null,
       body.id
     ).run()
 

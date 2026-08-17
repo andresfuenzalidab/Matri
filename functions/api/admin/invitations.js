@@ -10,7 +10,9 @@ export async function onRequestGet({ request, env }) {
           i.id, i.token, i.name, i.email, i.phone, i.nickname, i.companion_name,
           i.is_admin, i.invitation_sent, i.created_at,
           i.welcome_message, i.max_additional_guests, i.invitation_type, i.notes,
-          r.attending, r.num_guests
+          r.attending, r.num_guests,
+          r.companion_name AS rsvp_companion_name, r.email AS rsvp_email,
+          r.dietary_restriction, r.message AS rsvp_message, r.submitted_at
         FROM invitations i
         LEFT JOIN rsvp_responses r ON i.id = r.invitation_id
         ORDER BY i.created_at DESC

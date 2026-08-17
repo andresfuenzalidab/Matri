@@ -6,6 +6,7 @@ export default function StoryPhotosManager() {
       endpoint="/api/admin/story-photos"
       introText='Fotos del carrusel al final de "Nuestra Historia".'
       confirmNoun="esta foto del carrusel"
+      aspectRatio="1/1"
     />
   )
 }

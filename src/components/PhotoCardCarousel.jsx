@@ -37,7 +37,8 @@ export default function PhotoCardCarousel({ photos, landscape = false }) {
   return (
     <div className="photo-card-carousel">
       <div className={`photo-card ${landscape ? 'photo-card--landscape' : ''} ${fading ? 'photo-card-fading' : ''}`}>
-        <img src={src} alt={title || ''} onError={e => e.target.style.display = 'none'} />
+        <img src={src} alt={title || ''} style={{ objectPosition: photo.focal_point || '50% 50%' }}
+          onError={e => e.target.style.display = 'none'} />
         {title && (
           <div className="photo-card-overlay">
             <p className="photo-card-title">{title}</p>

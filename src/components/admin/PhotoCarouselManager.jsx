@@ -14,6 +14,71 @@ function joinCaption(title, badge) {
   return b ? `${t}|${b}` : t
 }
 
+const DEFAULT_FOCAL = '50% 50%'
+const FOCAL_POINTS = [
+  { value: '0% 0%',     label: 'Arriba a la izquierda' },
+  { value: '50% 0%',    label: 'Arriba al centro' },
+  { value: '100% 0%',   label: 'Arriba a la derecha' },
+  { value: '0% 50%',    label: 'Centro a la izquierda' },
+  { value: DEFAULT_FOCAL, label: 'Centro' },
+  { value: '100% 50%',  label: 'Centro a la derecha' },
+  { value: '0% 100%',   label: 'Abajo a la izquierda' },
+  { value: '50% 100%',  label: 'Abajo al centro' },
+  { value: '100% 100%', label: 'Abajo a la derecha' },
+]
+
+/**
+ * Which part of the photo survives the crop. The carousel always fills its
+ * box with `object-fit: cover`, so a subject off-center gets cut off unless
+ * something can move the visible window — this is that something, plus a
+ * live preview at the carousel's real aspect ratio.
+ */
+function FocalPointField({ url, value, onChange, aspectRatio }) {
+  const preview = normalizeImageUrl(url)
+  const current = value || DEFAULT_FOCAL
+
+  return (
+    <div className="form-field">
+      <label className="form-label">Encuadre de la foto</label>
+      <div style={{ display: 'flex', gap: '0.9rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+        {preview && (
+          <div style={{
+            width: 150, aspectRatio, borderRadius: 4, overflow: 'hidden',
+            flexShrink: 0, background: 'var(--color-neutral-200)',
+          }}>
+            <img src={preview} alt="" style={{
+              width: '100%', height: '100%', objectFit: 'cover', objectPosition: current, display: 'block',
+            }} onError={e => e.target.style.display = 'none'} />
+          </div>
+        )}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 30px)', gridTemplateRows: 'repeat(3, 30px)', gap: 4 }}>
+          {FOCAL_POINTS.map(fp => (
+            <button
+              key={fp.value}
+              type="button"
+              title={fp.label}
+              aria-label={fp.label}
+              onClick={() => onChange(fp.value)}
+              style={{
+                width: 30, height: 30, borderRadius: 4, cursor: 'pointer', padding: 0,
+                border: `1.5px solid ${current === fp.value ? 'var(--color-accent)' : 'var(--color-divider)'}`,
+                background: current === fp.value ? 'color-mix(in srgb, var(--color-accent) 16%, white)' : 'transparent',
+              }}
+            >
+              {current === fp.value && (
+                <span style={{ display: 'block', width: 6, height: 6, margin: '0 auto', borderRadius: '50%', background: 'var(--color-accent)' }} />
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+      <span style={{ fontSize: '0.7rem', opacity: 0.5, display: 'block', marginTop: '0.35rem' }}>
+        Elige qué parte de la foto se mantiene visible al recortarla para el carrusel.
+      </span>
+    </div>
+  )
+}
+
 /** Upload button + URL fallback, shared by the add form and the edit form. */
 function ImagePicker({ url, onChange, token }) {
   const [uploading, setUploading] = useState(false)
@@ -67,7 +132,7 @@ function ImagePicker({ url, onChange, token }) {
  * same fields, same reordering, same upload path, so the two admin tabs
  * behave identically instead of one lagging the other's features.
  */
-export default function PhotoCarouselManager({ endpoint, introText, confirmNoun }) {
+export default function PhotoCarouselManager({ endpoint, introText, confirmNoun, aspectRatio = '1/1' }) {
   const { token } = useApp()
   const [photos, setPhotos] = useState([])
   const [loading, setLoading] = useState(true)
@@ -77,12 +142,14 @@ export default function PhotoCarouselManager({ endpoint, introText, confirmNoun 
   const [newUrl, setNewUrl] = useState('')
   const [newTitle, setNewTitle] = useState('')
   const [newBadge, setNewBadge] = useState('')
+  const [newFocal, setNewFocal] = useState(DEFAULT_FOCAL)
   const [saving, setSaving] = useState(false)
 
   const [editId, setEditId] = useState(null)
   const [editUrl, setEditUrl] = useState('')
   const [editTitle, setEditTitle] = useState('')
   const [editBadge, setEditBadge] = useState('')
+  const [editFocal, setEditFocal] = useState(DEFAULT_FOCAL)
   const [editSaving, setEditSaving] = useState(false)
 
   async function load() {
@@ -108,12 +175,13 @@ export default function PhotoCarouselManager({ endpoint, introText, confirmNoun 
         body: JSON.stringify({
           image_url: normalizeImageUrl(newUrl.trim()),
           caption: joinCaption(newTitle, newBadge),
+          focal_point: newFocal,
         }),
       })
       if (res.ok) {
         const row = await res.json()
         setPhotos(prev => [...prev, row])
-        setNewUrl(''); setNewTitle(''); setNewBadge(''); setShowCreate(false)
+        setNewUrl(''); setNewTitle(''); setNewBadge(''); setNewFocal(DEFAULT_FOCAL); setShowCreate(false)
       } else {
         const d = await res.json().catch(() => ({}))
         setError(d.error || 'Error al agregar foto.')
@@ -138,6 +206,7 @@ export default function PhotoCarouselManager({ endpoint, introText, confirmNoun 
     setEditUrl(photo.image_url || '')
     setEditTitle(title)
     setEditBadge(badge)
+    setEditFocal(photo.focal_point || DEFAULT_FOCAL)
   }
 
   async function handleSaveEdit(photo) {
@@ -148,10 +217,10 @@ export default function PhotoCarouselManager({ endpoint, introText, confirmNoun 
       const res = await fetch(endpoint, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'X-Invite-Token': token },
-        body: JSON.stringify({ id: photo.id, image_url, caption, order_idx: photo.order_idx }),
+        body: JSON.stringify({ id: photo.id, image_url, caption, order_idx: photo.order_idx, focal_point: editFocal }),
       })
       if (res.ok) {
-        setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, image_url, caption } : p))
+        setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, image_url, caption, focal_point: editFocal } : p))
         setEditId(null)
       } else { setError('Error al guardar.') }
     } catch { setError('Error de conexión.') }
@@ -193,6 +262,9 @@ export default function PhotoCarouselManager({ endpoint, introText, confirmNoun 
         <form className="create-form" onSubmit={handleCreate}>
           <div className="create-form-title">Nueva foto</div>
           <ImagePicker url={newUrl} onChange={setNewUrl} token={token} />
+          {normalizeImageUrl(newUrl) && (
+            <FocalPointField url={newUrl} value={newFocal} onChange={setNewFocal} aspectRatio={aspectRatio} />
+          )}
           <div className="form-field">
             <label className="form-label">Título (opcional)</label>
             <input className="input" placeholder="ej. El jardín principal" value={newTitle} onChange={e => setNewTitle(e.target.value)} />
@@ -220,6 +292,7 @@ export default function PhotoCarouselManager({ endpoint, introText, confirmNoun 
                 {editId === photo.id ? (
                   <div>
                     <ImagePicker url={editUrl} onChange={setEditUrl} token={token} />
+                    <FocalPointField url={editUrl} value={editFocal} onChange={setEditFocal} aspectRatio={aspectRatio} />
                     <div className="form-field">
                       <label className="form-label">Título</label>
                       <input className="input" value={editTitle} onChange={e => setEditTitle(e.target.value)} />
@@ -240,7 +313,7 @@ export default function PhotoCarouselManager({ endpoint, introText, confirmNoun 
                     <img
                       src={normalizeImageUrl(photo.image_url)}
                       alt=""
-                      style={{ width: 72, height: 54, objectFit: 'cover', borderRadius: 4, flexShrink: 0 }}
+                      style={{ width: 72, height: 54, objectFit: 'cover', objectPosition: photo.focal_point || DEFAULT_FOCAL, borderRadius: 4, flexShrink: 0 }}
                       onError={e => e.target.style.display = 'none'}
                     />
                     <div style={{ flex: 1, minWidth: 0 }}>

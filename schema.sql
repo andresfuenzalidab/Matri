@@ -2,6 +2,7 @@ CREATE TABLE IF NOT EXISTS trips (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
   description TEXT,
+  image_url TEXT,
   order_idx INTEGER DEFAULT 0
 );
 
@@ -10,6 +11,8 @@ CREATE TABLE IF NOT EXISTS gifts (
   trip_id TEXT REFERENCES trips(id),
   name TEXT NOT NULL,
   price INTEGER,
+  description TEXT,
+  image_url TEXT,
   order_idx INTEGER DEFAULT 0,
   active INTEGER DEFAULT 1
 );
@@ -59,14 +62,16 @@ CREATE TABLE IF NOT EXISTS story_photos (
   id TEXT PRIMARY KEY,
   image_url TEXT NOT NULL,
   caption TEXT,
-  order_idx INTEGER DEFAULT 0
+  order_idx INTEGER DEFAULT 0,
+  focal_point TEXT
 );
 
 CREATE TABLE IF NOT EXISTS venue_photos (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   image_url TEXT NOT NULL,
   caption TEXT,
-  order_idx INTEGER DEFAULT 0
+  order_idx INTEGER DEFAULT 0,
+  focal_point TEXT
 );
 
 CREATE INDEX IF NOT EXISTS idx_gifts_trip_id ON gifts(trip_id);

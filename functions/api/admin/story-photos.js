@@ -25,8 +25,8 @@ export async function onRequestPost({ request, env }) {
     const order = (maxRow?.max ?? -1) + 1
 
     await env.DB.prepare(
-      'INSERT INTO story_photos (id, image_url, caption, order_idx) VALUES (?, ?, ?, ?)'
-    ).bind(id, body.image_url.trim(), body.caption?.trim() || null, order).run()
+      'INSERT INTO story_photos (id, image_url, caption, order_idx, focal_point) VALUES (?, ?, ?, ?, ?)'
+    ).bind(id, body.image_url.trim(), body.caption?.trim() || null, order, body.focal_point?.trim() || null).run()
 
     const row = await env.DB.prepare('SELECT * FROM story_photos WHERE id = ?').bind(id).first()
     return json(row, 201)
@@ -42,11 +42,12 @@ export async function onRequestPut({ request, env }) {
     if (!body?.id) return err('ID requerido.')
 
     await env.DB.prepare(
-      'UPDATE story_photos SET image_url = ?, caption = ?, order_idx = ? WHERE id = ?'
+      'UPDATE story_photos SET image_url = ?, caption = ?, order_idx = ?, focal_point = ? WHERE id = ?'
     ).bind(
       body.image_url?.trim() || '',
       body.caption?.trim() || null,
       body.order_idx ?? 0,
+      body.focal_point?.trim() || null,
       body.id
     ).run()
 

@@ -6,6 +6,7 @@ export default function VenuePhotosManager() {
       endpoint="/api/admin/venue-photos"
       introText='Fotos del carrusel en "El lugar".'
       confirmNoun="esta foto del lugar"
+      aspectRatio="16/9"
     />
   )
 }

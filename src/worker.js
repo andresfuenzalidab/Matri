@@ -3,18 +3,26 @@ import * as rsvpModule from '../functions/api/rsvp.js'
 import * as giftsModule from '../functions/api/gifts.js'
 import * as giftsReserve from '../functions/api/gifts/reserve.js'
 import * as giftsCheckout from '../functions/api/gifts/checkout.js'
+import * as giftsConfirmPayment from '../functions/api/gifts/confirm-payment.js'
 import * as contentModule from '../functions/api/content.js'
 import * as storyModule from '../functions/api/story.js'
 import * as venuePhotosModule from '../functions/api/venue-photos.js'
 import * as adminInvitations from '../functions/api/admin/invitations.js'
+import * as adminInvitationsImport from '../functions/api/admin/invitations-import.js'
+import * as adminInvitationsSent from '../functions/api/admin/invitations-sent.js'
 import * as adminRsvp from '../functions/api/admin/rsvp.js'
 import * as adminGifts from '../functions/api/admin/gifts.js'
+import * as adminGiftsImport from '../functions/api/admin/gifts-import.js'
 import * as adminContent from '../functions/api/admin/content.js'
 import * as adminStory from '../functions/api/admin/story.js'
 import * as adminVenuePhotos from '../functions/api/admin/venue-photos.js'
 import * as adminTrips from '../functions/api/admin/trips.js'
 import * as storyPhotosModule from '../functions/api/story-photos.js'
 import * as adminStoryPhotos from '../functions/api/admin/story-photos.js'
+import * as adminResetRsvp from '../functions/api/admin/reset-rsvp.js'
+import * as adminResetGifts from '../functions/api/admin/reset-gifts.js'
+import * as adminUpload from '../functions/api/admin/upload.js'
+import * as imagesHandler from '../functions/api/images/[[path]].js'
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -61,14 +69,28 @@ export default {
         response = await dispatch(giftsReserve, method, request, env)
       } else if (path === '/api/gifts/checkout') {
         response = await dispatch(giftsCheckout, method, request, env)
+      } else if (path === '/api/gifts/confirm-payment') {
+        response = await dispatch(giftsConfirmPayment, method, request, env)
       } else if (path === '/api/content') {
         response = await dispatch(contentModule, method, request, env)
       } else if (path === '/api/admin/invitations') {
         response = await dispatch(adminInvitations, method, request, env)
+      } else if (path === '/api/admin/invitations-import') {
+        response = await dispatch(adminInvitationsImport, method, request, env)
+      } else if (path === '/api/admin/invitations-sent') {
+        response = await dispatch(adminInvitationsSent, method, request, env)
       } else if (path === '/api/admin/rsvp') {
         response = await dispatch(adminRsvp, method, request, env)
+      } else if (path === '/api/admin/reset-rsvp') {
+        response = await dispatch(adminResetRsvp, method, request, env)
       } else if (path === '/api/admin/gifts') {
         response = await dispatch(adminGifts, method, request, env)
+      } else if (path === '/api/admin/gifts-import') {
+        response = await dispatch(adminGiftsImport, method, request, env)
+      } else if (path === '/api/admin/reset-gifts') {
+        response = await dispatch(adminResetGifts, method, request, env)
+      } else if (path === '/api/admin/upload') {
+        response = await dispatch(adminUpload, method, request, env)
       } else if (path === '/api/admin/content') {
         response = await dispatch(adminContent, method, request, env)
       } else if (path === '/api/story') {
@@ -85,6 +107,10 @@ export default {
         response = await dispatch(storyPhotosModule, method, request, env)
       } else if (path === '/api/admin/story-photos') {
         response = await dispatch(adminStoryPhotos, method, request, env)
+      } else if (path.startsWith('/api/images/')) {
+        // The only parameterized route — everything after the prefix is the
+        // R2 object key, matching the `[[path]]` catch-all the handler expects.
+        response = await dispatch(imagesHandler, method, request, env, { path: path.slice('/api/images/'.length) })
       } else {
         response = new Response(JSON.stringify({ error: 'Not found' }), {
           status: 404,
