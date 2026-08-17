@@ -141,7 +141,7 @@ export default function Gifts() {
               Total: {formatCLP(purchasedTotal)}
             </div>
           )}
-          <p className="thanks-message" style={{ margin: 0 }}>
+          <p className="thanks-message">
             Tu(s) regalo(s) ha(n) quedado reservado(s). ¡Nos hace muy felices!
           </p>
         </ThanksCard>
