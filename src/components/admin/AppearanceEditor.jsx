@@ -5,6 +5,8 @@ import { HEADING_FONTS, BODY_FONTS } from '../../utils/fontOptions.js'
 const COLOR_FIELDS = [
   { key: 'theme_color_bg', label: 'Fondo de la página', fallback: '#eceae8' },
   { key: 'theme_color_accent', label: 'Dorado / acento (títulos, bordes, botones)', fallback: '#b68235' },
+  { key: 'theme_color_accent_deep', label: 'Dorado oscuro (barra inferior, carrito de regalos)', fallback: '#3a270d' },
+  { key: 'theme_color_on_accent', label: 'Texto sobre fondo oscuro (barra inferior, carrito)', fallback: '#fdf9f0' },
   { key: 'theme_color_text', label: 'Texto', fallback: '#201f1d' },
   { key: 'theme_color_paper', label: 'Papel de las tarjetas (sobre, calendario, RSVP)', fallback: '#f7f3ea' },
   { key: 'theme_color_seal', label: 'Sello de cera', fallback: '#6d7355' },

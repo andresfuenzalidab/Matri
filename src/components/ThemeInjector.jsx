@@ -22,6 +22,8 @@ export default function ThemeInjector() {
   const { get } = useApp()
   const bg = get('theme_color_bg')
   const accent = get('theme_color_accent')
+  const accentDeep = get('theme_color_accent_deep')
+  const onAccent = get('theme_color_on_accent')
   const text = get('theme_color_text')
   const paper = get('theme_color_paper')
   const seal = get('theme_color_seal')
@@ -32,6 +34,8 @@ export default function ThemeInjector() {
     const vars = []
     if (bg) vars.push(`--color-bg:${bg}`)
     if (accent) vars.push(`--color-accent:${accent}`, `--color-accent-2:${accent}`)
+    if (accentDeep) vars.push(`--color-accent-deep:${accentDeep}`)
+    if (onAccent) vars.push(`--color-on-accent:${onAccent}`)
     if (text) vars.push(`--color-text:${text}`)
     if (paper) vars.push(`--paper:${paper}`)
     if (seal) vars.push(`--seal:${seal}`, `--seal-deep:${darken(seal)}`)
@@ -46,7 +50,7 @@ export default function ThemeInjector() {
       document.head.appendChild(tag)
     }
     tag.textContent = `:root{${vars.join(';')}}`
-  }, [bg, accent, text, paper, seal, fontHeading, fontBody])
+  }, [bg, accent, accentDeep, onAccent, text, paper, seal, fontHeading, fontBody])
 
   useEffect(() => { if (fontHeading) loadGoogleFont(HEADING_FONTS, fontHeading) }, [fontHeading])
   useEffect(() => { if (fontBody) loadGoogleFont(BODY_FONTS, fontBody) }, [fontBody])

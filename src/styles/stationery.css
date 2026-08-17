@@ -23,7 +23,10 @@
      instead of scrolling. */
   margin: auto;
   display: flex; flex-direction: column;
-  background: linear-gradient(158deg, #faf6ee 0%, var(--paper) 48%, #f0eadd 100%);
+  background: linear-gradient(158deg,
+    color-mix(in srgb, var(--paper) 92%, white) 0%,
+    var(--paper) 48%,
+    color-mix(in srgb, var(--paper) 90%, black) 100%);
   border-radius: 4px;
   box-shadow: 0 24px 60px rgba(20,18,14,0.45), inset 0 2px 0 rgba(255,255,255,0.5);
   color: var(--paper-ink);
@@ -244,15 +247,19 @@
   width: 100%;
   padding: clamp(1.5rem, 5vw, 2.75rem) clamp(0.9rem, 4vw, 2rem) clamp(3rem, 9vw, 4.75rem);
   border-radius: 6px;
-  background: linear-gradient(158deg, #f4efe5, #e8e2d4);
-  box-shadow: 0 16px 44px rgba(45,43,43,0.16);
+  background: linear-gradient(158deg,
+    color-mix(in srgb, var(--paper) 94%, black 6%),
+    color-mix(in srgb, var(--paper) 85%, black 15%));
+  box-shadow: 0 16px 44px color-mix(in srgb, var(--color-text) 16%, transparent);
 }
 /* the open back flap behind the card */
 .cal-envelope::before {
   content: "";
   position: absolute; left: 0; right: 0; top: 0;
   height: 58%;
-  background: linear-gradient(#f0ebe0, #e6e0d1);
+  background: linear-gradient(
+    color-mix(in srgb, var(--paper) 92%, black 8%),
+    color-mix(in srgb, var(--paper) 86%, black 14%));
   clip-path: polygon(0 0, 50% 100%, 100% 0);
   border-radius: 6px 6px 0 0;
 }
@@ -261,7 +268,9 @@
   content: "";
   position: absolute; left: 0; right: 0; bottom: 0;
   height: clamp(2.75rem, 8.5vw, 4.5rem);
-  background: linear-gradient(#f1ece2, #e4ded0);
+  background: linear-gradient(
+    color-mix(in srgb, var(--paper) 95%, black 5%),
+    color-mix(in srgb, var(--paper) 87%, black 13%));
   clip-path: polygon(0 100%, 50% 0, 100% 100%);
   border-radius: 0 0 6px 6px;
   z-index: 2;
@@ -272,7 +281,7 @@
   background: var(--paper);
   border-radius: 3px;
   padding: clamp(1.1rem, 4vw, 1.75rem) clamp(0.85rem, 3.5vw, 1.5rem) clamp(1.25rem, 4vw, 1.75rem);
-  box-shadow: 0 6px 22px rgba(45,43,43,0.14);
+  box-shadow: 0 6px 22px color-mix(in srgb, var(--color-text) 14%, transparent);
 }
 .cal-month {
   font-family: var(--font-heading);
@@ -317,11 +326,11 @@
   position: absolute;
   width: 128%; height: auto;
   color: var(--color-accent);
-  filter: drop-shadow(0 2px 5px rgba(182,130,53,0.35));
+  filter: drop-shadow(0 2px 5px color-mix(in srgb, var(--color-accent) 35%, transparent));
 }
 .cal-day.is-wedding { opacity: 1; }
 .cal-day.is-wedding .cal-day-num {
-  color: #fdf9f0;
+  color: var(--color-on-accent);
   font-weight: 600;
 }
 
@@ -333,7 +342,7 @@
   background: var(--paper);
   border-radius: 16px;
   padding: clamp(2.9rem, 9vw, 3.75rem) clamp(1.35rem, 5vw, 2.5rem) clamp(1.75rem, 5vw, 2.5rem);
-  box-shadow: 0 12px 34px rgba(45,43,43,0.14);
+  box-shadow: 0 12px 34px color-mix(in srgb, var(--color-text) 14%, transparent);
   text-align: center;
 }
 .paper-tag::before {
@@ -354,7 +363,7 @@
   aspect-ratio: 1;
   border-radius: 50%;
   background: var(--color-bg);
-  box-shadow: inset 0 1px 3px rgba(45,43,43,0.22);
+  box-shadow: inset 0 1px 3px color-mix(in srgb, var(--color-text) 22%, transparent);
 }
 .paper-tag-body { position: relative; z-index: 1; }
 .paper-tag-title {
@@ -400,7 +409,7 @@
    waiting on an upload, so it keeps its frame and its label. */
 .wedding-map-slot .photo-placeholder {
   background: color-mix(in srgb, var(--paper) 55%, transparent) !important;
-  border: 1px dashed rgba(182,130,53,0.4) !important;
+  border: 1px dashed color-mix(in srgb, var(--color-accent) 40%, transparent) !important;
   border-radius: 4px !important;
   color: var(--color-accent) !important;
   gap: 0.6rem;
@@ -415,7 +424,7 @@
 }
 .wedding-map-slot .wedding-detail-img {
   border-radius: 4px;
-  box-shadow: 0 10px 30px rgba(45,43,43,0.14);
+  box-shadow: 0 10px 30px color-mix(in srgb, var(--color-text) 14%, transparent);
 }
 
 /* ── 4c. "Save the date" buttons, at the foot of the paper tag ── */
@@ -513,7 +522,7 @@
   background: var(--color-bg);
   display: grid; place-items: center;
   color: var(--color-accent);
-  box-shadow: 0 0 0 1px var(--paper-edge), 0 2px 10px rgba(182,130,53,0.25);
+  box-shadow: 0 0 0 1px var(--paper-edge), 0 2px 10px color-mix(in srgb, var(--color-accent) 25%, transparent);
   transition: top 0.12s linear;
 }
 .timeline-marker-heart { width: 56%; height: auto; }
@@ -576,10 +585,13 @@
   position: relative;
   width: min(100%, 560px);
   margin: 0 auto;
-  background: linear-gradient(155deg, #faf6ee, var(--paper) 55%, #f1ebde);
+  background: linear-gradient(155deg,
+    color-mix(in srgb, var(--paper) 92%, white),
+    var(--paper) 55%,
+    color-mix(in srgb, var(--paper) 92%, black));
   border-radius: 6px;
   padding: clamp(1.75rem, 6vw, 3rem) clamp(1.25rem, 5vw, 3rem);
-  box-shadow: 0 18px 50px rgba(45,43,43,0.16);
+  box-shadow: 0 18px 50px color-mix(in srgb, var(--color-text) 16%, transparent);
   text-align: center;
   color: var(--paper-ink);
 }
@@ -665,7 +677,7 @@
   text-align: left;
   transition: background 0.18s ease, border-color 0.18s ease;
 }
-.rsvp-choice:hover { background: rgba(182,130,53,0.06); }
+.rsvp-choice:hover { background: color-mix(in srgb, var(--color-accent) 6%, transparent); }
 .rsvp-choice input { position: absolute; opacity: 0; pointer-events: none; }
 .rsvp-choice-box {
   flex-shrink: 0;
@@ -684,11 +696,11 @@
 }
 .rsvp-choice.is-picked {
   border-color: var(--color-accent);
-  background: rgba(182,130,53,0.09);
+  background: color-mix(in srgb, var(--color-accent) 9%, transparent);
 }
 .rsvp-choice.is-picked .rsvp-choice-box {
   background: var(--color-accent);
-  color: #fdf9f0;
+  color: var(--color-on-accent);
 }
 .rsvp-choice:focus-within { outline: 2px solid var(--color-accent); outline-offset: 2px; }
 
@@ -721,7 +733,7 @@
 }
 .rsvp-attendee.is-coming .rsvp-attendee-box {
   background: var(--color-accent);
-  color: #fdf9f0;
+  color: var(--color-on-accent);
 }
 .rsvp-attendee-name {
   font-family: var(--font-heading);
@@ -803,7 +815,7 @@
   color: var(--color-accent);
   transition: background 0.18s ease, color 0.18s ease;
 }
-.rsvp-send:hover:not(:disabled) { background: var(--color-accent); color: #fdf9f0; }
+.rsvp-send:hover:not(:disabled) { background: var(--color-accent); color: var(--color-on-accent); }
 .rsvp-send:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* The answered card dropping into its envelope */
@@ -822,7 +834,7 @@
   border: 1px solid var(--paper-edge);
   border-radius: 3px;
   padding: 1rem 0.75rem;
-  box-shadow: 0 8px 22px rgba(45,43,43,0.18);
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--color-text) 18%, transparent);
   z-index: 1;
   animation: letterIntoEnvelope 1.6s cubic-bezier(0.45, 0.05, 0.35, 1) forwards;
 }
@@ -920,7 +932,7 @@
 .faq-item:hover { background: color-mix(in srgb, var(--paper) 80%, transparent); }
 .faq-item.is-open {
   background: color-mix(in srgb, var(--paper) 90%, transparent);
-  border-color: rgba(182,130,53,0.4);
+  border-color: color-mix(in srgb, var(--color-accent) 40%, transparent);
 }
 .faq-question {
   padding: 1rem 1.1rem;
@@ -956,50 +968,42 @@
 .faq-answer-open { padding: 0 1.1rem 1.1rem; }
 .faq-answer { padding-inline: 1.1rem; }
 
-/* ── 6c. The two bars pinned to the bottom, in deep gold ──
-   Both sit on the cream page, so they carry cream type: gold-on-gold text was
-   the thing that made the old bar's labels hard to read. Nothing inside them
-   is gold. */
-
-/* The gift cart: dark gold */
+/* ── 6c. The gift cart bar, in deep gold ──
+   Sits on the cream page, so it carries cream type: gold-on-gold text was the
+   thing that made the old bar's labels hard to read. Nothing inside it is
+   gold. Driven by --color-accent-deep / --color-on-accent (see index.css's
+   .bottom-nav for the matching pill nav below it), not literal colors — those
+   used to be untouched by the admin's accent picker. */
 .gift-cart-bar {
-  background: linear-gradient(170deg, #6d4a12 0%, var(--color-accent-800) 58%, #48300a 100%);
-  color: #fdf9f0;
-  border: 1px solid rgba(255, 248, 232, 0.22);
-  box-shadow: 0 8px 28px rgba(45, 30, 8, 0.45);
+  background: linear-gradient(170deg,
+    color-mix(in srgb, var(--color-accent-deep) 82%, white 18%) 0%,
+    var(--color-accent-deep) 58%,
+    color-mix(in srgb, var(--color-accent-deep) 82%, black 18%) 100%);
+  color: var(--color-on-accent);
+  border: 1px solid color-mix(in srgb, var(--color-on-accent) 22%, transparent);
+  box-shadow: 0 8px 28px color-mix(in srgb, var(--color-accent-deep) 65%, transparent);
 }
-.gift-cart-label { color: rgba(255, 248, 232, 0.72); }
-.gift-cart-name { color: #fdf9f0; }
-.gift-cart-price { color: rgba(255, 248, 232, 0.88); }
+.gift-cart-label { color: color-mix(in srgb, var(--color-on-accent) 72%, transparent); }
+.gift-cart-name { color: var(--color-on-accent); }
+.gift-cart-price { color: color-mix(in srgb, var(--color-on-accent) 88%, transparent); }
 .gift-cart-bar .btn-ghost {
-  color: rgba(255, 248, 232, 0.82);
+  color: color-mix(in srgb, var(--color-on-accent) 82%, transparent);
   border-color: transparent;
 }
 .gift-cart-bar .btn-ghost:hover:not(:disabled) {
-  background: rgba(255, 248, 232, 0.16);
-  color: #fff;
+  background: color-mix(in srgb, var(--color-on-accent) 16%, transparent);
+  color: var(--color-on-accent);
 }
 .gift-cart-bar .btn-primary {
-  color: #fdf9f0;
-  border-color: rgba(255, 248, 232, 0.72);
-  background: rgba(255, 248, 232, 0.1);
+  color: var(--color-on-accent);
+  border-color: color-mix(in srgb, var(--color-on-accent) 72%, transparent);
+  background: color-mix(in srgb, var(--color-on-accent) 10%, transparent);
 }
 /* Inverts on hover — cream fill, deep gold type */
 .gift-cart-bar .btn-primary:hover:not(:disabled) {
-  background: #fdf9f0;
-  color: var(--color-accent-800);
-  border-color: #fdf9f0;
-}
-
-/* The pill nav: the deepest gold, so it reads as the layer underneath */
-.bottom-nav {
-  background: rgba(58, 39, 13, 0.93);
-  box-shadow: 0 4px 24px rgba(35, 24, 8, 0.45);
-}
-.bottom-nav-tab { color: rgba(255, 248, 232, 0.72); }
-.bottom-nav-tab.active {
-  background: rgba(255, 248, 232, 0.2);
-  color: #fff8e8;
+  background: var(--color-on-accent);
+  color: var(--color-accent-deep);
+  border-color: var(--color-on-accent);
 }
 
 /* ── 6d. Admin: Apariencia tab (colors + fonts) ── */
