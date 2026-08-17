@@ -73,7 +73,11 @@ export async function onRequestDelete({ request, env }) {
       const placeholders = giftIds.map(() => '?').join(',')
       await env.DB.batch([
         env.DB.prepare(`DELETE FROM gift_reservations WHERE gift_id IN (${placeholders})`).bind(...giftIds),
-        env.DB.prepare('UPDATE gifts SET active = 0 WHERE trip_id = ?').bind(id),
+        // Soft-delete AND clear trip_id — D1 enforces `gifts.trip_id
+        // REFERENCES trips(id)` by default (unlike plain SQLite, where
+        // foreign keys are off unless turned on). A gift left pointing at
+        // this trip — even one marked inactive — blocks the DELETE below.
+        env.DB.prepare('UPDATE gifts SET active = 0, trip_id = NULL WHERE trip_id = ?').bind(id),
       ])
     }
 
