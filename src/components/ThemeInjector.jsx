@@ -3,6 +3,9 @@ import { useApp } from '../context/AppContext'
 import { HEADING_FONTS, BODY_FONTS, loadGoogleFont } from '../utils/fontOptions.js'
 
 const STYLE_TAG_ID = 'theme-overrides'
+// Read synchronously by the inline bootstrap script in index.html, before
+// React (or even the admin's content fetch) has run — see the note below.
+const CACHE_KEY = 'matri-theme-css'
 
 /** Darkens a `#rrggbb` color for the wax seal's gradient shadow stop. */
 function darken(hex, amount = 0.32) {
@@ -43,13 +46,23 @@ export default function ThemeInjector() {
     if (fontBody) vars.push(`--font-body:'${fontBody}', serif`)
 
     let tag = document.getElementById(STYLE_TAG_ID)
-    if (!vars.length) { tag?.remove(); return }
+    if (!vars.length) {
+      tag?.remove()
+      try { localStorage.removeItem(CACHE_KEY) } catch { /* private browsing, etc. */ }
+      return
+    }
     if (!tag) {
       tag = document.createElement('style')
       tag.id = STYLE_TAG_ID
       document.head.appendChild(tag)
     }
-    tag.textContent = `:root{${vars.join(';')}}`
+    const css = `:root{${vars.join(';')}}`
+    tag.textContent = css
+    // Cached so the *next* load can apply it before the content fetch even
+    // starts — this effect itself only runs once `content` has arrived,
+    // which is exactly the frame where the spinner used to visibly snap from
+    // the default background to the admin's chosen one.
+    try { localStorage.setItem(CACHE_KEY, css) } catch { /* private browsing, etc. */ }
   }, [bg, accent, accentDeep, onAccent, text, paper, seal, fontHeading, fontBody])
 
   useEffect(() => { if (fontHeading) loadGoogleFont(HEADING_FONTS, fontHeading) }, [fontHeading])

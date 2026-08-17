@@ -10,6 +10,27 @@
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Lora:wght@400;600&display=swap" rel="stylesheet" />
   </head>
   <body>
+    <!-- Applies the admin's last-known colors before React (or its content
+         fetch) has even started, so a returning guest never sees the spinner
+         flash from the default background to the custom one mid-load. Key
+         must match CACHE_KEY in src/components/ThemeInjector.jsx. Placed
+         after the built stylesheet (Vite injects that into <head>, above) so
+         this wins the cascade on the same :root selector without needing
+         !important — plain, non-module scripts are left where they are by
+         Vite's build, unlike the app's own module entry script below. -->
+    <script>
+      (function () {
+        try {
+          var css = localStorage.getItem('matri-theme-css')
+          if (css) {
+            var tag = document.createElement('style')
+            tag.id = 'theme-overrides'
+            tag.textContent = css
+            document.head.appendChild(tag)
+          }
+        } catch (e) { /* private browsing, storage disabled, etc. */ }
+      })()
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
