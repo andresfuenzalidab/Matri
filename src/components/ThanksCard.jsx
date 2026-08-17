@@ -6,10 +6,9 @@ import WaveRule from './WaveRule'
  * glyph with no seal on the other — so confirming attendance and confirming
  * a gift felt like two different sites. Both now render through this.
  */
-export default function ThanksCard({ symbol = '♡', title, children }) {
+export default function ThanksCard({ title, children }) {
   return (
     <div className="thanks-card">
-      <div className="thanks-seal">{symbol}</div>
       <h2 className="thanks-title">{title}</h2>
       <WaveRule />
       {children}

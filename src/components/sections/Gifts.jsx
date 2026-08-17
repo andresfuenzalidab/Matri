@@ -126,7 +126,7 @@ export default function Gifts() {
     const purchasedTotal = purchasedGifts.reduce((sum, g) => sum + (g.price || 0) * (g.quantity || 1), 0)
     return (
       <section id="regalos" className="section-compact">
-        <ThanksCard symbol="♡" title={thanksMsg.replace(/\{nombre\}/gi, displayName)}>
+        <ThanksCard title={thanksMsg.replace(/\{nombre\}/gi, displayName)}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginBottom: '0.75rem' }}>
             {purchasedGifts.map((g, i) => (
               <span key={i} style={{ fontFamily: 'var(--font-heading)', fontStyle: 'italic', fontSize: 'clamp(1rem, 2.5vw, 1.15rem)', fontWeight: 400 }}>

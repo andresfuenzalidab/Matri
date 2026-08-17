@@ -864,22 +864,11 @@
 }
 
 /* Thank-you card — shared by RSVP and Gifts once each is filed, via
-   ThanksCard.jsx, so both close out with the same seal and voice. */
+   ThanksCard.jsx, so both close out with the same voice. */
 .thanks-card {
   width: min(100%, 520px);
   margin: 0 auto;
   text-align: center;
-}
-.thanks-seal {
-  width: clamp(46px, 13vw, 60px);
-  aspect-ratio: 1;
-  margin: 0 auto 1rem;
-  border-radius: 50%;
-  display: grid; place-items: center;
-  background: radial-gradient(circle at 34% 30%, var(--seal) 0%, var(--seal-deep) 72%);
-  color: rgba(255,255,255,0.92);
-  font-size: 1.35rem;
-  box-shadow: 0 4px 14px rgba(40,44,30,0.34);
 }
 .thanks-title {
   font-family: var(--font-heading);

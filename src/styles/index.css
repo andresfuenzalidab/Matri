@@ -6,7 +6,10 @@
   --color-text: #201f1d;
   --color-accent: #b68235;
   --color-accent-2: #ac803e;
-  --color-divider: color-mix(in srgb, #201f1d 16%, transparent);
+  /* Was a hardcoded copy of --color-text's default, not a reference to it —
+     an admin-set text color wouldn't have moved any of the borders/rules
+     built on this. */
+  --color-divider: color-mix(in srgb, var(--color-text) 16%, transparent);
 
   --color-neutral-100: #f8f4f4;
   --color-neutral-200: #eae7e7;
@@ -1118,9 +1121,12 @@ textarea.input { min-height: 90px; resize: vertical; }
    EDITORIAL REDESIGN — luxury botanical theme
    ═══════════════════════════════════════════════ */
 
-/* Override body to luxury cream, no texture */
+/* Override body to luxury cream, no texture.
+   Was a literal hex, not var(--color-bg) — the admin's "Fondo de la página"
+   picker changed the token but this hardcoded copy of its default value
+   never noticed, so the actual <body> background never moved. */
 body {
-  background-color: #eceae8;
+  background-color: var(--color-bg);
   background-image: none;
 }
 
@@ -1129,7 +1135,7 @@ body {
    the hero are NOT see-through onto the video. */
 .editorial-main {
   position: relative;
-  background: linear-gradient(to bottom, transparent 100vh, #eceae8 100vh);
+  background: linear-gradient(to bottom, transparent 100vh, var(--color-bg) 100vh);
 }
 
 /* Sections: transparent (they inherit from editorial-main's cream bg) */
@@ -1280,7 +1286,7 @@ body {
   position: relative;
   z-index: 2;
   pointer-events: none;
-  background: #eceae8;
+  background: var(--color-bg);
 }
 
 /* Editorial section titles ── */

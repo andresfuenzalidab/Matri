@@ -170,7 +170,7 @@ export default function RSVP({ initialRsvp }) {
 
     return (
       <section id="rsvp" className="section-compact">
-        <ThanksCard symbol={rsvp.attending ? '♡' : '✦'} title={`Gracias, ${displayName}`}>
+        <ThanksCard title={`Gracias, ${displayName}`}>
           <p className="thanks-message">{rsvp.attending ? attendingMsg : declinedMsg}</p>
           {/* The calendar buttons live on the date card further up the page. */}
           {rsvp.attending ? (
@@ -195,7 +195,7 @@ export default function RSVP({ initialRsvp }) {
   if (isPastDeadline) {
     return (
       <section id="rsvp" className="section-compact">
-        <ThanksCard symbol="✦" title="Plazo cerrado">
+        <ThanksCard title="Plazo cerrado">
           <p className="thanks-message">
             El plazo para confirmar asistencia venció el {deadlineLabel}. Si tienes alguna duda, escríbenos directamente.
           </p>
