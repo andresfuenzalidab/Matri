@@ -197,7 +197,7 @@ export default function Gifts() {
                 <img
                   src={normalizeImageUrl(gift.imageUrl)}
                   alt={gift.name}
-                  style={{ width: '100%', height: 130, objectFit: 'cover', borderRadius: 4, marginBottom: '0.25rem' }}
+                  className="gift-card-img"
                   onError={e => e.target.style.display = 'none'}
                 />
               )}
