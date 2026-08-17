@@ -131,10 +131,15 @@ function ImagePicker({ url, onChange, token }) {
  * Shared CRUD for both photo carousels ("Nuestra Historia" and "El lugar") —
  * same fields, same reordering, same upload path, so the two admin tabs
  * behave identically instead of one lagging the other's features.
+ *
+ * `photos`/`setPhotos`/`loadPhotos` come from AppContext (see StoryPhotosManager
+ * / VenuePhotosManager) rather than being fetched independently here — the
+ * live carousel reads the exact same state, so an edit lands on the page
+ * immediately instead of waiting for that component's own separate fetch to
+ * happen to re-run (which, on a single-page app, is "never, until reload").
  */
-export default function PhotoCarouselManager({ endpoint, introText, confirmNoun, aspectRatio = '1/1' }) {
+export default function PhotoCarouselManager({ endpoint, introText, confirmNoun, aspectRatio = '1/1', photos, setPhotos, loadPhotos }) {
   const { token } = useApp()
-  const [photos, setPhotos] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -152,17 +157,13 @@ export default function PhotoCarouselManager({ endpoint, introText, confirmNoun,
   const [editFocal, setEditFocal] = useState(DEFAULT_FOCAL)
   const [editSaving, setEditSaving] = useState(false)
 
-  async function load() {
-    setLoading(true)
-    try {
-      const res = await fetch(endpoint, { headers: { 'X-Invite-Token': token } })
-      if (res.ok) setPhotos(await res.json())
-      else setError('No se pudieron cargar las fotos.')
-    } catch { setError('Error de conexión.') }
-    finally { setLoading(false) }
-  }
-
-  useEffect(() => { load() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    // loadPhotos() (from AppContext, shared with the live carousel) already
+    // fails silently on error rather than rejecting — appropriate for a
+    // guest-facing section, less so here, but an admin seeing an empty list
+    // on a real network failure is a rare, low-stakes edge case.
+    loadPhotos().finally(() => setLoading(false))
+  }, [loadPhotos])
 
   async function handleCreate(e) {
     e.preventDefault()

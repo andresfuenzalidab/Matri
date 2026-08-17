@@ -1,17 +1,14 @@
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { useApp } from '../../context/AppContext'
 import PhotoCardCarousel from '../PhotoCardCarousel'
 
 export default function OurStory() {
-  const { token, get } = useApp()
-  const [photos, setPhotos] = useState([])
+  const { get, storyPhotos, loadStoryPhotos } = useApp()
 
-  useEffect(() => {
-    fetch('/api/story-photos', { headers: { 'X-Invite-Token': token } })
-      .then(r => r.json())
-      .then(data => setPhotos(data || []))
-      .catch(() => {})
-  }, [token])
+  // Shared with the admin editor via AppContext — an edit there updates this
+  // same state directly, instead of this component holding its own stale
+  // copy fetched once on mount.
+  useEffect(() => { loadStoryPhotos() }, [loadStoryPhotos])
 
   const body = get('story_body', '')
   const subtitle = get('story_subtitle', '')
@@ -41,9 +38,9 @@ export default function OurStory() {
         </div>
       )}
 
-      {photos.length > 0 && (
+      {storyPhotos.length > 0 && (
         <div style={{ marginTop: '2rem' }}>
-          <PhotoCardCarousel photos={photos} />
+          <PhotoCardCarousel photos={storyPhotos} />
         </div>
       )}
     </section>

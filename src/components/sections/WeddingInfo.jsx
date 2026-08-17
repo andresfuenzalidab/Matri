@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { useApp } from '../../context/AppContext'
 import { normalizeImageUrl } from '../../utils/imageUrl.js'
 import { parseTimelineItems, DEFAULT_TIMELINE_ITEMS } from '../../utils/timelineItems.js'
@@ -8,20 +8,17 @@ import BlendVideo from '../BlendVideo'
 import Timeline from '../Timeline'
 
 export default function WeddingInfo({ shouldPlay }) {
-  const { get, token, guest } = useApp()
-  const [venuePhotos, setVenuePhotos] = useState([])
+  const { get, guest, venuePhotos, loadVenuePhotos } = useApp()
   const dressVideoRef = useRef(null)
 
   useEffect(() => {
     if (shouldPlay) dressVideoRef.current?.play().catch(() => {})
   }, [shouldPlay])
 
-  useEffect(() => {
-    fetch('/api/venue-photos', { headers: { 'X-Invite-Token': token } })
-      .then(r => r.json())
-      .then(data => setVenuePhotos(data))
-      .catch(() => {})
-  }, [token])
+  // Shared with the admin editor via AppContext — an edit there updates this
+  // same state directly, instead of this component holding its own stale
+  // copy fetched once on mount.
+  useEffect(() => { loadVenuePhotos() }, [loadVenuePhotos])
 
   const mapsUrl = get('venue_maps_url')
   const isPartyOnly = guest?.invitationType === 'party_only'
