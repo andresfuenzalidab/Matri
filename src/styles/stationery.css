@@ -637,13 +637,6 @@
   margin-bottom: clamp(1.1rem, 4vw, 1.6rem);
   text-align: left;
 }
-.rsvp-letter-line-mark {
-  font-family: var(--font-heading);
-  font-size: clamp(1.2rem, 4vw, 1.6rem);
-  font-style: italic;
-  opacity: 0.55;
-  flex-shrink: 0;
-}
 .rsvp-letter-line-name {
   font-family: var(--font-heading);
   font-size: clamp(1.15rem, 4vw, 1.6rem);

@@ -64,7 +64,9 @@ export default function WeddingInfo({ shouldPlay }) {
       {/* ── Photos of the venue ── */}
       {venuePhotos.length > 0 && (
         <div className="reveal-on-scroll" style={{ marginTop: '2.5rem', textAlign: 'center' }}>
-          <PhotoCardCarousel photos={venuePhotos} landscape />
+          {/* Manual only — the venue carousel shouldn't auto-advance while
+              someone's still reading a caption. */}
+          <PhotoCardCarousel photos={venuePhotos} landscape autoPlay={false} />
         </div>
       )}
 

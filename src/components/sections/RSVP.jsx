@@ -217,10 +217,9 @@ export default function RSVP({ initialRsvp }) {
           <p className="rsvp-letter-heading">RSVP</p>
           <WaveRule />
 
-          {/* The addressee, written on the line — "M ______" on stationery.
-              Formal names here, as on a printed reply card. */}
+          {/* The addressee, written on the line. Formal names here, as on a
+              printed reply card. */}
           <div className="rsvp-letter-line">
-            <span className="rsvp-letter-line-mark" aria-hidden="true">M</span>
             <span className="rsvp-letter-line-name">{formalName}</span>
           </div>
 

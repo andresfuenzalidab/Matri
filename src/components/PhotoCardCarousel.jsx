@@ -1,5 +1,9 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { normalizeImageUrl } from '../utils/imageUrl.js'
+
+// A swipe has to be mostly horizontal and past this distance to count —
+// short/vertical drags are page-scroll attempts, not a slide gesture.
+const SWIPE_THRESHOLD = 40
 
 /**
  * The photo carousel used both by "Nuestra Historia" and by "El lugar" — one
@@ -8,23 +12,37 @@ import { normalizeImageUrl } from '../utils/imageUrl.js'
  * "Título|Etiqueta" pair, split on the pipe; the admin editor writes that
  * format so this stays a plain, boring string on the wire.
  */
-export default function PhotoCardCarousel({ photos, landscape = false }) {
+export default function PhotoCardCarousel({ photos, landscape = false, autoPlay = true }) {
   const [current, setCurrent] = useState(0)
   const [fading, setFading] = useState(false)
+  const dragRef = useRef(null)
 
   const go = useCallback((idx) => {
     setFading(true)
     setTimeout(() => { setCurrent(idx); setFading(false) }, 280)
   }, [])
 
-  const prev = () => go((current - 1 + photos.length) % photos.length)
+  const prev = useCallback(() => go((current - 1 + photos.length) % photos.length), [current, go, photos.length])
   const next = useCallback(() => go((current + 1) % photos.length), [current, go, photos.length])
 
   useEffect(() => {
-    if (photos.length <= 1) return
+    if (!autoPlay || photos.length <= 1) return
     const t = setInterval(next, 5000)
     return () => clearInterval(t)
-  }, [next, photos.length])
+  }, [autoPlay, next, photos.length])
+
+  function handlePointerDown(e) {
+    if (photos.length <= 1) return
+    dragRef.current = { x: e.clientX, y: e.clientY }
+  }
+  function handlePointerUp(e) {
+    if (!dragRef.current) return
+    const dx = e.clientX - dragRef.current.x
+    const dy = e.clientY - dragRef.current.y
+    dragRef.current = null
+    if (Math.abs(dx) < SWIPE_THRESHOLD || Math.abs(dx) < Math.abs(dy)) return
+    if (dx > 0) prev(); else next()
+  }
 
   if (!photos.length) return null
   const photo = photos[current]
@@ -36,8 +54,15 @@ export default function PhotoCardCarousel({ photos, landscape = false }) {
 
   return (
     <div className="photo-card-carousel">
-      <div className={`photo-card ${landscape ? 'photo-card--landscape' : ''} ${fading ? 'photo-card-fading' : ''}`}>
-        <img src={src} alt={title || ''} style={{ objectPosition: photo.focal_point || '50% 50%' }}
+      <div
+        className={`photo-card ${landscape ? 'photo-card--landscape' : ''} ${fading ? 'photo-card-fading' : ''}`}
+        onPointerDown={handlePointerDown}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={() => { dragRef.current = null }}
+        style={{ touchAction: 'pan-y' }}
+      >
+        <img src={src} alt={title || ''} draggable={false}
+          style={{ objectPosition: photo.focal_point || '50% 50%' }}
           onError={e => e.target.style.display = 'none'} />
         {title && (
           <div className="photo-card-overlay">

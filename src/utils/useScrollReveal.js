@@ -3,8 +3,6 @@ import { useEffect } from 'react'
 export function useScrollReveal(active) {
   useEffect(() => {
     if (!active) return
-    const els = document.querySelectorAll('.reveal-on-scroll')
-    if (!els.length) return
 
     const observer = new IntersectionObserver(
       entries => {
@@ -18,7 +16,7 @@ export function useScrollReveal(active) {
       { threshold: 0.1 }
     )
 
-    els.forEach(el => {
+    function register(el) {
       const rect = el.getBoundingClientRect()
       // Synchronously reveal elements already in the viewport
       if (rect.top < window.innerHeight && rect.bottom > 0) {
@@ -26,8 +24,26 @@ export function useScrollReveal(active) {
       } else {
         observer.observe(el)
       }
-    })
+    }
 
-    return () => observer.disconnect()
+    document.querySelectorAll('.reveal-on-scroll').forEach(register)
+
+    // Sections whose content loads asynchronously (gifts, venue photos, the
+    // story carousel) mount their `.reveal-on-scroll` element after this
+    // effect's initial scan — a fetch that's still in flight the moment the
+    // guest opens the envelope. Without this, that element never gets
+    // registered and stays invisible until a reload happens to win the race.
+    const mutationObserver = new MutationObserver(mutations => {
+      for (const mutation of mutations) {
+        for (const node of mutation.addedNodes) {
+          if (node.nodeType !== 1) continue
+          if (node.matches?.('.reveal-on-scroll')) register(node)
+          node.querySelectorAll?.('.reveal-on-scroll').forEach(register)
+        }
+      }
+    })
+    mutationObserver.observe(document.body, { childList: true, subtree: true })
+
+    return () => { observer.disconnect(); mutationObserver.disconnect() }
   }, [active])
 }
