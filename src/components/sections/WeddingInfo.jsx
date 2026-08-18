@@ -1,19 +1,13 @@
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import { useApp } from '../../context/AppContext'
 import { normalizeImageUrl } from '../../utils/imageUrl.js'
 import { parseTimelineItems, DEFAULT_TIMELINE_ITEMS } from '../../utils/timelineItems.js'
 import PhotoPlaceholder from '../PhotoPlaceholder'
 import PhotoCardCarousel from '../PhotoCardCarousel'
-import BlendVideo from '../BlendVideo'
 import Timeline from '../Timeline'
 
-export default function WeddingInfo({ shouldPlay }) {
+export default function WeddingInfo() {
   const { get, guest, venuePhotos, loadVenuePhotos } = useApp()
-  const dressVideoRef = useRef(null)
-
-  useEffect(() => {
-    if (shouldPlay) dressVideoRef.current?.play().catch(() => {})
-  }, [shouldPlay])
 
   // Shared with the admin editor via AppContext — an edit there updates this
   // same state directly, instead of this component holding its own stale
@@ -25,6 +19,9 @@ export default function WeddingInfo({ shouldPlay }) {
   const dressCodeImage = get('dress_code_image')
   const venueMapImage = normalizeImageUrl(get('venue_map_image') || '')
   const descriptionImage = normalizeImageUrl(get('description_image') || '')
+  const dressCodeGif = normalizeImageUrl(get('dresscode_video_url')) || '/dresscode_cat.gif'
+  const timerCatGif = normalizeImageUrl(get('background_video_url')) || '/timer_cat.gif'
+  const descriptionDogGif = normalizeImageUrl(get('description_dog_url')) || '/description_dog.gif'
 
   const savedTimeline = parseTimelineItems(get('timeline_items'))
   const timelineItems = savedTimeline.length ? savedTimeline : DEFAULT_TIMELINE_ITEMS
@@ -61,11 +58,17 @@ export default function WeddingInfo({ shouldPlay }) {
       {/* ── Photos of the venue ── */}
       {venuePhotos.length > 0 && (
         <div className="reveal-on-scroll" style={{ marginTop: '2.5rem', textAlign: 'center' }}>
-          {/* Manual only — the venue carousel shouldn't auto-advance while
-              someone's still reading a caption. */}
-          <PhotoCardCarousel photos={venuePhotos} landscape autoPlay={false} />
+          {/* Auto-advances — the dog + timer cat gif underneath keep looping
+              regardless, so a static carousel next to them reads as stalled. */}
+          <PhotoCardCarousel photos={venuePhotos} landscape />
         </div>
       )}
+
+      {/* ── Countdown mascots, right under the venue carousel ── */}
+      <div className="wedding-timer-gifs reveal-on-scroll">
+        <img src={descriptionDogGif} alt="" className="wedding-timer-dog" />
+        <img src={timerCatGif} alt="" className="wedding-timer-cat" />
+      </div>
 
       {/* ── Programme of the day — full-day guests only ── */}
       {!isPartyOnly && timelineItems.length > 0 && (
@@ -89,24 +92,13 @@ export default function WeddingInfo({ shouldPlay }) {
       {/* ── Dress code ── */}
       <div className="wedding-detail-block reveal-on-scroll">
         <h3 className="wedding-detail-title">Código de vestimenta</h3>
-        <div style={{ display: 'flex', borderRadius: 6, overflow: 'hidden', maxWidth: 600, margin: '0 auto' }}>
-          {dressCodeImage ? (
-            <img src={normalizeImageUrl(dressCodeImage)} alt="Código de vestimenta"
-              style={{ flex: '0 0 50%', width: '50%', objectFit: 'cover', display: 'block' }}
-              onError={e => e.target.style.display = 'none'} />
-          ) : (
-            <div style={{ flex: '0 0 50%', width: '50%' }}>
-              <PhotoPlaceholder size="md" label="Imagen de código de vestimenta" />
-            </div>
-          )}
-          <BlendVideo
-            ref={dressVideoRef}
-            loop
-            wrapperStyle={{ flex: '0 0 50%', width: '50%' }}
-            style={{ width: '100%', height: '100%', display: 'block', objectFit: 'cover' }}
-            src={get('dresscode_video_url') || '/dresscode_cat.mp4'}
-          />
-        </div>
+        {dressCodeImage ? (
+          <img src={normalizeImageUrl(dressCodeImage)} alt="Código de vestimenta"
+            className="wedding-detail-img" onError={e => e.target.style.display = 'none'} />
+        ) : (
+          <PhotoPlaceholder size="lg" label="Imagen de código de vestimenta" />
+        )}
+        <img src={dressCodeGif} alt="" className="wedding-dresscode-gif" />
       </div>
     </section>
   )

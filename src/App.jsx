@@ -221,9 +221,9 @@ function MainApp({ token, guest, rsvp }) {
           <SectionDivider />
           <DateSection />
           <SectionDivider />
-          <CountdownSection shouldPlay={welcomed} />
+          <CountdownSection />
           <SectionDivider />
-          <WeddingInfo shouldPlay={welcomed} />
+          <WeddingInfo />
           <SectionDivider />
           <OurStory />
           <SectionDivider />

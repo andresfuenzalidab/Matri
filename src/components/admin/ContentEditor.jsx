@@ -72,6 +72,7 @@ const SECTIONS = [
       { key: 'venue_map_title', label: 'Título del plano del lugar', type: 'text' },
       { key: 'venue_map_image', label: 'Imagen del plano / mapa del lugar', type: 'image' },
       { key: 'dress_code_image', label: 'Imagen código de vestimenta', type: 'image' },
+      { key: 'description_dog_url', label: 'Gif del perro (bajo el carrusel del lugar)', type: 'image' },
     ],
   },
   {
@@ -140,10 +141,10 @@ const SECTIONS = [
     ],
   },
   {
-    label: 'Videos de las secciones',
+    label: 'Gifs de las secciones',
     fields: [
-      { key: 'background_video_url', label: 'Video del contador (gato del timer)', type: 'video' },
-      { key: 'dresscode_video_url', label: 'Video del código de vestimenta', type: 'video' },
+      { key: 'background_video_url', label: 'Gif del gato del timer (bajo el carrusel del lugar)', type: 'image' },
+      { key: 'dresscode_video_url', label: 'Gif del código de vestimenta', type: 'image' },
     ],
   },
   {
