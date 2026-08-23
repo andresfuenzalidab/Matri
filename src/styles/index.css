@@ -937,16 +937,16 @@ textarea.input { min-height: 90px; resize: vertical; }
 /* Countdown mascots below the venue carousel — transparent gifs, no video
    blend needed. Dog reads as the lead, cat trails smaller beside it. Each
    is a `.framed-media` wrapper now (gif + optional overlay art on top),
-   so the width/sizing lives on the wrapper, not the `<img>` directly. */
-.wedding-timer-gifs {
-  display: flex; align-items: flex-end; justify-content: center;
-  gap: 1.5rem; margin-top: 2.5rem;
-}
+   so the width/sizing lives on the wrapper, not the `<img>` directly.
+   Percentages are of each grid column now (`.pets-row` in stationery.css
+   — two equal 1fr columns, each centering its own animal), not of the row
+   as a whole, so they read roughly twice as large as they would in a
+   plain centered flex row for the same visual size. */
 .wedding-timer-dog {
-  width: 48%; max-width: 320px;
+  width: 90%; max-width: 320px;
 }
 .wedding-timer-cat {
-  width: 38%; max-width: 220px;
+  width: 62%; max-width: 220px;
 }
 
 /* Dress code gif — stacked below the outfit reference image instead of

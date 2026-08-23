@@ -439,13 +439,14 @@
 .corner-floral--br { bottom: 0.5rem; right: calc(var(--stationery-border-w) + 2px - var(--stationery-pad)); }
 .corner-floral--sm { width: clamp(150px, 46vw, 300px); }
 
-/* Guaranteed clearance under the top corner florals for whatever text
-   comes right after them (a kicker, a title) — independent of the
-   floral art's exact proportions, so bigger/smaller uploads can never
-   start covering the title again. Same growth rate as `.corner-floral`
-   itself (40vw) so the gap scales together with it. */
+/* Clearance under the top corner florals for whatever text comes right
+   after them (a kicker, a title) — enough that the florals' own art
+   doesn't start covering the title, but no more than that; the previous
+   value was sized to clear the florals' *full* height with a wide buffer,
+   which read as a big dead gap now that the florals themselves are sized
+   well. Trimmed down closer to the title. */
 .corner-floral-clearance {
-  margin-top: clamp(7rem, 40vw, 12rem) !important;
+  margin-top: clamp(3.5rem, 20vw, 6rem) !important;
 }
 
 /* Small stone urn — reused between "La celebración" and "El lugar", same
@@ -601,15 +602,19 @@
    sits inside it (z-index 1, so it's above the page background but below
    the overlay art at z-index 2). Dog reads noticeably larger than the cat;
    both keep real breathing room between them. */
+/* Two equal-width columns, each centering its own animal — not a flex row
+   centered as one unit. The dog is meant to render noticeably bigger than
+   the cat, and centering an asymmetric pair as a single group visually
+   drags the whole thing toward whichever side is bigger, even though the
+   group's bounding box is technically centered. Splitting into equal
+   halves gives each animal its own true center. */
 .pets-row {
   position: relative;
   z-index: 1;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  gap: clamp(2.5rem, 12vw, 5rem);
-  /* Same horizontal inset as the carousel above (none) — they need to line
-     up, not have the pets sit noticeably narrower than the photo. */
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: end;
+  justify-items: center;
   padding: 1.5rem 2% 0;
 }
 .wedding-timer-dog { width: 46%; max-width: 360px; }
@@ -898,7 +903,7 @@
 .rsvp-section { text-align: center; }
 .rsvp-letter {
   position: relative;
-  width: min(100%, 720px);
+  width: 100%;
   margin: 0 auto;
   background: linear-gradient(155deg,
     color-mix(in srgb, var(--paper) 92%, white),
