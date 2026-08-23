@@ -25,8 +25,8 @@ export default function WeddingInfo() {
   const descriptionDogGif = normalizeImageUrl(get('description_dog_url')) || '/description_dog.gif'
 
   // New botanical-lace skin, scoped to the venue hero for now.
-  const cornerFloral1 = get('corner_floral_1')
-  const cornerFloral2 = get('corner_floral_2')
+  const cornerFloralTl = get('corner_floral_tl')
+  const cornerFloralTr = get('corner_floral_tr')
   const urnImage = get('urn_image')
   const venuePhotoFrame = normalizeImageUrl(get('venue_photo_frame_image') || '')
 
@@ -36,9 +36,9 @@ export default function WeddingInfo() {
   return (
     <section id="boda" className="section">
       <div className="stationery-scene reveal-on-scroll">
-        <DecorSlot url={cornerFloral1} label="Adorno esquina" aspectRatio="1"
+        <DecorSlot url={cornerFloralTl} label="Adorno esquina" aspectRatio="1"
           className="corner-floral corner-floral--sm corner-floral--tl" />
-        <DecorSlot url={cornerFloral2} label="Adorno esquina" aspectRatio="1"
+        <DecorSlot url={cornerFloralTr} label="Adorno esquina" aspectRatio="1"
           className="corner-floral corner-floral--sm corner-floral--tr" />
 
         <h2 className="section-title" style={{ textAlign: 'center' }}>El lugar</h2>

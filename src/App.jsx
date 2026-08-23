@@ -8,7 +8,6 @@ import Loader from './components/Loader'
 import ThemeInjector from './components/ThemeInjector'
 import WelcomeModal from './components/WelcomeModal'
 import MusicPlayer from './components/MusicPlayer'
-import SectionDivider from './components/SectionDivider'
 import Home from './components/sections/Home'
 import DateSection from './components/sections/DateSection'
 import CountdownSection from './components/sections/CountdownSection'
@@ -51,32 +50,25 @@ const SharedHeroVideo = forwardRef(function SharedHeroVideo({ onCanPlay, onError
 })
 
 /**
- * Paper texture + damask side borders, reaching the real screen edges —
- * `fixed`, not scoped to any one section, so it reads as one continuous
- * surface behind the whole page instead of a per-section "card". Replaces
- * the old repeating vine decoration, which is gone now that this exists.
+ * Paper texture + damask side borders, wrapping everything after the hero.
+ * A normal (non-fixed) block, not a full-viewport overlay — it starts
+ * exactly where `Home` ends and is exactly as tall as its own children, so
+ * it never covers the hero video (which is meant to be the only thing
+ * showing on that first screen) and its border never needs viewport-height
+ * math. Replaces the old repeating vine decoration, which is gone now that
+ * this exists.
  */
-function StationeryBackdrop() {
+function StationeryMain({ children }) {
   const { get } = useApp()
   const paper = normalizeImageUrl(get('stationery_paper_texture') || '')
   const border = normalizeImageUrl(get('stationery_side_border') || '')
-  if (!paper && !border) return null
-
   return (
-    <>
-      {paper && (
-        <div className="stationery-backdrop-paper" aria-hidden="true"
-          style={{ backgroundImage: `url(${paper})` }} />
-      )}
-      {border && (
-        <>
-          <div className="stationery-backdrop-border stationery-backdrop-border--left" aria-hidden="true"
-            style={{ backgroundImage: `url(${border})` }} />
-          <div className="stationery-backdrop-border stationery-backdrop-border--right" aria-hidden="true"
-            style={{ backgroundImage: `url(${border})` }} />
-        </>
-      )}
-    </>
+    <div className="stationery-main" style={{
+      '--stationery-paper': paper ? `url(${paper})` : undefined,
+      '--stationery-border': border ? `url(${border})` : undefined,
+    }}>
+      {children}
+    </div>
   )
 }
 
@@ -177,7 +169,6 @@ function MainApp({ token, guest, rsvp }) {
         isolation: 'isolate',
       }}>
         <Nav />
-        <StationeryBackdrop />
 
         <main className="editorial-main">
           {/* ── Ambient warm glows ── */}
@@ -186,26 +177,23 @@ function MainApp({ token, guest, rsvp }) {
           <div className="ambient-glow" style={{ top: 3600, left: '12%' }} aria-hidden="true"/>
           <div className="ambient-glow" style={{ top: 5000, right: '8%', left: 'auto' }} aria-hidden="true"/>
 
-          {/* ── Content ── */}
+          {/* ── Hero — outside the paper/border skin below, so the video
+              stays the only thing showing on this first screen ── */}
           <Home />
-          <SectionDivider />
-          <DateSection />
-          <SectionDivider />
-          <CountdownSection />
-          <SectionDivider />
-          <WeddingInfo />
-          <SectionDivider />
-          <OurStory />
-          <SectionDivider />
-          <RSVP initialRsvp={rsvp} />
-          <SectionDivider />
-          <Gifts />
-          <SectionDivider />
-          <FAQ />
-          <SectionDivider />
-          {/* Closing note — the last thing on the page */}
-          <Contact />
-          <FlowerFooter />
+
+          {/* ── Everything after the hero, on the paper + damask skin ── */}
+          <StationeryMain>
+            <DateSection />
+            <CountdownSection />
+            <WeddingInfo />
+            <OurStory />
+            <RSVP initialRsvp={rsvp} />
+            <Gifts />
+            <FAQ />
+            {/* Closing note — the last thing on the page */}
+            <Contact />
+            <FlowerFooter />
+          </StationeryMain>
         </main>
         {guest?.isAdmin && (
           <>

@@ -31,14 +31,16 @@ export default function CountdownSection() {
   const bgImage = normalizeImageUrl(get('countdown_bg_image') || '')
 
   const urnImage = get('urn_image')
-  const cornerFloral1 = get('corner_floral_1')
-  const cornerFloral2 = get('corner_floral_2')
+  const cornerFloralTl = get('corner_floral_tl')
+  const cornerFloralTr = get('corner_floral_tr')
+  const cornerFloralBl = get('corner_floral_bl')
+  const cornerFloralBr = get('corner_floral_br')
 
   return (
     <div className="stationery-scene reveal-on-scroll">
-      <DecorSlot url={cornerFloral1} label="Adorno esquina" aspectRatio="1"
+      <DecorSlot url={cornerFloralTl} label="Adorno esquina" aspectRatio="1"
         className="corner-floral corner-floral--sm corner-floral--tl" />
-      <DecorSlot url={cornerFloral2} label="Adorno esquina" aspectRatio="1"
+      <DecorSlot url={cornerFloralTr} label="Adorno esquina" aspectRatio="1"
         className="corner-floral corner-floral--sm corner-floral--tr" />
 
       <DecorSlot url={urnImage} label="Urna" aspectRatio="0.85" className="urn-image" />
@@ -68,9 +70,9 @@ export default function CountdownSection() {
         </div>
       </div>
 
-      <DecorSlot url={cornerFloral1} label="Adorno esquina" aspectRatio="1"
+      <DecorSlot url={cornerFloralBl} label="Adorno esquina" aspectRatio="1"
         className="corner-floral corner-floral--sm corner-floral--bl" />
-      <DecorSlot url={cornerFloral2} label="Adorno esquina" aspectRatio="1"
+      <DecorSlot url={cornerFloralBr} label="Adorno esquina" aspectRatio="1"
         className="corner-floral corner-floral--sm corner-floral--br" />
     </div>
   )

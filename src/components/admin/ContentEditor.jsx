@@ -23,7 +23,6 @@ const SECTIONS = [
       { key: 'hero_video', label: 'Video de portada (MP4)', type: 'video' },
       { key: 'countdown_bg_image', label: 'Imagen de fondo del contador', type: 'image' },
       { key: 'flower_footer', label: 'Flores del cierre / footer (PNG ancho, fondo blanco o transparente)', type: 'image' },
-      { key: 'section_divider_image', label: 'Separador entre secciones (PNG sin fondo — si está vacío se usa un adorno dibujado)', type: 'image' },
     ],
   },
   {
@@ -39,9 +38,11 @@ const SECTIONS = [
     fields: [
       { key: 'stationery_paper_texture', label: 'Textura de papel de fondo (se repite en mosaico)', type: 'image' },
       { key: 'stationery_side_border', label: 'Borde lateral decorativo (se repite en vertical, izquierda y derecha)', type: 'image' },
-      { key: 'corner_floral_1', label: 'Adorno floral de esquina — variante 1', type: 'image' },
-      { key: 'corner_floral_2', label: 'Adorno floral de esquina — variante 2', type: 'image' },
-      { key: 'urn_image', label: 'Urna con flores (bajo el contador y junto a las mascotas)', type: 'image' },
+      { key: 'corner_floral_tl', label: 'Adorno floral — esquina superior izquierda', type: 'image' },
+      { key: 'corner_floral_tr', label: 'Adorno floral — esquina superior derecha', type: 'image' },
+      { key: 'corner_floral_bl', label: 'Adorno floral — esquina inferior izquierda (solo contador)', type: 'image' },
+      { key: 'corner_floral_br', label: 'Adorno floral — esquina inferior derecha (solo contador)', type: 'image' },
+      { key: 'urn_image', label: 'Urna con flores (centrada, bajo el contador y junto a las mascotas)', type: 'image' },
       { key: 'date_oval_frame_image', label: 'Marco ovalado "La celebración" (detrás de la tarjeta de citación)', type: 'image' },
       { key: 'venue_photo_frame_image', label: 'Marco dorado para la foto del lugar (PNG con centro transparente)', type: 'image' },
     ],

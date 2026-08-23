@@ -187,29 +187,6 @@
   background-position: center;
 }
 
-/* ── 2. Section dividers ── */
-.section-divider {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: clamp(1.25rem, 4vw, 2.25rem) 1rem;
-  pointer-events: none;
-  position: relative;
-  z-index: 2;
-}
-.section-divider-art {
-  width: clamp(200px, 56vw, 300px);
-  height: auto;
-  color: var(--color-accent);
-  opacity: 0.6;
-}
-.section-divider-img {
-  width: clamp(160px, 46vw, 320px);
-  height: auto;
-  opacity: 0.9;
-  mix-blend-mode: multiply;
-}
-
 /* ── 3. Date section: calendar over the envelope illustration ──
    The envelope + calendar used to be drawn with CSS (paper-fold gradients,
    a card with its own shadow). Now the whole thing is one uploaded
@@ -344,39 +321,43 @@
    the same treatment). Paper/border/frame art comes from admin-pasted
    public URLs (ContentEditor → "Decoración — nuevo estilo"); every piece
    degrades to a labelled placeholder box until art is uploaded (DecorSlot),
-   or simply doesn't render for the page-wide backdrop below. */
+   or simply doesn't render for the wrapper below. */
 
-/* Paper texture + damask side borders — `fixed` to the real viewport, not
-   scoped to any one section, so it reads as one continuous surface behind
-   the whole page rather than a boxed "card" per section. Rendered once in
-   App.jsx (`StationeryBackdrop`). */
-.stationery-backdrop-paper {
-  position: fixed; inset: 0;
+/* Paper texture + damask side borders, wrapping everything after the hero
+   (`StationeryMain` in App.jsx). Deliberately NOT `position: fixed` — a
+   fixed layer covers the full viewport including the hero's first screen,
+   where the video is meant to be the only thing showing. As a normal block
+   this starts exactly where Home ends and its height is just its content's,
+   so `::before` below can span it with a plain `inset: 0`. The border is
+   painted by `::before`, which — with no z-index of its own — paints below
+   every real child of this wrapper by draw order alone, so section content
+   (including corner florals that bleed into the border strip) always
+   layers on top of it, never underneath. */
+.stationery-main {
+  position: relative;
+  width: 100%;
+  background-color: var(--color-bg);
+  background-image: var(--stationery-paper, none);
   background-repeat: repeat;
   background-size: 420px auto;
-  z-index: -2;
+}
+.stationery-main::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    var(--stationery-border, none) left / clamp(24px, 7vw, 68px) auto repeat-y,
+    var(--stationery-border, none) right / clamp(24px, 7vw, 68px) auto repeat-y;
   pointer-events: none;
 }
-.stationery-backdrop-border {
-  position: fixed; top: 0; bottom: 0;
-  width: clamp(24px, 7vw, 68px);
-  background-repeat: repeat-y;
-  background-size: 100% auto;
-  z-index: 5;
-  pointer-events: none;
-}
-.stationery-backdrop-border--left { left: 0; }
-.stationery-backdrop-border--right { right: 0; transform: scaleX(-1); }
 
-/* A section using the new skin just needs room to clear the fixed side
-   borders — the backdrop itself is global now, not per-section. */
+/* A section using the new skin just needs room to clear the side borders. */
 .stationery-scene {
   position: relative;
   padding: 1.5rem clamp(1.5rem, 6vw, 3rem);
 }
 
-/* Corner florals: absolutely positioned within whichever ancestor is
-   `position: relative` — bleed past the edge like the reference art. */
+/* Corner florals — pinned to the inner (cream) edge of the padded section,
+   never past it, so they can never end up sitting under the green border. */
 .corner-floral {
   position: absolute;
   width: clamp(130px, 34vw, 280px);
@@ -384,14 +365,11 @@
   pointer-events: none;
   z-index: 2;
 }
-.corner-floral--tl { top: -6%; left: -4%; }
-.corner-floral--tr { top: -6%; right: -4%; }
-.corner-floral--bl { bottom: -6%; left: -4%; }
-.corner-floral--br { bottom: -6%; right: -4%; }
+.corner-floral--tl { top: 0; left: 0; }
+.corner-floral--tr { top: 0; right: 0; }
+.corner-floral--bl { bottom: 0; left: 0; }
+.corner-floral--br { bottom: 0; right: 0; }
 .corner-floral--sm { width: clamp(90px, 22vw, 190px); }
-/* Mirror real art for the right-hand corners, so one uploaded asset covers
-   both sides — but not the dashed placeholder, or its label reads backwards. */
-img.corner-floral--tr, img.corner-floral--br { transform: scaleX(-1); }
 
 /* Small stone urn — reused between "La celebración" and "El lugar", same
    size both places so it reads as the same recurring motif. */
@@ -404,7 +382,9 @@ img.corner-floral--tr, img.corner-floral--br { transform: scaleX(-1); }
 
 /* "La celebración" oval frame — a real image now (not a CSS background),
    so it keeps its natural aspect ratio; the live citation content sits
-   centered on top of it, inside the oval's open window. */
+   inside its open window, below the "La celebración" label baked into the
+   art. Content is deliberately packed tight (see .paper-tag--bare below) —
+   this is a fixed oval, not a box that grows with its content. */
 .date-celebration-frame {
   position: relative;
   max-width: 620px;
@@ -417,14 +397,16 @@ img.corner-floral--tr, img.corner-floral--br { transform: scaleX(-1); }
 }
 .date-celebration-content {
   position: absolute;
-  top: 32%; left: 16%; right: 16%;
+  top: 27%; bottom: 6%;
+  left: 12%; right: 12%;
+  display: flex; flex-direction: column; justify-content: center;
+  overflow: hidden;
   text-align: center;
 }
 
-/* Envelope + calendar — one full illustration; only the live day grid
-   (no card chrome of its own) draws on top, at the printed card's spot. */
+/* Envelope + calendar — one full illustration, nothing drawn on top: the
+   art already has the month, the grid and the wedding day marked. */
 .cal-envelope-stage {
-  position: relative;
   max-width: 620px;
   margin: clamp(1.5rem, 5vw, 2.5rem) auto 0;
 }
@@ -433,18 +415,10 @@ img.corner-floral--tr, img.corner-floral--br { transform: scaleX(-1); }
   width: 100%;
   height: auto;
 }
-.cal-overlay {
-  position: absolute;
-  top: 21%; left: 20%; right: 20%;
-}
-.cal-overlay .cal-month { font-size: clamp(1.3rem, 6vw, 2.1rem); }
-.cal-overlay .cal-day { font-size: clamp(0.6rem, 2.2vw, 0.85rem); }
-.cal-overlay .cal-heart { width: 110%; }
 
 /* Citation card, chromeless — used only inside the oval frame above, so no
-   paper/shadow/holes of its own; the frame art is the container now. Text
-   sizes down a step too — the oval's usable width is narrower than the
-   card this was originally designed for. */
+   paper/shadow/holes of its own; the frame art is the container now. Sizes
+   packed tight since the oval's open window is small and fixed. */
 .paper-tag--bare {
   width: 100%;
   margin: 0;
@@ -455,12 +429,19 @@ img.corner-floral--tr, img.corner-floral--br { transform: scaleX(-1); }
 .paper-tag--bare::before,
 .paper-tag--bare .paper-tag-holes,
 .paper-tag--bare .paper-tag-index { display: none; }
+.paper-tag--bare .paper-tag-body { display: flex; flex-direction: column; gap: clamp(0.4rem, 2vw, 0.7rem); }
 .paper-tag--bare .paper-tag-row { text-align: center; }
-.paper-tag--bare .paper-tag-row + .paper-tag-row { margin-top: clamp(0.6rem, 2.5vw, 1rem); }
-.paper-tag--bare .paper-tag-label { font-size: 0.5rem; }
-.paper-tag--bare .paper-tag-value { font-size: clamp(0.8rem, 2.8vw, 1.05rem); }
-.paper-tag--bare .paper-tag-hint { font-size: clamp(0.7rem, 2.2vw, 0.85rem); }
-.paper-tag--bare .cal-add { margin-top: clamp(1rem, 3.5vw, 1.5rem); padding-top: clamp(0.7rem, 3vw, 1rem); }
+.paper-tag--bare .paper-tag-row + .paper-tag-row { margin-top: 0; }
+.paper-tag--bare .paper-tag-label { font-size: 0.44rem; margin-bottom: 0.15rem; }
+.paper-tag--bare .paper-tag-value { font-size: clamp(0.68rem, 2.3vw, 0.85rem); line-height: 1.25; }
+.paper-tag--bare .paper-tag-hint { font-size: clamp(0.58rem, 1.9vw, 0.7rem); margin-top: 0; }
+.paper-tag--bare .cal-add {
+  margin-top: clamp(0.3rem, 1.5vw, 0.5rem);
+  padding-top: clamp(0.3rem, 1.5vw, 0.5rem);
+}
+.paper-tag--bare .cal-add-label { font-size: 0.42rem; margin-bottom: 0.3rem; }
+.paper-tag--bare .cal-add-btn { font-size: clamp(0.6rem, 2vw, 0.72rem); gap: 0.25rem; }
+.paper-tag--bare .cal-add-icon { width: 10px; height: 10px; }
 
 /* Gold frame overlay for the venue photo — the frame art needs a
    transparent window in its middle; the real photo sits underneath it. */
