@@ -37,7 +37,7 @@ export default function CountdownSection() {
   const cornerFloralBr = get('corner_floral_br')
 
   return (
-    <div className="stationery-scene reveal-on-scroll">
+    <div className="stationery-scene countdown-scene reveal-on-scroll">
       <DecorSlot url={cornerFloralTl} label="Adorno esquina" aspectRatio="1"
         className="corner-floral corner-floral--sm corner-floral--tl" />
       <DecorSlot url={cornerFloralTr} label="Adorno esquina" aspectRatio="1"

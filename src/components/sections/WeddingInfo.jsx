@@ -17,9 +17,8 @@ export default function WeddingInfo() {
 
   const mapsUrl = get('venue_maps_url')
   const isPartyOnly = guest?.invitationType === 'party_only'
-  const dressCodeImage = get('dress_code_image')
+  const dressCodeImage = normalizeImageUrl(get('dress_code_image') || '')
   const venueMapImage = normalizeImageUrl(get('venue_map_image') || '')
-  const descriptionImage = normalizeImageUrl(get('description_image') || '')
   const dressCodeGif = normalizeImageUrl(get('dresscode_video_url')) || '/dresscode_cat.gif'
   const timerCatGif = normalizeImageUrl(get('background_video_url')) || '/timer_cat.gif'
   const descriptionDogGif = normalizeImageUrl(get('description_dog_url')) || '/description_dog.gif'
@@ -27,8 +26,12 @@ export default function WeddingInfo() {
   // New botanical-lace skin, scoped to the venue hero for now.
   const cornerFloralTl = get('corner_floral_tl')
   const cornerFloralTr = get('corner_floral_tr')
-  const urnImage = get('urn_image')
   const venuePhotoFrame = normalizeImageUrl(get('venue_photo_frame_image') || '')
+  const petOverlay = normalizeImageUrl(get('pet_overlay_image') || '')
+  const timelineSeparator = get('timeline_separator_image')
+  const timelineFloralLeft = get('timeline_floral_left')
+  const timelineFloralRight = get('timeline_floral_right')
+  const dressCodeNote = get('dress_code_note')
 
   const savedTimeline = parseTimelineItems(get('timeline_items'))
   const timelineItems = savedTimeline.length ? savedTimeline : DEFAULT_TIMELINE_ITEMS
@@ -46,56 +49,62 @@ export default function WeddingInfo() {
           {get('venue_name', 'Altos del Paico')}
         </p>
 
-        {/* ── General info image + how to get there ── */}
-        <div className="card venue-card">
-          <div className="venue-photo-framed">
-            {descriptionImage ? (
-              <img src={descriptionImage} alt="El lugar"
-                style={{ width: '100%', borderRadius: 6, display: 'block', objectFit: 'cover' }}
-                onError={e => e.target.style.display = 'none'} />
-            ) : (
-              <PhotoPlaceholder size="lg" label="Sube aquí una foto del lugar" />
-            )}
-            {venuePhotoFrame && (
-              <img src={venuePhotoFrame} alt="" className="venue-photo-frame-art" aria-hidden="true"
-                onError={e => { e.target.style.display = 'none' }} />
-            )}
-          </div>
-          {mapsUrl && (
-            <a href={mapsUrl} target="_blank" rel="noopener noreferrer"
-              className="btn btn-secondary"
-              style={{ alignSelf: 'center', marginTop: '1rem' }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-                style={{ marginRight: 6, verticalAlign: 'middle' }}>
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
-              </svg>
-              Ver en Google Maps
-            </a>
+        {/* ── Venue photos — one carousel, framed, straight under the title ── */}
+        <div className="framed-media" style={{ marginTop: '1.5rem' }}>
+          {venuePhotos.length > 0 ? (
+            <PhotoCardCarousel photos={venuePhotos} landscape />
+          ) : (
+            <PhotoPlaceholder size="lg" label="Sube fotos del lugar" />
+          )}
+          {venuePhotoFrame && (
+            <img src={venuePhotoFrame} alt="" className="framed-media-overlay" aria-hidden="true"
+              onError={e => { e.target.style.display = 'none' }} />
           )}
         </div>
 
-        {/* ── Photos of the venue ── */}
-        {venuePhotos.length > 0 && (
-          <div style={{ marginTop: '2.5rem', textAlign: 'center' }}>
-            {/* Auto-advances — the dog + timer cat gif underneath keep looping
-                regardless, so a static carousel next to them reads as stalled. */}
-            <PhotoCardCarousel photos={venuePhotos} landscape />
-          </div>
+        {mapsUrl && (
+          <a href={mapsUrl} target="_blank" rel="noopener noreferrer"
+            className="btn btn-secondary"
+            style={{ alignSelf: 'center', margin: '1rem auto 0', display: 'table' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+              style={{ marginRight: 6, verticalAlign: 'middle' }}>
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
+            </svg>
+            Ver en Google Maps
+          </a>
         )}
 
-        {/* ── Countdown mascots, flanking the urn, right under the carousel ── */}
+        {/* ── Dog + cat, each with the same optional overlay art on top ── */}
         <div className="wedding-timer-gifs">
-          <img src={descriptionDogGif} alt="" className="wedding-timer-dog" />
-          <DecorSlot url={urnImage} label="Urna" aspectRatio="0.85" className="urn-image" />
-          <img src={timerCatGif} alt="" className="wedding-timer-cat" />
+          <div className="framed-media wedding-timer-dog">
+            <img src={descriptionDogGif} alt="" style={{ width: '100%', display: 'block' }} />
+            {petOverlay && <img src={petOverlay} alt="" className="framed-media-overlay" aria-hidden="true" />}
+          </div>
+          <div className="framed-media wedding-timer-cat">
+            <img src={timerCatGif} alt="" style={{ width: '100%', display: 'block' }} />
+            {petOverlay && <img src={petOverlay} alt="" className="framed-media-overlay" aria-hidden="true" />}
+          </div>
         </div>
       </div>
 
       {/* ── Programme of the day — full-day guests only ── */}
       {!isPartyOnly && timelineItems.length > 0 && (
-        <div className="wedding-detail-block reveal-on-scroll">
+        <div className="wedding-detail-block timeline-block reveal-on-scroll">
+          <DecorSlot url={timelineSeparator} label="Separador horizontal" aspectRatio="7"
+            className="timeline-separator" />
+
           <h3 className="wedding-detail-title">{get('timeline_title', 'Programa del día')}</h3>
-          <Timeline items={timelineItems} />
+
+          <div className="timeline-flanked">
+            <DecorSlot url={timelineFloralLeft} label="Adorno vertical" aspectRatio="0.18"
+              className="timeline-floral timeline-floral--left" />
+            <Timeline items={timelineItems} />
+            <DecorSlot url={timelineFloralRight} label="Adorno vertical" aspectRatio="0.18"
+              className="timeline-floral timeline-floral--right" />
+          </div>
+
+          <DecorSlot url={timelineSeparator} label="Separador horizontal" aspectRatio="7"
+            className="timeline-separator" />
         </div>
       )}
 
@@ -110,16 +119,24 @@ export default function WeddingInfo() {
         )}
       </div>
 
-      {/* ── Dress code ── */}
+      {/* ── Dress code — a single image (no corner florals here), an
+          optional "mayores indicaciones" note drawn on top of it, and the
+          cat gif below with the same overlay treatment as the other two ── */}
       <div className="wedding-detail-block reveal-on-scroll">
         <h3 className="wedding-detail-title">Código de vestimenta</h3>
-        {dressCodeImage ? (
-          <img src={normalizeImageUrl(dressCodeImage)} alt="Código de vestimenta"
-            className="wedding-detail-img" onError={e => e.target.style.display = 'none'} />
-        ) : (
-          <PhotoPlaceholder size="lg" label="Imagen de código de vestimenta" />
-        )}
-        <img src={dressCodeGif} alt="" className="wedding-dresscode-gif" />
+        <div className="framed-media wedding-detail-img">
+          {dressCodeImage ? (
+            <img src={dressCodeImage} alt="Código de vestimenta" style={{ width: '100%', display: 'block' }}
+              onError={e => e.target.style.display = 'none'} />
+          ) : (
+            <PhotoPlaceholder size="lg" label="Imagen de código de vestimenta" />
+          )}
+          {dressCodeNote && <p className="dresscode-note-overlay">{dressCodeNote}</p>}
+        </div>
+        <div className="framed-media wedding-dresscode-gif">
+          <img src={dressCodeGif} alt="" style={{ width: '100%', display: 'block' }} />
+          {petOverlay && <img src={petOverlay} alt="" className="framed-media-overlay" aria-hidden="true" />}
+        </div>
       </div>
     </section>
   )

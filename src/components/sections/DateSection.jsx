@@ -13,7 +13,7 @@ function CitationTag({ rows }) {
         {rows.map((row, i) => (
           <div key={row.label} className="paper-tag-row">
             <p className="paper-tag-label">{row.label}</p>
-            <p className="paper-tag-value">{row.value}</p>
+            {row.value && <p className="paper-tag-value">{row.value}</p>}
             {row.hint && <p className="paper-tag-hint">{row.hint}</p>}
           </div>
         ))}
@@ -56,10 +56,13 @@ export default function DateSection() {
   if (extraNote) rows.push({ label: 'Ten en cuenta', value: extraNote })
 
   // The "take the day off" nudge only makes sense for guests invited to the
-  // whole day — party-only guests arrive in the evening.
+  // whole day — party-only guests arrive in the evening. It's long-form
+  // text, not a short value, so it renders in the smaller italic slot
+  // (same treatment as the other secondary details) rather than the bigger
+  // heading style meant for a one-line answer.
   const recommendation = get('wedding_day_off_tip')
   if (!isPartyOnly && recommendation) {
-    rows.push({ label: 'Recomendación', value: recommendation })
+    rows.push({ label: 'Recomendación', hint: recommendation })
   }
 
   return (
