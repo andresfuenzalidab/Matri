@@ -1,6 +1,7 @@
 import { useApp } from '../../context/AppContext'
 import { normalizeImageUrl } from '../../utils/imageUrl.js'
 import AddToCalendar from '../AddToCalendar'
+import DecorSlot from '../DecorSlot'
 import {
   MONTH_NAMES, WEEKDAY_LABELS, monthMatrix, weddingDateParts, longDateLabel,
 } from '../../utils/weddingDate.js'
@@ -88,6 +89,13 @@ export default function DateSection() {
   const calendarBg = normalizeImageUrl(get('calendar_card_background_image') || '')
   const citationBg = normalizeImageUrl(get('citation_card_background_image') || '')
 
+  // New botanical-lace skin — public-URL art, all optional (see DecorSlot).
+  const paperTexture = get('stationery_paper_texture')
+  const sideBorder = get('stationery_side_border')
+  const cornerFloral1 = get('corner_floral_1')
+  const cornerFloral2 = get('corner_floral_2')
+  const ovalFrame = normalizeImageUrl(get('date_oval_frame_image') || '')
+
   const citationTime = isPartyOnly
     ? get('reception_time', '19:30')
     : get('ceremony_time', '17:00')
@@ -117,21 +125,36 @@ export default function DateSection() {
 
   return (
     <section id="fecha" className="section date-section">
-      <span className="kicker reveal-on-scroll">Reserva el día</span>
-      <h2 className="section-title reveal-on-scroll">Nuestra fecha</h2>
+      <div className="stationery-scene" style={{
+        '--stationery-paper': paperTexture ? `url(${normalizeImageUrl(paperTexture)})` : undefined,
+        '--stationery-border': sideBorder ? `url(${normalizeImageUrl(sideBorder)})` : undefined,
+      }}>
+        <DecorSlot url={cornerFloral1} label="Adorno esquina" aspectRatio="1"
+          className="corner-floral corner-floral--tl" />
+        <DecorSlot url={cornerFloral2} label="Adorno esquina" aspectRatio="1"
+          className="corner-floral corner-floral--tr" />
 
-      <div className="date-section-stage reveal-on-scroll">
-        {decor && (
-          <img src={decor} alt="" className="date-section-decor" aria-hidden="true"
-            onError={e => { e.target.style.display = 'none' }} />
-        )}
-        <div className="cal-envelope">
-          <Calendar dateStr={dateStr} bgImage={calendarBg} />
+        <span className="kicker reveal-on-scroll">Reserva el día</span>
+        <h2 className="section-title reveal-on-scroll">Nuestra fecha</h2>
+
+        <div className="date-section-stage reveal-on-scroll">
+          {decor && (
+            <img src={decor} alt="" className="date-section-decor" aria-hidden="true"
+              onError={e => { e.target.style.display = 'none' }} />
+          )}
+          <div className="cal-envelope">
+            <Calendar dateStr={dateStr} bgImage={calendarBg} />
+          </div>
         </div>
-      </div>
 
-      <div className="reveal-on-scroll">
-        <CitationTag rows={rows} title={get('citation_card_title', 'La citación')} bgImage={citationBg} />
+        {/* The oval lace frame is decoration only — sits behind the real
+            citation card rather than replacing it, so the venue/time/notes
+            stay live and admin-editable instead of baked into an image. */}
+        <div className="date-celebration-frame reveal-on-scroll" style={{
+          '--frame-image': ovalFrame ? `url(${ovalFrame})` : undefined,
+        }}>
+          <CitationTag rows={rows} title={get('citation_card_title', 'La celebración')} bgImage={citationBg} />
+        </div>
       </div>
     </section>
   )

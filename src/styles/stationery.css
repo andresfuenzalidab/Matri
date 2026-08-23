@@ -404,6 +404,113 @@
   margin: 0.15rem 0 0;
 }
 
+/* ── 4a. Botanical-lace skin — new reference design ──
+   Being rolled out section by section (Nuestra fecha, La celebración,
+   El lugar so far). `.stationery-scene` gives a block its own paper
+   texture + damask side borders as one self-contained "card"; it's applied
+   per-section rather than globally so unconverted sections downstream keep
+   their current look until they get the same treatment.
+   Paper/border/frame art comes from admin-pasted public URLs (see
+   ContentEditor "Decoración — nuevo estilo"); `--stationery-*` custom
+   properties are set inline per instance, `none` when nothing is uploaded
+   yet so this degrades to the plain card background underneath. */
+.stationery-scene {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: 4px;
+  padding: 2.5rem clamp(2rem, 9vw, 5.5rem);
+}
+.stationery-scene::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-color: var(--color-bg);
+  background-image: var(--stationery-paper, none);
+  background-repeat: repeat;
+  background-size: 420px auto;
+  z-index: -2;
+}
+.stationery-scene::after {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    var(--stationery-border, none) left / clamp(24px, 7vw, 68px) auto repeat-y,
+    var(--stationery-border, none) right / clamp(24px, 7vw, 68px) auto repeat-y;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Corner florals: absolutely positioned within whichever ancestor is
+   `position: relative` — bleed slightly past the edge like the reference art. */
+.corner-floral {
+  position: absolute;
+  width: clamp(90px, 22vw, 190px);
+  height: auto;
+  pointer-events: none;
+  z-index: 2;
+}
+.corner-floral--tl { top: -8%; left: -6%; }
+.corner-floral--tr { top: -8%; right: -6%; }
+.corner-floral--bl { bottom: -8%; left: -6%; }
+.corner-floral--br { bottom: -8%; right: -6%; }
+.corner-floral--sm { width: clamp(60px, 14vw, 120px); }
+/* Mirror real art for the right-hand corners, so one uploaded asset covers
+   both sides — but not the dashed placeholder, or its label reads backwards. */
+img.corner-floral--tr, img.corner-floral--br { transform: scaleX(-1); }
+
+/* Small stone urn — reused between "La celebración" and "El lugar". */
+.urn-image {
+  display: block;
+  width: clamp(70px, 16vw, 130px);
+  height: auto;
+  margin: 0 auto;
+}
+
+/* "La celebración" oval frame behind the citation card. Sized by its own
+   aspect ratio (portrait oval, per the reference) rather than a fixed
+   height, so it keeps its proportions at any width. */
+.date-celebration-frame {
+  position: relative;
+  max-width: 620px;
+  margin: clamp(2.5rem, 7vw, 4rem) auto 0;
+  padding: clamp(2.5rem, 8vw, 4rem) clamp(1.5rem, 6vw, 3rem);
+  background: var(--frame-image, none) center / contain no-repeat;
+}
+
+/* Gold frame overlay for the venue photo — the frame art needs a
+   transparent window in its middle; the real photo sits underneath it. */
+.venue-photo-framed {
+  position: relative;
+  width: 100%;
+}
+.venue-photo-framed .venue-photo-frame-art {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Placeholder for any DecorSlot without art yet — same idea as
+   .photo-placeholder, but sized by aspect-ratio instead of a fixed height
+   so it fits odd shapes (ovals, wide dividers, corner sprays). */
+.decor-slot-placeholder {
+  display: flex; align-items: center; justify-content: center;
+  text-align: center;
+  border: 1px dashed color-mix(in srgb, var(--color-accent) 30%, transparent);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--color-accent) 5%, transparent);
+  color: color-mix(in srgb, var(--color-accent) 55%, transparent);
+  font-size: 0.62rem;
+  letter-spacing: 0.03em;
+  line-height: 1.4;
+  padding: 0.5rem;
+}
+
+@media (max-width: 480px) {
+  .stationery-scene { padding: 2rem 1.25rem; }
+  .corner-floral { width: clamp(64px, 26vw, 110px); }
+}
+
 /* ── 4b. Venue map slot ──
    Placeholders elsewhere are deliberately near-invisible; this one is a slot
    waiting on an upload, so it keeps its frame and its label. */

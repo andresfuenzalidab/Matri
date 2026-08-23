@@ -40,6 +40,18 @@ const SECTIONS = [
     ],
   },
   {
+    label: 'Decoración — nuevo estilo botánico (en construcción)',
+    fields: [
+      { key: 'stationery_paper_texture', label: 'Textura de papel de fondo (se repite en mosaico)', type: 'image' },
+      { key: 'stationery_side_border', label: 'Borde lateral decorativo (se repite en vertical, izquierda y derecha)', type: 'image' },
+      { key: 'corner_floral_1', label: 'Adorno floral de esquina — variante 1', type: 'image' },
+      { key: 'corner_floral_2', label: 'Adorno floral de esquina — variante 2', type: 'image' },
+      { key: 'urn_image', label: 'Urna con flores (bajo el contador y junto a las mascotas)', type: 'image' },
+      { key: 'date_oval_frame_image', label: 'Marco ovalado "La celebración" (detrás de la tarjeta de citación)', type: 'image' },
+      { key: 'venue_photo_frame_image', label: 'Marco dorado para la foto del lugar (PNG con centro transparente)', type: 'image' },
+    ],
+  },
+  {
     label: 'Nuestra Historia',
     fields: [
       { key: 'story_heading', label: 'Título de la sección', type: 'text' },

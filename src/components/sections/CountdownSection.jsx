@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useApp } from '../../context/AppContext'
 import { normalizeImageUrl } from '../../utils/imageUrl.js'
 import { weddingInstant } from '../../utils/weddingDate.js'
+import DecorSlot from '../DecorSlot'
 
 function useCountdown(targetMs) {
   const [diff, setDiff] = useState(() => Math.max(0, targetMs - Date.now()))
@@ -29,30 +30,48 @@ export default function CountdownSection() {
   const { days, hours, minutes, seconds } = useCountdown(targetMs)
   const bgImage = normalizeImageUrl(get('countdown_bg_image') || '')
 
-  return (
-    <div className="countdown-section reveal-on-scroll">
-      <p className="countdown-kicker">FALTAN</p>
+  const paperTexture = get('stationery_paper_texture')
+  const sideBorder = get('stationery_side_border')
+  const urnImage = get('urn_image')
+  const cornerFloral1 = get('corner_floral_1')
+  const cornerFloral2 = get('corner_floral_2')
 
-      <div
-        className="countdown-section-timer"
-        style={bgImage ? { backgroundImage: `url(${bgImage})` } : undefined}
-      >
-        <div className="countdown-section-content">
-          <div className="countdown" aria-label="Cuenta regresiva">
-            {[
-              ['días', days],
-              ['horas', hours],
-              ['min', minutes],
-              ['seg', seconds],
-            ].map(([label, val]) => (
-              <div key={label} className="countdown-unit">
-                <span className="countdown-number">{String(val).padStart(2, '0')}</span>
-                <span className="countdown-label">{label}</span>
-              </div>
-            ))}
+  return (
+    <div className="stationery-scene reveal-on-scroll" style={{
+      '--stationery-paper': paperTexture ? `url(${normalizeImageUrl(paperTexture)})` : undefined,
+      '--stationery-border': sideBorder ? `url(${normalizeImageUrl(sideBorder)})` : undefined,
+    }}>
+      <DecorSlot url={urnImage} label="Urna" aspectRatio="0.85" className="urn-image" />
+
+      <div className="countdown-section">
+        <p className="countdown-kicker">FALTAN</p>
+
+        <div
+          className="countdown-section-timer"
+          style={bgImage ? { backgroundImage: `url(${bgImage})` } : undefined}
+        >
+          <div className="countdown-section-content">
+            <div className="countdown" aria-label="Cuenta regresiva">
+              {[
+                ['días', days],
+                ['horas', hours],
+                ['min', minutes],
+                ['seg', seconds],
+              ].map(([label, val]) => (
+                <div key={label} className="countdown-unit">
+                  <span className="countdown-number">{String(val).padStart(2, '0')}</span>
+                  <span className="countdown-label">{label}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
+
+      <DecorSlot url={cornerFloral1} label="Adorno esquina" aspectRatio="1"
+        className="corner-floral corner-floral--sm corner-floral--bl" />
+      <DecorSlot url={cornerFloral2} label="Adorno esquina" aspectRatio="1"
+        className="corner-floral corner-floral--sm corner-floral--br" />
     </div>
   )
 }

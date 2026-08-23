@@ -5,6 +5,8 @@ import { parseTimelineItems, DEFAULT_TIMELINE_ITEMS } from '../../utils/timeline
 import PhotoPlaceholder from '../PhotoPlaceholder'
 import PhotoCardCarousel from '../PhotoCardCarousel'
 import Timeline from '../Timeline'
+import DecorSlot from '../DecorSlot'
+import SectionDivider from '../SectionDivider'
 
 export default function WeddingInfo() {
   const { get, guest, venuePhotos, loadVenuePhotos } = useApp()
@@ -23,52 +25,79 @@ export default function WeddingInfo() {
   const timerCatGif = normalizeImageUrl(get('background_video_url')) || '/timer_cat.gif'
   const descriptionDogGif = normalizeImageUrl(get('description_dog_url')) || '/description_dog.gif'
 
+  // New botanical-lace skin, scoped to the venue hero for now.
+  const paperTexture = get('stationery_paper_texture')
+  const sideBorder = get('stationery_side_border')
+  const cornerFloral1 = get('corner_floral_1')
+  const cornerFloral2 = get('corner_floral_2')
+  const urnImage = get('urn_image')
+  const venuePhotoFrame = normalizeImageUrl(get('venue_photo_frame_image') || '')
+
   const savedTimeline = parseTimelineItems(get('timeline_items'))
   const timelineItems = savedTimeline.length ? savedTimeline : DEFAULT_TIMELINE_ITEMS
 
   return (
     <section id="boda" className="section">
-      <h2 className="section-title reveal-on-scroll" style={{ textAlign: 'center' }}>El lugar</h2>
-      <p className="section-subtitle reveal-on-scroll" style={{ textAlign: 'center' }}>
-        {get('venue_name', 'Altos del Paico')}
-      </p>
+      <div className="stationery-scene reveal-on-scroll" style={{
+        '--stationery-paper': paperTexture ? `url(${normalizeImageUrl(paperTexture)})` : undefined,
+        '--stationery-border': sideBorder ? `url(${normalizeImageUrl(sideBorder)})` : undefined,
+      }}>
+        <DecorSlot url={cornerFloral1} label="Adorno esquina" aspectRatio="1"
+          className="corner-floral corner-floral--sm corner-floral--tl" />
+        <DecorSlot url={cornerFloral2} label="Adorno esquina" aspectRatio="1"
+          className="corner-floral corner-floral--sm corner-floral--tr" />
 
-      {/* ── General info image + how to get there ── */}
-      <div className="card venue-card reveal-on-scroll">
-        {descriptionImage ? (
-          <img src={descriptionImage} alt="El lugar"
-            style={{ width: '100%', borderRadius: 6, display: 'block', objectFit: 'cover' }}
-            onError={e => e.target.style.display = 'none'} />
-        ) : (
-          <PhotoPlaceholder size="lg" label="Sube aquí una foto del lugar" />
-        )}
-        {mapsUrl && (
-          <a href={mapsUrl} target="_blank" rel="noopener noreferrer"
-            className="btn btn-secondary"
-            style={{ alignSelf: 'center', marginTop: '1rem' }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-              style={{ marginRight: 6, verticalAlign: 'middle' }}>
-              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
-            </svg>
-            Ver en Google Maps
-          </a>
-        )}
-      </div>
+        <h2 className="section-title" style={{ textAlign: 'center' }}>El lugar</h2>
+        <p className="section-subtitle" style={{ textAlign: 'center' }}>
+          {get('venue_name', 'Altos del Paico')}
+        </p>
 
-      {/* ── Photos of the venue ── */}
-      {venuePhotos.length > 0 && (
-        <div className="reveal-on-scroll" style={{ marginTop: '2.5rem', textAlign: 'center' }}>
-          {/* Auto-advances — the dog + timer cat gif underneath keep looping
-              regardless, so a static carousel next to them reads as stalled. */}
-          <PhotoCardCarousel photos={venuePhotos} landscape />
+        {/* ── General info image + how to get there ── */}
+        <div className="card venue-card">
+          <div className="venue-photo-framed">
+            {descriptionImage ? (
+              <img src={descriptionImage} alt="El lugar"
+                style={{ width: '100%', borderRadius: 6, display: 'block', objectFit: 'cover' }}
+                onError={e => e.target.style.display = 'none'} />
+            ) : (
+              <PhotoPlaceholder size="lg" label="Sube aquí una foto del lugar" />
+            )}
+            {venuePhotoFrame && (
+              <img src={venuePhotoFrame} alt="" className="venue-photo-frame-art" aria-hidden="true"
+                onError={e => { e.target.style.display = 'none' }} />
+            )}
+          </div>
+          {mapsUrl && (
+            <a href={mapsUrl} target="_blank" rel="noopener noreferrer"
+              className="btn btn-secondary"
+              style={{ alignSelf: 'center', marginTop: '1rem' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                style={{ marginRight: 6, verticalAlign: 'middle' }}>
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
+              </svg>
+              Ver en Google Maps
+            </a>
+          )}
         </div>
-      )}
 
-      {/* ── Countdown mascots, right under the venue carousel ── */}
-      <div className="wedding-timer-gifs reveal-on-scroll">
-        <img src={descriptionDogGif} alt="" className="wedding-timer-dog" />
-        <img src={timerCatGif} alt="" className="wedding-timer-cat" />
+        {/* ── Photos of the venue ── */}
+        {venuePhotos.length > 0 && (
+          <div style={{ marginTop: '2.5rem', textAlign: 'center' }}>
+            {/* Auto-advances — the dog + timer cat gif underneath keep looping
+                regardless, so a static carousel next to them reads as stalled. */}
+            <PhotoCardCarousel photos={venuePhotos} landscape />
+          </div>
+        )}
+
+        {/* ── Countdown mascots, flanking the urn, right under the carousel ── */}
+        <div className="wedding-timer-gifs">
+          <img src={descriptionDogGif} alt="" className="wedding-timer-dog" />
+          <DecorSlot url={urnImage} label="Urna" aspectRatio="0.85" className="urn-image" />
+          <img src={timerCatGif} alt="" className="wedding-timer-cat" />
+        </div>
       </div>
+
+      <SectionDivider />
 
       {/* ── Programme of the day — full-day guests only ── */}
       {!isPartyOnly && timelineItems.length > 0 && (
