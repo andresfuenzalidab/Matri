@@ -65,12 +65,12 @@ export default function AddToCalendar({ className = '' }) {
       <div className="cal-add-actions">
         <a href={gcUrl} target="_blank" rel="noopener noreferrer" className="cal-add-btn">
           <CalendarGlyph />
-          Google Calendar
+          Google
         </a>
         <span className="cal-add-sep" aria-hidden="true" />
         <button type="button" className="cal-add-btn" onClick={downloadIcs}>
           <CalendarGlyph />
-          Apple / Outlook
+          Apple
         </button>
       </div>
     </div>
