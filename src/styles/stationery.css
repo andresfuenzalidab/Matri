@@ -427,7 +427,7 @@
 .corner-floral--tr { top: 0.5rem; right: calc(var(--stationery-border-w) + 2px); }
 .corner-floral--bl { bottom: 0.5rem; left: calc(var(--stationery-border-w) + 2px); }
 .corner-floral--br { bottom: 0.5rem; right: calc(var(--stationery-border-w) + 2px); }
-.corner-floral--sm { width: clamp(110px, 28vw, 230px); }
+.corner-floral--sm { width: clamp(150px, 46vw, 300px); }
 
 /* Guaranteed clearance under the top corner florals for whatever text
    comes right after them (a kicker, a title) — independent of the
@@ -656,17 +656,18 @@
 .timeline-flanked {
   position: relative;
   width: 100%;
-  /* Slim on purpose — RSVP reuses this same wrapper and needs to stay
-     close to full width; the florals should read as a thin delimiting
-     edge, not a wide margin eating into the form/list. */
-  padding-left: clamp(22px, 5vw, 40px);
-  padding-right: clamp(22px, 5vw, 40px);
+  /* Matches `.timeline-floral`'s own width (below) plus its edge offset,
+     so the list/form clears the floral art regardless of how big it
+     renders — content padding and floral size are meant to grow together,
+     not be sized independently of each other. */
+  padding-left: clamp(60px, 16vw, 115px);
+  padding-right: clamp(60px, 16vw, 115px);
 }
 .timeline-floral {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  width: clamp(26px, 5.5vw, 44px);
+  width: clamp(55px, 15vw, 110px);
   height: auto;
   pointer-events: none;
   /* Without this, the left one was losing to `.rsvp-letter` (also
