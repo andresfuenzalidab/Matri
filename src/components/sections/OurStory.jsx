@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { useApp } from '../../context/AppContext'
+import { normalizeImageUrl } from '../../utils/imageUrl.js'
 import PhotoCardCarousel from '../PhotoCardCarousel'
 
 export default function OurStory() {
@@ -12,6 +13,7 @@ export default function OurStory() {
 
   const body = get('story_body', '')
   const subtitle = get('story_subtitle', '')
+  const storyFrame = normalizeImageUrl(get('story_photo_frame_image') || '')
 
   return (
     <section id="historia" className="section reveal-on-scroll" style={{ textAlign: 'center' }}>
@@ -39,8 +41,11 @@ export default function OurStory() {
       )}
 
       {storyPhotos.length > 0 && (
-        <div style={{ marginTop: '2rem' }}>
+        <div className="framed-media" style={{ marginTop: '2rem' }}>
           <PhotoCardCarousel photos={storyPhotos} />
+          {storyFrame && (
+            <img src={storyFrame} alt="" className="framed-media-overlay" aria-hidden="true" />
+          )}
         </div>
       )}
     </section>

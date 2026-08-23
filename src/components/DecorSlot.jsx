@@ -10,9 +10,13 @@ import { normalizeImageUrl } from '../utils/imageUrl.js'
 export default function DecorSlot({ url, label, aspectRatio, className = '', style, alt = '' }) {
   const resolved = normalizeImageUrl(url)
   if (resolved) {
+    // `aspectRatio` is a stand-in for the real art's own proportions before
+    // it exists — forcing it onto the real `<img>` too would stretch/distort
+    // any real upload whose natural ratio doesn't match the guess. The real
+    // image sizes itself (width from `style`/className, height auto).
     return (
       <img src={resolved} alt={alt} className={className}
-        style={{ ...style, aspectRatio }}
+        style={style}
         onError={e => { e.target.style.visibility = 'hidden' }} />
     )
   }

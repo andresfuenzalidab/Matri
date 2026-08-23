@@ -7,6 +7,10 @@ import PhotoCardCarousel from '../PhotoCardCarousel'
 import Timeline from '../Timeline'
 import DecorSlot from '../DecorSlot'
 
+const DRESS_CODE_NOTE_DEFAULT =
+  'Queremos verlos elegantes y disfrutando. Pueden elegir los colores que más les gusten; ' +
+  'solo les pedimos no usar el blanco, crema, marfil o tonos similares reservados para la novia.'
+
 export default function WeddingInfo() {
   const { get, guest, venuePhotos, loadVenuePhotos } = useApp()
 
@@ -27,30 +31,36 @@ export default function WeddingInfo() {
   const cornerFloralTl = get('corner_floral_tl')
   const cornerFloralTr = get('corner_floral_tr')
   const venuePhotoFrame = normalizeImageUrl(get('venue_photo_frame_image') || '')
-  const petOverlay = normalizeImageUrl(get('pet_overlay_image') || '')
-  const timelineSeparator = get('timeline_separator_image')
+  // One shared background for the dog+cat pair, and a separate, dedicated
+  // one for the dress-code cat — two different spots, two different images.
+  const petsOverlay = normalizeImageUrl(get('pets_overlay_image') || '')
+  const dresscodePetOverlay = normalizeImageUrl(get('dresscode_pet_overlay_image') || '')
+  const timelineSeparatorTop = get('timeline_separator_top_image')
+  const timelineSeparatorBottom = get('timeline_separator_bottom_image')
   const timelineFloralLeft = get('timeline_floral_left')
   const timelineFloralRight = get('timeline_floral_right')
-  const dressCodeNote = get('dress_code_note')
+  const dressCodeNote = get('dress_code_note', DRESS_CODE_NOTE_DEFAULT)
 
   const savedTimeline = parseTimelineItems(get('timeline_items'))
   const timelineItems = savedTimeline.length ? savedTimeline : DEFAULT_TIMELINE_ITEMS
 
   return (
     <section id="boda" className="section">
-      <div className="stationery-scene reveal-on-scroll">
+      <div className="stationery-scene">
         <DecorSlot url={cornerFloralTl} label="Adorno esquina" aspectRatio="1"
           className="corner-floral corner-floral--sm corner-floral--tl" />
         <DecorSlot url={cornerFloralTr} label="Adorno esquina" aspectRatio="1"
           className="corner-floral corner-floral--sm corner-floral--tr" />
 
-        <h2 className="section-title" style={{ textAlign: 'center' }}>El lugar</h2>
-        <p className="section-subtitle" style={{ textAlign: 'center' }}>
+        <h2 className="section-title reveal-on-scroll" style={{ textAlign: 'center' }}>El lugar</h2>
+        <p className="section-subtitle reveal-on-scroll" style={{ textAlign: 'center' }}>
           {get('venue_name', 'Altos del Paico')}
         </p>
 
-        {/* ── Venue photos — one carousel, framed, straight under the title ── */}
-        <div className="framed-media" style={{ marginTop: '1.5rem' }}>
+        {/* ── Venue photos — one carousel, framed, full width, straight
+            under the title. Arrows/dots live inside the carousel itself
+            now (see PhotoCardCarousel) — nothing renders below the frame. ── */}
+        <div className="framed-media reveal-on-scroll" style={{ marginTop: '1.5rem' }}>
           {venuePhotos.length > 0 ? (
             <PhotoCardCarousel photos={venuePhotos} landscape />
           ) : (
@@ -64,7 +74,7 @@ export default function WeddingInfo() {
 
         {mapsUrl && (
           <a href={mapsUrl} target="_blank" rel="noopener noreferrer"
-            className="btn btn-secondary"
+            className="btn btn-gold reveal-on-scroll"
             style={{ alignSelf: 'center', margin: '1rem auto 0', display: 'table' }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
               style={{ marginRight: 6, verticalAlign: 'middle' }}>
@@ -74,27 +84,34 @@ export default function WeddingInfo() {
           </a>
         )}
 
-        {/* ── Dog + cat, each with the same optional overlay art on top ── */}
-        <div className="wedding-timer-gifs">
-          <div className="framed-media wedding-timer-dog">
-            <img src={descriptionDogGif} alt="" style={{ width: '100%', display: 'block' }} />
-            {petOverlay && <img src={petOverlay} alt="" className="framed-media-overlay" aria-hidden="true" />}
+        {/* ── Dog + cat share one full-width background/frame — not one
+            each — with real space between them. ── */}
+        <div className="framed-media reveal-on-scroll" style={{ marginTop: '2.5rem' }}>
+          <div className="pets-row">
+            <div className="wedding-timer-dog">
+              <img src={descriptionDogGif} alt="" style={{ width: '100%', display: 'block' }} />
+            </div>
+            <div className="wedding-timer-cat">
+              <img src={timerCatGif} alt="" style={{ width: '100%', display: 'block' }} />
+            </div>
           </div>
-          <div className="framed-media wedding-timer-cat">
-            <img src={timerCatGif} alt="" style={{ width: '100%', display: 'block' }} />
-            {petOverlay && <img src={petOverlay} alt="" className="framed-media-overlay" aria-hidden="true" />}
-          </div>
+          {petsOverlay && (
+            <img src={petsOverlay} alt="" className="framed-media-overlay" aria-hidden="true" />
+          )}
         </div>
       </div>
 
       {/* ── Programme of the day — full-day guests only ── */}
       {!isPartyOnly && timelineItems.length > 0 && (
         <div className="wedding-detail-block timeline-block reveal-on-scroll">
-          <DecorSlot url={timelineSeparator} label="Separador horizontal" aspectRatio="7"
+          <DecorSlot url={timelineSeparatorTop} label="Separador horizontal (arriba)" aspectRatio="7"
             className="timeline-separator" />
 
           <h3 className="wedding-detail-title">{get('timeline_title', 'Programa del día')}</h3>
 
+          {/* The florals are delimiters the list sits inside of, not
+              decoration drawn over it — see .timeline-flanked .timeline
+              in stationery.css for the inset that keeps the two apart. */}
           <div className="timeline-flanked">
             <DecorSlot url={timelineFloralLeft} label="Adorno vertical" aspectRatio="0.18"
               className="timeline-floral timeline-floral--left" />
@@ -103,7 +120,7 @@ export default function WeddingInfo() {
               className="timeline-floral timeline-floral--right" />
           </div>
 
-          <DecorSlot url={timelineSeparator} label="Separador horizontal" aspectRatio="7"
+          <DecorSlot url={timelineSeparatorBottom} label="Separador horizontal (cierre)" aspectRatio="7"
             className="timeline-separator" />
         </div>
       )}
@@ -119,9 +136,9 @@ export default function WeddingInfo() {
         )}
       </div>
 
-      {/* ── Dress code — a single image (no corner florals here), an
-          optional "mayores indicaciones" note drawn on top of it, and the
-          cat gif below with the same overlay treatment as the other two ── */}
+      {/* ── Dress code — a single image (no corner florals here), a
+          customizable note drawn over it, and the cat gif below with its
+          own dedicated full-width background (not the dog+cat one). ── */}
       <div className="wedding-detail-block reveal-on-scroll">
         <h3 className="wedding-detail-title">Código de vestimenta</h3>
         <div className="framed-media wedding-detail-img">
@@ -133,9 +150,15 @@ export default function WeddingInfo() {
           )}
           {dressCodeNote && <p className="dresscode-note-overlay">{dressCodeNote}</p>}
         </div>
-        <div className="framed-media wedding-dresscode-gif">
-          <img src={dressCodeGif} alt="" style={{ width: '100%', display: 'block' }} />
-          {petOverlay && <img src={petOverlay} alt="" className="framed-media-overlay" aria-hidden="true" />}
+        <div className="framed-media" style={{ marginTop: '1.5rem' }}>
+          <div className="dresscode-pet-row">
+            <div className="framed-media">
+              <img src={dressCodeGif} alt="" style={{ width: '100%', display: 'block' }} />
+            </div>
+          </div>
+          {dresscodePetOverlay && (
+            <img src={dresscodePetOverlay} alt="" className="framed-media-overlay" aria-hidden="true" />
+          )}
         </div>
       </div>
     </section>

@@ -4,6 +4,28 @@ import { normalizeImageUrl } from '../../utils/imageUrl.js'
 import { guestDisplayName, guestFormalName, isPairInvite, pick } from '../../utils/guestName.js'
 import WaveRule from '../WaveRule'
 import ThanksCard from '../ThanksCard'
+import DecorSlot from '../DecorSlot'
+
+/** Same top/bottom image + left/right floral enclosure on every RSVP state
+ *  (sealing, thanked, past-deadline, the open form) — one wrapper instead
+ *  of repeating it in each early return. */
+function RsvpFrame({ get, children, className = 'section rsvp-section' }) {
+  return (
+    <section id="rsvp" className={className}>
+      <DecorSlot url={get('rsvp_top_image')} label="Imagen superior" aspectRatio="7"
+        className="timeline-separator" />
+      <div className="timeline-flanked">
+        <DecorSlot url={get('timeline_floral_left')} label="Adorno vertical" aspectRatio="0.18"
+          className="timeline-floral timeline-floral--left" />
+        {children}
+        <DecorSlot url={get('timeline_floral_right')} label="Adorno vertical" aspectRatio="0.18"
+          className="timeline-floral timeline-floral--right" />
+      </div>
+      <DecorSlot url={get('rsvp_bottom_image')} label="Imagen inferior" aspectRatio="7"
+        className="timeline-separator" style={{ marginBottom: 0 }} />
+    </section>
+  )
+}
 
 /** Envelope the answered card slides into once it is sent. */
 const EnvelopeGraphic = ({ image }) => (
@@ -136,7 +158,7 @@ export default function RSVP({ initialRsvp }) {
   // ── Sealing animation: the answered card drops into the envelope ──
   if (sealing && !rsvp) {
     return (
-      <section id="rsvp" className="section-compact">
+      <RsvpFrame get={get} className="section-compact">
         <div className="rsvp-sealing">
           <div className="rsvp-sealing-stage">
             <div className="rsvp-sealing-letter">
@@ -150,7 +172,7 @@ export default function RSVP({ initialRsvp }) {
           </div>
           <p className="rsvp-sealing-caption">Enviando tu respuesta…</p>
         </div>
-      </section>
+      </RsvpFrame>
     )
   }
 
@@ -169,7 +191,7 @@ export default function RSVP({ initialRsvp }) {
     const declinedMsg = (get('rsvp_thanks_declined') || defaultDeclinedMsg).replace(/\{NOMBRE\}/gi, displayName)
 
     return (
-      <section id="rsvp" className="section-compact">
+      <RsvpFrame get={get} className="section-compact">
         <ThanksCard title={`Gracias, ${displayName}`}>
           <p className="thanks-message">{rsvp.attending ? attendingMsg : declinedMsg}</p>
           {/* The calendar buttons live on the date card further up the page. */}
@@ -183,7 +205,7 @@ export default function RSVP({ initialRsvp }) {
             </button>
           ) : null}
         </ThanksCard>
-      </section>
+      </RsvpFrame>
     )
   }
 
@@ -194,19 +216,19 @@ export default function RSVP({ initialRsvp }) {
 
   if (isPastDeadline) {
     return (
-      <section id="rsvp" className="section-compact">
+      <RsvpFrame get={get} className="section-compact">
         <ThanksCard title="Plazo cerrado">
           <p className="thanks-message">
             El plazo para confirmar asistencia venció el {deadlineLabel}. Si tienes alguna duda, escríbenos directamente.
           </p>
         </ThanksCard>
-      </section>
+      </RsvpFrame>
     )
   }
 
   // ── The open letter ──
   return (
-    <section id="rsvp" className="section rsvp-section">
+    <RsvpFrame get={get}>
       <form className="rsvp-letter reveal-on-scroll" onSubmit={handleSubmit} noValidate>
         {cardImage && (
           <img src={cardImage} alt="" className="rsvp-letter-decor" aria-hidden="true"
@@ -339,6 +361,6 @@ export default function RSVP({ initialRsvp }) {
           </button>
         </div>
       </form>
-    </section>
+    </RsvpFrame>
   )
 }

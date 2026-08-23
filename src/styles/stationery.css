@@ -416,12 +416,14 @@
    centered in the remaining space down to the bottom corner florals,
    instead of hugging the top with a lot of dead air below it. */
 .countdown-scene {
-  min-height: min(72vh, 640px);
+  min-height: min(48vh, 420px);
   display: flex;
   flex-direction: column;
 }
-.countdown-scene .urn-image { margin-top: 0; margin-bottom: 0; }
+.countdown-scene .urn-image { margin: 0; }
 .countdown-scene .countdown-section { flex: 1; justify-content: center; }
+.countdown-kicker { margin-bottom: 0.35rem; }
+.urn-image--sm { width: clamp(70px, 15vw, 120px); }
 
 /* "La celebración" oval frame — a real image now (not a CSS background),
    so it keeps its natural aspect ratio; the live citation content sits
@@ -430,8 +432,8 @@
    this is a fixed oval, not a box that grows with its content. */
 .date-celebration-frame {
   position: relative;
-  max-width: 620px;
-  margin: clamp(2.5rem, 7vw, 4rem) auto 0;
+  width: 100%;
+  margin-top: clamp(2.5rem, 7vw, 4rem);
 }
 .date-celebration-frame-image {
   display: block;
@@ -440,18 +442,19 @@
 }
 .date-celebration-content {
   position: absolute;
-  top: 34%; bottom: 8%;
+  top: 34%; bottom: 6%;
   left: 13%; right: 13%;
   display: flex; flex-direction: column; justify-content: center;
-  overflow: hidden;
+  /* No `overflow: hidden` — losing the calendar buttons off the bottom
+     edge is worse than the text running a little past the oval. */
   text-align: center;
 }
 
 /* Envelope + calendar — one full illustration, nothing drawn on top: the
    art already has the month, the grid and the wedding day marked. */
 .cal-envelope-stage {
-  max-width: 620px;
-  margin: clamp(1.5rem, 5vw, 2.5rem) auto 0;
+  width: 100%;
+  margin-top: clamp(1.5rem, 5vw, 2.5rem);
 }
 .cal-envelope-image {
   display: block;
@@ -487,6 +490,16 @@
 .paper-tag--bare .cal-add-btn { font-size: clamp(0.58rem, 1.9vw, 0.68rem); gap: 0.25rem; }
 .paper-tag--bare .cal-add-icon { width: 9px; height: 9px; }
 
+/* "Ver en Google Maps" — gold, matching the rest of the new skin's accents
+   instead of the site-wide neutral secondary-button style. */
+.btn-gold {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+.btn-gold:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+}
+
 /* Generic frame/overlay pair — real media (photo, carousel, gif) as the
    base layer, a piece of art with a transparent window drawn on top of it.
    Reused for the venue carousel, both pet gifs, and the dress-code photo. */
@@ -501,6 +514,38 @@
   z-index: 2;
 }
 
+/* Dog + cat share ONE full-width overlay (not one each) — the row of gifs
+   sits inside it (z-index 1, so it's above the page background but below
+   the overlay art at z-index 2). Dog reads noticeably larger than the cat;
+   both keep real breathing room between them. */
+.pets-row {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: clamp(2rem, 8vw, 4rem);
+  padding: 1.5rem 8% 0;
+}
+.wedding-timer-dog { width: 46%; max-width: 360px; }
+.wedding-timer-cat { width: 30%; max-width: 220px; }
+
+/* Dress-code cat — its own dedicated full-width background, separate from
+   the pair above, and a smaller gif than before. */
+.dresscode-pet-row {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  padding: 1.5rem 0;
+}
+.dresscode-pet-row .framed-media { width: 30%; max-width: 170px; }
+
+/* Timeline vertical florals act as delimiters, not decoration overlapping
+   the list: centered on the block's height (not pinned to the top) and
+   outside the list's own content width, so the list reads as "between"
+   them instead of "under" them (see `.timeline-floral` itself, further
+   down, for the actual positioning). */
 /* Placeholder for any DecorSlot without art yet — same idea as
    .photo-placeholder, but sized by aspect-ratio instead of a fixed height
    so it fits odd shapes (ovals, wide dividers, corner sprays). */
@@ -522,18 +567,26 @@
    same "independent per spot" approach as the four corner florals). */
 .timeline-separator {
   display: block;
-  width: min(100%, 520px);
+  width: 100%;
   height: auto;
-  margin: 0 auto 1.75rem;
+  margin: 0 0 1.75rem;
 }
 .timeline-block > .timeline-separator:last-child { margin: 1.75rem auto 0; }
+/* `.timeline-flanked` is reused as-is for the RSVP form: absolutely
+   positioned children (the florals) ignore an ancestor's own padding —
+   same rule as the corner florals — so real (normal-flow) content gets
+   pushed clear of them via padding here, while the florals themselves stay
+   positioned from the true outer edge, delimiting rather than overlapping. */
 .timeline-flanked {
   position: relative;
   width: 100%;
+  padding-left: clamp(56px, 14vw, 110px);
+  padding-right: clamp(56px, 14vw, 110px);
 }
 .timeline-floral {
   position: absolute;
-  top: 8%;
+  top: 50%;
+  transform: translateY(-50%);
   width: clamp(46px, 11vw, 92px);
   height: auto;
   pointer-events: none;

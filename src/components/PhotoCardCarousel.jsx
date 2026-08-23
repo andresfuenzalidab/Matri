@@ -70,20 +70,20 @@ export default function PhotoCardCarousel({ photos, landscape = false, autoPlay 
             {badge && <span className="photo-card-badge">{badge}</span>}
           </div>
         )}
+        {photos.length > 1 && (
+          <>
+            <button className="photo-card-arrow photo-card-arrow--prev" onClick={prev} aria-label="Anterior">‹</button>
+            <button className="photo-card-arrow photo-card-arrow--next" onClick={next} aria-label="Siguiente">›</button>
+            <div className="photo-card-dots">
+              {photos.map((_, i) => (
+                <button key={i}
+                  className={`photo-card-dot ${i === current ? 'active' : ''}`}
+                  onClick={() => go(i)} aria-label={`Foto ${i + 1}`} />
+              ))}
+            </div>
+          </>
+        )}
       </div>
-      {photos.length > 1 && (
-        <div className="photo-card-controls">
-          <button className="photo-card-arrow" onClick={prev} aria-label="Anterior">‹</button>
-          <div className="photo-card-dots">
-            {photos.map((_, i) => (
-              <button key={i}
-                className={`photo-card-dot ${i === current ? 'active' : ''}`}
-                onClick={() => go(i)} aria-label={`Foto ${i + 1}`} />
-            ))}
-          </div>
-          <button className="photo-card-arrow" onClick={next} aria-label="Siguiente">›</button>
-        </div>
-      )}
     </div>
   )
 }

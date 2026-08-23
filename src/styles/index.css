@@ -923,7 +923,7 @@ textarea.input { min-height: 90px; resize: vertical; }
   margin-bottom: 1rem; text-align: center; color: var(--color-accent);
 }
 .wedding-detail-img {
-  width: 100%; max-width: 720px;
+  width: 100%;
   border-radius: var(--radius-md);
   display: block; margin: 0 auto;
 }
@@ -1530,8 +1530,6 @@ body {
 /* ── Photo card carousel (matches reference) ── */
 .photo-card-carousel {
   width: 100%;
-  max-width: 480px;
-  margin: 0 auto;
 }
 .photo-card {
   position: relative;
@@ -1579,27 +1577,29 @@ body {
   padding: 0.28rem 0.7rem;
   border-radius: 100px;
 }
-.photo-card-controls {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  padding: 1.1rem 0;
-}
+/* Arrows + dots draw on top of the photo itself now (inside the card,
+   inside whatever frame art wraps it) instead of sitting in their own row
+   underneath — nothing should render below the framed image. */
 .photo-card-arrow {
-  width: 42px; height: 42px;
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 38px; height: 38px;
   border-radius: 50%;
   background: rgba(255,255,255,0.88);
   border: none; cursor: pointer;
-  font-size: 1.3rem; line-height: 1;
+  font-size: 1.2rem; line-height: 1;
   display: flex; align-items: center; justify-content: center;
   color: var(--color-text);
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.15);
   transition: background 0.15s;
+  z-index: 3;
 }
 .photo-card-arrow:hover { background: #fff; }
+.photo-card-arrow--prev { left: 0.75rem; }
+.photo-card-arrow--next { right: 0.75rem; }
 .photo-card-dots {
-  display: flex; gap: 5px; align-items: center;
+  position: absolute; left: 0; right: 0; bottom: 0.85rem;
+  display: flex; gap: 5px; align-items: center; justify-content: center;
+  z-index: 3;
 }
 .photo-card-dot {
   width: 7px; height: 7px;

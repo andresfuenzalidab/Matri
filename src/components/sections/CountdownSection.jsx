@@ -43,7 +43,7 @@ export default function CountdownSection() {
       <DecorSlot url={cornerFloralTr} label="Adorno esquina" aspectRatio="1"
         className="corner-floral corner-floral--sm corner-floral--tr" />
 
-      <DecorSlot url={urnImage} label="Urna" aspectRatio="0.85" className="urn-image" />
+      <DecorSlot url={urnImage} label="Urna" aspectRatio="0.85" className="urn-image urn-image--sm" />
 
       <div className="countdown-section">
         <p className="countdown-kicker">FALTAN</p>
@@ -69,6 +69,10 @@ export default function CountdownSection() {
           </div>
         </div>
       </div>
+
+      {/* Same urn again, echoing the top one — closer to the bottom corners
+          rather than one big arrangement floating alone in the middle. */}
+      <DecorSlot url={urnImage} label="Urna" aspectRatio="0.85" className="urn-image urn-image--sm" />
 
       <DecorSlot url={cornerFloralBl} label="Adorno esquina" aspectRatio="1"
         className="corner-floral corner-floral--sm corner-floral--bl" />
