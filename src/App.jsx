@@ -19,7 +19,6 @@ import Gifts from './components/sections/Gifts'
 import Contact from './components/sections/Contact'
 import FAQ from './components/sections/FAQ'
 import AdminPanel from './components/admin/AdminPanel'
-import { BotanicalHeroLeft, BotanicalHeroRight } from './components/Botanical'
 
 function getToken() {
   const fromUrl = new URLSearchParams(window.location.search).get('token')
@@ -52,59 +51,31 @@ const SharedHeroVideo = forwardRef(function SharedHeroVideo({ onCanPlay, onError
 })
 
 /**
- * Repeats of the uploaded vine image down each side, fading out with depth.
- * `count` used to be fixed at 8 — now it comes from `flower_vine_frequency`
- * in admin, so a sparser or denser repeat is just a number, not a code change.
+ * Paper texture + damask side borders, reaching the real screen edges —
+ * `fixed`, not scoped to any one section, so it reads as one continuous
+ * surface behind the whole page instead of a per-section "card". Replaces
+ * the old repeating vine decoration, which is gone now that this exists.
  */
-function buildVineStops(count) {
-  const n = Math.max(2, Math.min(20, Math.round(count) || 8))
-  return Array.from({ length: n }, (_, i) => {
-    const t = i / n
-    return { top: `${(t * 100).toFixed(2)}%`, opacity: Math.max(0.15, 0.9 - t * 0.75) }
-  })
-}
-
-function SideVines() {
+function StationeryBackdrop() {
   const { get } = useApp()
-  const img = normalizeImageUrl(get('flower_vine_left') || '')
-  const stops = buildVineStops(Number(get('flower_vine_frequency', 8)))
-
-  if (img) {
-    return (
-      <>
-        <div className="side-vine side-vine-left" aria-hidden="true">
-          {stops.map((s, i) => (
-            <img key={i} src={img} alt="" style={{
-              position: 'absolute', top: s.top, left: 0,
-              width: '100%', opacity: s.opacity, mixBlendMode: 'multiply',
-            }} />
-          ))}
-        </div>
-        <div className="side-vine side-vine-right" aria-hidden="true">
-          {stops.map((s, i) => (
-            <img key={i} src={img} alt="" style={{
-              position: 'absolute', top: s.top, right: 0,
-              width: '100%', opacity: s.opacity, mixBlendMode: 'multiply',
-              transform: 'scaleX(-1)',
-            }} />
-          ))}
-        </div>
-      </>
-    )
-  }
+  const paper = normalizeImageUrl(get('stationery_paper_texture') || '')
+  const border = normalizeImageUrl(get('stationery_side_border') || '')
+  if (!paper && !border) return null
 
   return (
     <>
-      <div className="side-vine side-vine-left side-vine-svg" aria-hidden="true">
-        <BotanicalHeroLeft style={{ opacity: 0.78 }}/>
-        <BotanicalHeroLeft style={{ opacity: 0.45, marginTop: -100 }}/>
-        <BotanicalHeroLeft style={{ opacity: 0.28, marginTop: -100 }}/>
-      </div>
-      <div className="side-vine side-vine-right side-vine-svg" aria-hidden="true">
-        <BotanicalHeroRight style={{ opacity: 0.78 }}/>
-        <BotanicalHeroRight style={{ opacity: 0.45, marginTop: -100 }}/>
-        <BotanicalHeroRight style={{ opacity: 0.28, marginTop: -100 }}/>
-      </div>
+      {paper && (
+        <div className="stationery-backdrop-paper" aria-hidden="true"
+          style={{ backgroundImage: `url(${paper})` }} />
+      )}
+      {border && (
+        <>
+          <div className="stationery-backdrop-border stationery-backdrop-border--left" aria-hidden="true"
+            style={{ backgroundImage: `url(${border})` }} />
+          <div className="stationery-backdrop-border stationery-backdrop-border--right" aria-hidden="true"
+            style={{ backgroundImage: `url(${border})` }} />
+        </>
+      )}
     </>
   )
 }
@@ -206,10 +177,9 @@ function MainApp({ token, guest, rsvp }) {
         isolation: 'isolate',
       }}>
         <Nav />
-        <main className="editorial-main">
-          {/* ── Side vines running full height ── */}
-          <SideVines />
+        <StationeryBackdrop />
 
+        <main className="editorial-main">
           {/* ── Ambient warm glows ── */}
           <div className="ambient-glow" style={{ top: 900, left: '8%' }} aria-hidden="true"/>
           <div className="ambient-glow" style={{ top: 2200, right: '6%', left: 'auto' }} aria-hidden="true"/>

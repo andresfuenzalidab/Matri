@@ -30,17 +30,17 @@ export default function CountdownSection() {
   const { days, hours, minutes, seconds } = useCountdown(targetMs)
   const bgImage = normalizeImageUrl(get('countdown_bg_image') || '')
 
-  const paperTexture = get('stationery_paper_texture')
-  const sideBorder = get('stationery_side_border')
   const urnImage = get('urn_image')
   const cornerFloral1 = get('corner_floral_1')
   const cornerFloral2 = get('corner_floral_2')
 
   return (
-    <div className="stationery-scene reveal-on-scroll" style={{
-      '--stationery-paper': paperTexture ? `url(${normalizeImageUrl(paperTexture)})` : undefined,
-      '--stationery-border': sideBorder ? `url(${normalizeImageUrl(sideBorder)})` : undefined,
-    }}>
+    <div className="stationery-scene reveal-on-scroll">
+      <DecorSlot url={cornerFloral1} label="Adorno esquina" aspectRatio="1"
+        className="corner-floral corner-floral--sm corner-floral--tl" />
+      <DecorSlot url={cornerFloral2} label="Adorno esquina" aspectRatio="1"
+        className="corner-floral corner-floral--sm corner-floral--tr" />
+
       <DecorSlot url={urnImage} label="Urna" aspectRatio="0.85" className="urn-image" />
 
       <div className="countdown-section">

@@ -22,8 +22,6 @@ const SECTIONS = [
       { key: 'hero_date', label: 'Fecha en texto (ej. Viernes 6 de noviembre de 2026)', type: 'text' },
       { key: 'hero_video', label: 'Video de portada (MP4)', type: 'video' },
       { key: 'countdown_bg_image', label: 'Imagen de fondo del contador', type: 'image' },
-      { key: 'flower_vine_left', label: 'Flores laterales (PNG fondo blanco o transparente)', type: 'image' },
-      { key: 'flower_vine_frequency', label: 'Frecuencia de flores laterales (repeticiones de arriba a abajo, 2-20)', type: 'number' },
       { key: 'flower_footer', label: 'Flores del cierre / footer (PNG ancho, fondo blanco o transparente)', type: 'image' },
       { key: 'section_divider_image', label: 'Separador entre secciones (PNG sin fondo — si está vacío se usa un adorno dibujado)', type: 'image' },
     ],
@@ -32,11 +30,8 @@ const SECTIONS = [
     label: 'Fecha y citación (calendario)',
     fields: [
       { key: 'wedding_date', label: 'Fecha del matrimonio (YYYY-MM-DD) — usada por el calendario y la cuenta regresiva', type: 'text' },
-      { key: 'calendar_decor_image', label: 'Imagen decorativa junto al calendario (PNG sin fondo, opcional)', type: 'image' },
-      { key: 'calendar_card_background_image', label: 'Fondo de la tarjeta del calendario (reemplaza el papel por tu foto)', type: 'image' },
-      { key: 'citation_card_title', label: 'Título de la tarjeta de citación', type: 'text' },
+      { key: 'calendar_decor_image', label: 'Sobre + calendario (imagen completa) — el calendario en vivo se dibuja encima', type: 'image' },
       { key: 'citation_note', label: 'Nota extra en la tarjeta (para todos los invitados)', type: 'textarea' },
-      { key: 'citation_card_background_image', label: 'Fondo de la tarjeta de citación (reemplaza el papel por tu foto)', type: 'image' },
     ],
   },
   {

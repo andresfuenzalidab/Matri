@@ -172,31 +172,16 @@
   .app-loader-spinner { animation-duration: 2s; }
 }
 
-/* ── 1c. Replaceable stationery backgrounds ──
-   Three surfaces are drawn with a plain CSS gradient by default: the
-   envelope, the calendar card and the citation tag. Each accepts an
-   admin-uploaded photo that replaces the gradient outright — laid under a
-   translucent wash of the same paper color so the existing text stays
-   legible over whatever is uploaded. The URL rides in on a custom property
-   so the wash itself stays defined in CSS (and follows the paper color if
-   that is themed too), rather than being rebuilt in JS. */
+/* ── 1c. Replaceable stationery background ──
+   The cover envelope (WelcomeModal) is the one surface still drawn with a
+   plain CSS gradient by default; it accepts an admin-uploaded photo that
+   replaces the gradient outright, under a translucent wash of the paper
+   color so its text stays legible over whatever is uploaded. The calendar
+   card and citation tag used to have the same mechanism, but both are now
+   drawn on top of a full illustration instead (see section 3 below). */
 .envelope.has-custom-bg {
   background-image:
     linear-gradient(160deg, color-mix(in srgb, var(--paper) 80%, transparent) 0%, color-mix(in srgb, var(--paper) 88%, transparent) 100%),
-    var(--custom-bg-image);
-  background-size: cover;
-  background-position: center;
-}
-.cal-card.has-custom-bg {
-  background-image:
-    linear-gradient(color-mix(in srgb, var(--paper) 80%, transparent), color-mix(in srgb, var(--paper) 80%, transparent)),
-    var(--custom-bg-image);
-  background-size: cover;
-  background-position: center;
-}
-.paper-tag.has-custom-bg {
-  background-image:
-    linear-gradient(color-mix(in srgb, var(--paper) 82%, transparent), color-mix(in srgb, var(--paper) 82%, transparent)),
     var(--custom-bg-image);
   background-size: cover;
   background-position: center;
@@ -225,64 +210,13 @@
   mix-blend-mode: multiply;
 }
 
-/* ── 3. Date section: calendar in an open envelope ── */
+/* ── 3. Date section: calendar over the envelope illustration ──
+   The envelope + calendar used to be drawn with CSS (paper-fold gradients,
+   a card with its own shadow). Now the whole thing is one uploaded
+   illustration (`.cal-envelope-image`, see section 4a) and only the live
+   day grid below draws on top of it — sizing and positioning for that grid
+   live in section 4a too, next to the rest of the new skin. */
 .date-section { text-align: center; }
-.date-section-stage {
-  position: relative;
-  display: flex; justify-content: center;
-  margin: clamp(1.5rem, 5vw, 2.5rem) auto 0;
-  max-width: 520px;
-}
-.date-section-decor {
-  position: absolute;
-  left: -38%; bottom: -6%;
-  width: 46%;
-  max-width: 260px;
-  mix-blend-mode: multiply;
-  pointer-events: none;
-  z-index: 3;
-}
-.cal-envelope {
-  position: relative;
-  width: 100%;
-  padding: clamp(1.5rem, 5vw, 2.75rem) clamp(0.9rem, 4vw, 2rem) clamp(3rem, 9vw, 4.75rem);
-  border-radius: 6px;
-  background: linear-gradient(158deg,
-    color-mix(in srgb, var(--paper) 94%, black 6%),
-    color-mix(in srgb, var(--paper) 85%, black 15%));
-  box-shadow: 0 16px 44px color-mix(in srgb, var(--color-text) 16%, transparent);
-}
-/* the open back flap behind the card */
-.cal-envelope::before {
-  content: "";
-  position: absolute; left: 0; right: 0; top: 0;
-  height: 58%;
-  background: linear-gradient(
-    color-mix(in srgb, var(--paper) 92%, black 8%),
-    color-mix(in srgb, var(--paper) 86%, black 14%));
-  clip-path: polygon(0 0, 50% 100%, 100% 0);
-  border-radius: 6px 6px 0 0;
-}
-/* the front pocket, overlapping only the card's bottom margin */
-.cal-envelope::after {
-  content: "";
-  position: absolute; left: 0; right: 0; bottom: 0;
-  height: clamp(2.75rem, 8.5vw, 4.5rem);
-  background: linear-gradient(
-    color-mix(in srgb, var(--paper) 95%, black 5%),
-    color-mix(in srgb, var(--paper) 87%, black 13%));
-  clip-path: polygon(0 100%, 50% 0, 100% 100%);
-  border-radius: 0 0 6px 6px;
-  z-index: 2;
-}
-.cal-card {
-  position: relative; z-index: 1;
-  width: 100%;
-  background: var(--paper);
-  border-radius: 3px;
-  padding: clamp(1.1rem, 4vw, 1.75rem) clamp(0.85rem, 3.5vw, 1.5rem) clamp(1.25rem, 4vw, 1.75rem);
-  box-shadow: 0 6px 22px color-mix(in srgb, var(--color-text) 14%, transparent);
-}
 .cal-month {
   font-family: var(--font-heading);
   font-size: clamp(2rem, 8vw, 3.1rem);
@@ -406,76 +340,127 @@
 
 /* ── 4a. Botanical-lace skin — new reference design ──
    Being rolled out section by section (Nuestra fecha, La celebración,
-   El lugar so far). `.stationery-scene` gives a block its own paper
-   texture + damask side borders as one self-contained "card"; it's applied
-   per-section rather than globally so unconverted sections downstream keep
-   their current look until they get the same treatment.
-   Paper/border/frame art comes from admin-pasted public URLs (see
-   ContentEditor "Decoración — nuevo estilo"); `--stationery-*` custom
-   properties are set inline per instance, `none` when nothing is uploaded
-   yet so this degrades to the plain card background underneath. */
-.stationery-scene {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  border-radius: 4px;
-  padding: 2.5rem clamp(2rem, 9vw, 5.5rem);
-}
-.stationery-scene::before {
-  content: '';
-  position: absolute; inset: 0;
-  background-color: var(--color-bg);
-  background-image: var(--stationery-paper, none);
+   El lugar so far — other sections keep their current look until they get
+   the same treatment). Paper/border/frame art comes from admin-pasted
+   public URLs (ContentEditor → "Decoración — nuevo estilo"); every piece
+   degrades to a labelled placeholder box until art is uploaded (DecorSlot),
+   or simply doesn't render for the page-wide backdrop below. */
+
+/* Paper texture + damask side borders — `fixed` to the real viewport, not
+   scoped to any one section, so it reads as one continuous surface behind
+   the whole page rather than a boxed "card" per section. Rendered once in
+   App.jsx (`StationeryBackdrop`). */
+.stationery-backdrop-paper {
+  position: fixed; inset: 0;
   background-repeat: repeat;
   background-size: 420px auto;
   z-index: -2;
-}
-.stationery-scene::after {
-  content: '';
-  position: absolute; inset: 0;
-  background:
-    var(--stationery-border, none) left / clamp(24px, 7vw, 68px) auto repeat-y,
-    var(--stationery-border, none) right / clamp(24px, 7vw, 68px) auto repeat-y;
-  z-index: -1;
   pointer-events: none;
+}
+.stationery-backdrop-border {
+  position: fixed; top: 0; bottom: 0;
+  width: clamp(24px, 7vw, 68px);
+  background-repeat: repeat-y;
+  background-size: 100% auto;
+  z-index: 5;
+  pointer-events: none;
+}
+.stationery-backdrop-border--left { left: 0; }
+.stationery-backdrop-border--right { right: 0; transform: scaleX(-1); }
+
+/* A section using the new skin just needs room to clear the fixed side
+   borders — the backdrop itself is global now, not per-section. */
+.stationery-scene {
+  position: relative;
+  padding: 1.5rem clamp(1.5rem, 6vw, 3rem);
 }
 
 /* Corner florals: absolutely positioned within whichever ancestor is
-   `position: relative` — bleed slightly past the edge like the reference art. */
+   `position: relative` — bleed past the edge like the reference art. */
 .corner-floral {
   position: absolute;
-  width: clamp(90px, 22vw, 190px);
+  width: clamp(130px, 34vw, 280px);
   height: auto;
   pointer-events: none;
   z-index: 2;
 }
-.corner-floral--tl { top: -8%; left: -6%; }
-.corner-floral--tr { top: -8%; right: -6%; }
-.corner-floral--bl { bottom: -8%; left: -6%; }
-.corner-floral--br { bottom: -8%; right: -6%; }
-.corner-floral--sm { width: clamp(60px, 14vw, 120px); }
+.corner-floral--tl { top: -6%; left: -4%; }
+.corner-floral--tr { top: -6%; right: -4%; }
+.corner-floral--bl { bottom: -6%; left: -4%; }
+.corner-floral--br { bottom: -6%; right: -4%; }
+.corner-floral--sm { width: clamp(90px, 22vw, 190px); }
 /* Mirror real art for the right-hand corners, so one uploaded asset covers
    both sides — but not the dashed placeholder, or its label reads backwards. */
 img.corner-floral--tr, img.corner-floral--br { transform: scaleX(-1); }
 
-/* Small stone urn — reused between "La celebración" and "El lugar". */
+/* Small stone urn — reused between "La celebración" and "El lugar", same
+   size both places so it reads as the same recurring motif. */
 .urn-image {
   display: block;
-  width: clamp(70px, 16vw, 130px);
+  width: clamp(120px, 26vw, 220px);
   height: auto;
   margin: 0 auto;
 }
 
-/* "La celebración" oval frame behind the citation card. Sized by its own
-   aspect ratio (portrait oval, per the reference) rather than a fixed
-   height, so it keeps its proportions at any width. */
+/* "La celebración" oval frame — a real image now (not a CSS background),
+   so it keeps its natural aspect ratio; the live citation content sits
+   centered on top of it, inside the oval's open window. */
 .date-celebration-frame {
   position: relative;
   max-width: 620px;
   margin: clamp(2.5rem, 7vw, 4rem) auto 0;
-  padding: clamp(2.5rem, 8vw, 4rem) clamp(1.5rem, 6vw, 3rem);
-  background: var(--frame-image, none) center / contain no-repeat;
 }
+.date-celebration-frame-image {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.date-celebration-content {
+  position: absolute;
+  top: 32%; left: 16%; right: 16%;
+  text-align: center;
+}
+
+/* Envelope + calendar — one full illustration; only the live day grid
+   (no card chrome of its own) draws on top, at the printed card's spot. */
+.cal-envelope-stage {
+  position: relative;
+  max-width: 620px;
+  margin: clamp(1.5rem, 5vw, 2.5rem) auto 0;
+}
+.cal-envelope-image {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.cal-overlay {
+  position: absolute;
+  top: 21%; left: 20%; right: 20%;
+}
+.cal-overlay .cal-month { font-size: clamp(1.3rem, 6vw, 2.1rem); }
+.cal-overlay .cal-day { font-size: clamp(0.6rem, 2.2vw, 0.85rem); }
+.cal-overlay .cal-heart { width: 110%; }
+
+/* Citation card, chromeless — used only inside the oval frame above, so no
+   paper/shadow/holes of its own; the frame art is the container now. Text
+   sizes down a step too — the oval's usable width is narrower than the
+   card this was originally designed for. */
+.paper-tag--bare {
+  width: 100%;
+  margin: 0;
+  background: none;
+  box-shadow: none;
+  padding: 0;
+}
+.paper-tag--bare::before,
+.paper-tag--bare .paper-tag-holes,
+.paper-tag--bare .paper-tag-index { display: none; }
+.paper-tag--bare .paper-tag-row { text-align: center; }
+.paper-tag--bare .paper-tag-row + .paper-tag-row { margin-top: clamp(0.6rem, 2.5vw, 1rem); }
+.paper-tag--bare .paper-tag-label { font-size: 0.5rem; }
+.paper-tag--bare .paper-tag-value { font-size: clamp(0.8rem, 2.8vw, 1.05rem); }
+.paper-tag--bare .paper-tag-hint { font-size: clamp(0.7rem, 2.2vw, 0.85rem); }
+.paper-tag--bare .cal-add { margin-top: clamp(1rem, 3.5vw, 1.5rem); padding-top: clamp(0.7rem, 3vw, 1rem); }
 
 /* Gold frame overlay for the venue photo — the frame art needs a
    transparent window in its middle; the real photo sits underneath it. */

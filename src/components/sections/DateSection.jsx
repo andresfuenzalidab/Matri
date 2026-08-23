@@ -16,15 +16,14 @@ const DayHeart = () => (
   </svg>
 )
 
-function Calendar({ dateStr, bgImage }) {
+/** Just the live day grid — no card of its own, so it can draw directly on
+ *  top of the envelope illustration at the printed card's position. */
+function Calendar({ dateStr }) {
   const { year, month, day } = weddingDateParts(dateStr)
   const weeks = monthMatrix(year, month)
 
   return (
-    <div
-      className={`cal-card ${bgImage ? 'has-custom-bg' : ''}`}
-      style={bgImage ? { '--custom-bg-image': `url("${bgImage}")` } : undefined}
-    >
+    <div className="cal-overlay">
       <p className="cal-month">{MONTH_NAMES[month]}</p>
       <p className="cal-year">{year}</p>
 
@@ -54,21 +53,14 @@ function Calendar({ dateStr, bgImage }) {
   )
 }
 
-/** Punched paper tag with the practical details of the day. */
-function CitationTag({ rows, title, bgImage }) {
+/** Citación details — chromeless, drawn straight onto whatever sits behind
+ *  it (the oval frame art), instead of its own punched-paper card. */
+function CitationTag({ rows }) {
   return (
-    <div
-      className={`paper-tag ${bgImage ? 'has-custom-bg' : ''}`}
-      style={bgImage ? { '--custom-bg-image': `url("${bgImage}")` } : undefined}
-    >
-      <div className="paper-tag-holes" aria-hidden="true">
-        <span /><span /><span />
-      </div>
+    <div className="paper-tag paper-tag--bare">
       <div className="paper-tag-body">
-        <p className="paper-tag-title">{title}</p>
         {rows.map((row, i) => (
           <div key={row.label} className="paper-tag-row">
-            <span className="paper-tag-index" aria-hidden="true">({i + 1})</span>
             <p className="paper-tag-label">{row.label}</p>
             <p className="paper-tag-value">{row.value}</p>
             {row.hint && <p className="paper-tag-hint">{row.hint}</p>}
@@ -85,16 +77,12 @@ export default function DateSection() {
   const isPartyOnly = guest?.invitationType === 'party_only'
 
   const dateStr = get('wedding_date')
-  const decor = normalizeImageUrl(get('calendar_decor_image') || '')
-  const calendarBg = normalizeImageUrl(get('calendar_card_background_image') || '')
-  const citationBg = normalizeImageUrl(get('citation_card_background_image') || '')
+  const envelopeImage = normalizeImageUrl(get('calendar_decor_image') || '')
+  const ovalFrame = normalizeImageUrl(get('date_oval_frame_image') || '')
 
   // New botanical-lace skin — public-URL art, all optional (see DecorSlot).
-  const paperTexture = get('stationery_paper_texture')
-  const sideBorder = get('stationery_side_border')
   const cornerFloral1 = get('corner_floral_1')
   const cornerFloral2 = get('corner_floral_2')
-  const ovalFrame = normalizeImageUrl(get('date_oval_frame_image') || '')
 
   const citationTime = isPartyOnly
     ? get('reception_time', '19:30')
@@ -125,10 +113,7 @@ export default function DateSection() {
 
   return (
     <section id="fecha" className="section date-section">
-      <div className="stationery-scene" style={{
-        '--stationery-paper': paperTexture ? `url(${normalizeImageUrl(paperTexture)})` : undefined,
-        '--stationery-border': sideBorder ? `url(${normalizeImageUrl(sideBorder)})` : undefined,
-      }}>
+      <div className="stationery-scene">
         <DecorSlot url={cornerFloral1} label="Adorno esquina" aspectRatio="1"
           className="corner-floral corner-floral--tl" />
         <DecorSlot url={cornerFloral2} label="Adorno esquina" aspectRatio="1"
@@ -137,23 +122,35 @@ export default function DateSection() {
         <span className="kicker reveal-on-scroll">Reserva el día</span>
         <h2 className="section-title reveal-on-scroll">Nuestra fecha</h2>
 
-        <div className="date-section-stage reveal-on-scroll">
-          {decor && (
-            <img src={decor} alt="" className="date-section-decor" aria-hidden="true"
-              onError={e => { e.target.style.display = 'none' }} />
+        {/* Envelope + calendar, one full illustration — the live day grid
+            draws on top at the printed card's spot, nothing else here is
+            baked separately. */}
+        <div className="cal-envelope-stage reveal-on-scroll">
+          {envelopeImage ? (
+            <img src={envelopeImage} alt="" className="cal-envelope-image"
+              onError={e => { e.target.style.visibility = 'hidden' }} />
+          ) : (
+            <div className="decor-slot-placeholder" style={{ aspectRatio: '0.78', width: '100%' }}>
+              <span>Sobre + calendario (imagen completa)</span>
+            </div>
           )}
-          <div className="cal-envelope">
-            <Calendar dateStr={dateStr} bgImage={calendarBg} />
-          </div>
+          <Calendar dateStr={dateStr} />
         </div>
 
-        {/* The oval lace frame is decoration only — sits behind the real
-            citation card rather than replacing it, so the venue/time/notes
-            stay live and admin-editable instead of baked into an image. */}
-        <div className="date-celebration-frame reveal-on-scroll" style={{
-          '--frame-image': ovalFrame ? `url(${ovalFrame})` : undefined,
-        }}>
-          <CitationTag rows={rows} title={get('citation_card_title', 'La celebración')} bgImage={citationBg} />
+        {/* Same idea for the oval frame — the citación details draw inside
+            its open window instead of sitting on their own paper card. */}
+        <div className="date-celebration-frame reveal-on-scroll">
+          {ovalFrame ? (
+            <img src={ovalFrame} alt="" className="date-celebration-frame-image"
+              onError={e => { e.target.style.visibility = 'hidden' }} />
+          ) : (
+            <div className="decor-slot-placeholder" style={{ aspectRatio: '0.8', width: '100%' }}>
+              <span>Marco ovalado "La celebración"</span>
+            </div>
+          )}
+          <div className="date-celebration-content">
+            <CitationTag rows={rows} />
+          </div>
         </div>
       </div>
     </section>

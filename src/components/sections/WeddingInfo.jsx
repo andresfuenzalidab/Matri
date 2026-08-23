@@ -6,7 +6,6 @@ import PhotoPlaceholder from '../PhotoPlaceholder'
 import PhotoCardCarousel from '../PhotoCardCarousel'
 import Timeline from '../Timeline'
 import DecorSlot from '../DecorSlot'
-import SectionDivider from '../SectionDivider'
 
 export default function WeddingInfo() {
   const { get, guest, venuePhotos, loadVenuePhotos } = useApp()
@@ -26,8 +25,6 @@ export default function WeddingInfo() {
   const descriptionDogGif = normalizeImageUrl(get('description_dog_url')) || '/description_dog.gif'
 
   // New botanical-lace skin, scoped to the venue hero for now.
-  const paperTexture = get('stationery_paper_texture')
-  const sideBorder = get('stationery_side_border')
   const cornerFloral1 = get('corner_floral_1')
   const cornerFloral2 = get('corner_floral_2')
   const urnImage = get('urn_image')
@@ -38,10 +35,7 @@ export default function WeddingInfo() {
 
   return (
     <section id="boda" className="section">
-      <div className="stationery-scene reveal-on-scroll" style={{
-        '--stationery-paper': paperTexture ? `url(${normalizeImageUrl(paperTexture)})` : undefined,
-        '--stationery-border': sideBorder ? `url(${normalizeImageUrl(sideBorder)})` : undefined,
-      }}>
+      <div className="stationery-scene reveal-on-scroll">
         <DecorSlot url={cornerFloral1} label="Adorno esquina" aspectRatio="1"
           className="corner-floral corner-floral--sm corner-floral--tl" />
         <DecorSlot url={cornerFloral2} label="Adorno esquina" aspectRatio="1"
@@ -96,8 +90,6 @@ export default function WeddingInfo() {
           <img src={timerCatGif} alt="" className="wedding-timer-cat" />
         </div>
       </div>
-
-      <SectionDivider />
 
       {/* ── Programme of the day — full-day guests only ── */}
       {!isPartyOnly && timelineItems.length > 0 && (
