@@ -428,10 +428,25 @@
      itself — visible content painting over the green, symmetric on both
      sides once centering was fixed. Only the extra `1rem` buffer needs
      cancelling to land exactly at the border's inner edge — the same
-     target `.corner-floral` already hits correctly. */
+     target `.corner-floral` already hits correctly.
+
+     `align-self: flex-start`: several of these elements are flex *items*
+     inside a container with `align-items: center` (`.wedding-detail-block`,
+     for one). For a `position: relative` element, the browser resolves its
+     normal flex-computed position FIRST — including cross-axis centering —
+     and only THEN applies `left` as an additional offset on top of that.
+     Centering a box that's deliberately wider than its own flex container
+     produces a real (non-zero) centering offset, which `left` then
+     compounds with instead of replacing. Same root cause as the old
+     `margin: auto` bug, different layout mode. Forcing `flex-start` here
+     means there's nothing for the container to center — the item's static
+     position is just "flush with the start edge," and `left` is the only
+     thing moving it from there, exactly as intended. Harmless on elements
+     that aren't flex items at all. */
   position: relative;
   left: calc(-1 * (var(--stationery-pad) - var(--stationery-border-w))) !important;
   width: calc(100% + 2 * (var(--stationery-pad) - var(--stationery-border-w))) !important;
+  align-self: flex-start !important;
 }
 
 /* Corner florals — absolute positioning ignores an ancestor's own padding
@@ -442,8 +457,16 @@
    the border's inner edge and never under it — on every section, at every
    viewport width. */
 .corner-floral {
+  /* Max bound is sized against `.section`'s own 820px design ceiling, not
+     the raw viewport — `vw` tracks the full viewport regardless of that
+     cap, so any screen ≥ ~800px (i.e. every laptop/desktop, not just
+     ultra-wide ones) was sitting at the OLD max the whole time. Two
+     corners at 320px each inside an 820px column leaves under a third of
+     the width for the title between them — that's the overlap, not a
+     rendering bug. ~205px keeps two corners comfortably clear of a
+     centered title even at the 820px ceiling. */
   position: absolute;
-  width: clamp(150px, 40vw, 320px);
+  width: clamp(150px, 40vw, 205px);
   height: auto;
   pointer-events: none;
   z-index: 2;
@@ -462,7 +485,12 @@
 .corner-floral--tr { top: 0.5rem; right: calc(var(--stationery-border-w) + 2px - var(--stationery-pad)); }
 .corner-floral--bl { bottom: 0.5rem; left: calc(var(--stationery-border-w) + 2px - var(--stationery-pad)); }
 .corner-floral--br { bottom: 0.5rem; right: calc(var(--stationery-border-w) + 2px - var(--stationery-pad)); }
-.corner-floral--sm { width: clamp(150px, 46vw, 300px); }
+/* Same 820px-ceiling reasoning as `.corner-floral` above — only the max
+   changed (min/vw untouched, since mobile sizing here was already
+   confirmed correct). This variant has even more to fit at once (Countdown
+   uses all 4 corners plus 2 urns, competing for the same ~820px column),
+   so it's capped a bit tighter than the 2-corner case. */
+.corner-floral--sm { width: clamp(150px, 46vw, 180px); }
 
 /* Clearance under the top corner florals for whatever text comes right
    after them (a kicker, a title) — enough that the florals' own art
