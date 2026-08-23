@@ -456,6 +456,18 @@
   left: calc(-1 * (var(--stationery-pad) - var(--stationery-border-w))) !important;
   width: calc(100% + 2 * (var(--stationery-pad) - var(--stationery-border-w))) !important;
   align-self: flex-start !important;
+  /* `max-width` is not a cascade competitor with `width` — even with
+     `!important` on `width` above, a global `img { max-width: 100% }` reset
+     (index.css) still clamps the USED width back down afterwards, on any
+     element this class is applied directly to an `<img>` (DecorSlot's
+     top/bottom separators, RSVP's top/bottom images, the gifts→FAQ
+     separator — the only `.full-bleed` users that are a bare `<img>` rather
+     than a `<div>` wrapper). `left` still applies in full, so the image
+     shifts toward the border on one side while its width stays at 100% of
+     the padded container — flush-ish on one edge, a real gap short of the
+     border on the other. Every other `.full-bleed` element is a `<div>`
+     wrapper, never hits that reset, and so never showed this. */
+  max-width: none !important;
 }
 
 /* Corner florals — absolute positioning ignores an ancestor's own padding
