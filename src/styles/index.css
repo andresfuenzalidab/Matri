@@ -931,7 +931,12 @@ textarea.input { min-height: 90px; resize: vertical; }
 .wedding-detail-img {
   width: 100%;
   border-radius: var(--radius-md);
-  display: block; margin: 0 auto;
+  display: block;
+  /* No `margin: auto` — this is always paired with `.full-bleed`
+     (stationery.css), which deliberately makes the element wider than its
+     container and positions it with `left`. A leftover `margin-left/right:
+     auto` here would still shift the element's pre-offset static position
+     before that `left` applies, same bug as the timeline separator had. */
 }
 
 /* Countdown mascots below the venue carousel — transparent gifs, no video

@@ -685,7 +685,14 @@
 .gifts-closing-separator {
   padding: 1.5rem var(--stationery-pad);
 }
-.timeline-block > .timeline-separator:last-child { margin: 1.75rem auto 0; }
+/* Only the top margin needs to change here (closing spacing instead of
+   opening spacing) — `margin: … auto …` for the left/right was left over
+   from before `.full-bleed` existed, and being a `margin-left/right: auto`
+   on an element `.full-bleed` deliberately makes *wider* than its
+   container, it was shifting the element's pre-offset static position
+   before `left` even applied, throwing this one separator off-center in a
+   way none of the others were. */
+.timeline-block > .timeline-separator:last-child { margin-top: 1.75rem; margin-bottom: 0; }
 /* `.timeline-flanked` is reused as-is for the RSVP form: absolutely
    positioned children (the florals) ignore an ancestor's own padding —
    same rule as the corner florals — so real (normal-flow) content gets
@@ -697,9 +704,12 @@
   /* Matches `.timeline-floral`'s own width (below) plus its edge offset,
      so the list/form clears the floral art regardless of how big it
      renders — content padding and floral size are meant to grow together,
-     not be sized independently of each other. */
-  padding-left: clamp(60px, 16vw, 115px);
-  padding-right: clamp(60px, 16vw, 115px);
+     not be sized independently of each other. Trimmed to just clear it
+     (floral's own inset from its containing block, minus a small ~6px
+     buffer) rather than a generous margin — RSVP reuses this same wrapper
+     and needs every bit of width it can get. */
+  padding-left: clamp(47px, 14vw, 102px);
+  padding-right: clamp(47px, 14vw, 102px);
 }
 .timeline-floral {
   position: absolute;
