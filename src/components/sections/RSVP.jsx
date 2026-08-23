@@ -14,12 +14,12 @@ function RsvpFrame({ get, children, className = 'section rsvp-section' }) {
     <section id="rsvp" className={className}>
       <DecorSlot url={get('rsvp_top_image')} label="Imagen superior" aspectRatio="7"
         className="timeline-separator full-bleed" />
-      <div className="timeline-flanked">
+      <div className="timeline-flanked timeline-flanked--rsvp">
         <DecorSlot url={get('timeline_floral_left')} label="Adorno vertical" aspectRatio="0.18"
-          className="timeline-floral timeline-floral--left" />
+          className="timeline-floral timeline-floral--left timeline-floral--rsvp" />
         {children}
         <DecorSlot url={get('timeline_floral_right')} label="Adorno vertical" aspectRatio="0.18"
-          className="timeline-floral timeline-floral--right" />
+          className="timeline-floral timeline-floral--right timeline-floral--rsvp" />
       </div>
       <DecorSlot url={get('rsvp_bottom_image')} label="Imagen inferior" aspectRatio="7"
         className="timeline-separator full-bleed" style={{ marginBottom: 0 }} />

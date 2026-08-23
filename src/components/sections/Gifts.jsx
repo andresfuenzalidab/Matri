@@ -219,7 +219,7 @@ export default function Gifts() {
               {gift.tripName && <span className="kicker gift-card-category">{gift.tripName}</span>}
               <div className="gift-name">{gift.name}</div>
               {gift.description && (
-                <div style={{ fontSize: '0.8rem', opacity: 0.65, lineHeight: 1.5 }}>{gift.description}</div>
+                <div style={{ fontSize: '0.7rem', opacity: 0.65, lineHeight: 1.4 }}>{gift.description}</div>
               )}
               <div className="gift-price">{formatCLP(gift.price)}</div>
               <div className="gift-action">

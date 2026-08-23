@@ -345,7 +345,22 @@
      of bug structurally impossible: nothing can be "inside the border's
      width" and "past the border's edge" at the same time if both are
      defined from the same number. */
-  --stationery-border-w: clamp(24px, 7vw, 68px);
+  /* Below the content column's own 820px ceiling (`.section`'s max-width),
+     this is unchanged from before — the same `clamp()` that's been tuned
+     against every mobile/tablet bug already fixed in this file. Above it,
+     `.section` stops growing at 820px but this used to keep scaling only up
+     to a low fixed max (68px) — leaving a widening strip of plain cream
+     between the green border (pinned near the true viewport edge) and the
+     820px content box (centered, but not touching the border) on any wide
+     desktop screen: items stayed the same width, which was correct, but
+     the leftover space stayed cream instead of becoming more border. The
+     `max()` with `(100vw - 820px) / 2` picks up exactly where the content
+     column's own growth stops and grows the border to consume the rest, so
+     the border always sits flush against the 820px box with no gap,
+     however wide the screen — "keep every item the same width, let the
+     green fill whatever's left" — while every viewport at or below that
+     crossover (~953px) resolves to the exact same value as before. */
+  --stationery-border-w: max(clamp(24px, 7vw, 68px), calc((100vw - 820px) / 2));
   /* The safe inset every section uses to clear the border — and, via
      `.full-bleed` below, the exact amount every "should touch the border"
      image cancels back out. One number driving both directions is what
@@ -576,7 +591,8 @@
 .date-celebration-content {
   position: absolute;
   top: 34%; bottom: 6%;
-  left: 24%; right: 24%;
+  /* Width narrowed ~10% (24% inset → 26.6%) per feedback. */
+  left: 26.6%; right: 26.6%;
   display: flex; flex-direction: column; justify-content: center;
   /* No `overflow: hidden` — losing the calendar buttons off the bottom
      edge is worse than the text running a little past the oval. */
@@ -784,11 +800,23 @@
 .timeline-floral--left { left: calc(var(--stationery-border-w) + 2px - var(--stationery-pad)); }
 .timeline-floral--right { right: calc(var(--stationery-border-w) + 2px - var(--stationery-pad)); }
 
+/* RSVP-only variants — the letter form was asked to be as wide as possible,
+   more than the Programa del día list next to the same floral art needs to
+   stay legible. Both floral width and its matching `.timeline-flanked`
+   padding are scaled down together (~75%, padding kept at floral-width minus
+   the same ~8px buffer the base pair uses) so the letter gains real width
+   without the floral overlapping it — about +20% at typical mobile widths,
+   a bit less at the 820px desktop ceiling where there's already much more
+   room relative to the floral either way. */
+.timeline-floral--rsvp { width: clamp(42px, 11vw, 84px); }
+.timeline-flanked--rsvp { padding-left: clamp(34px, calc(11vw - 8px), 76px); padding-right: clamp(34px, calc(11vw - 8px), 76px); }
+
 /* Dress-code note ("mayores indicaciones") — drawn as a caption over the
    dress-code photo rather than its own separate card. */
 .dresscode-note-overlay {
   position: absolute;
-  left: 21%; right: 21%; bottom: 5%;
+  /* Width narrowed ~10% (21% inset → 23.9%) per feedback. */
+  left: 23.9%; right: 23.9%; bottom: 5%;
   text-align: center;
   font-family: var(--font-heading);
   font-style: italic;
