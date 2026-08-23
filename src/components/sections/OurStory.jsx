@@ -25,7 +25,7 @@ export default function OurStory() {
         <div style={{
           maxWidth: 580,
           margin: '0 auto 3rem',
-          textAlign: 'left',
+          textAlign: 'center',
           lineHeight: 2,
           fontFamily: 'var(--font-heading)',
           fontStyle: 'italic',
@@ -42,7 +42,9 @@ export default function OurStory() {
 
       {storyPhotos.length > 0 && (
         <div className="framed-media full-bleed" style={{ marginTop: '2rem' }}>
-          <PhotoCardCarousel photos={storyPhotos} />
+          <div className="framed-media-content">
+            <PhotoCardCarousel photos={storyPhotos} />
+          </div>
           {storyFrame && (
             <img src={storyFrame} alt="" className="framed-media-overlay" aria-hidden="true" />
           )}

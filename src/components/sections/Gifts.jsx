@@ -196,10 +196,17 @@ export default function Gifts() {
           const inCart = cart.has(gift.id)
           const canAdd = gift.price != null
 
+          const selectable = canAdd && !inCart
           return (
             <div
               key={gift.id}
               className={`card gift-card ${inCart ? 'gift-in-cart' : ''}`}
+              onClick={selectable ? () => addToCart(gift) : undefined}
+              role={selectable ? 'button' : undefined}
+              tabIndex={selectable ? 0 : undefined}
+              onKeyDown={selectable ? e => {
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); addToCart(gift) }
+              } : undefined}
             >
               {normalizeImageUrl(gift.imageUrl) && (
                 <img
@@ -218,12 +225,17 @@ export default function Gifts() {
               <div className="gift-action">
                 {!canAdd && <span className="tag tag-neutral">Próximamente</span>}
                 {canAdd && !inCart && (
-                  <button className="btn btn-ghost" style={{ width: '100%', letterSpacing: '0.08em', fontSize: '0.78rem', textTransform: 'uppercase' }} onClick={() => addToCart(gift)}>
+                  // No onClick of its own — the whole card is the click
+                  // target now (see above); a handler here too would fire
+                  // twice (this button's, then the card's, via bubbling).
+                  // Still a real <button>, so it stays focusable/keyboard-
+                  // triggerable on its own, that click just bubbles up.
+                  <button className="btn btn-ghost" style={{ width: '100%', letterSpacing: '0.08em', fontSize: '0.78rem', textTransform: 'uppercase' }}>
                     Seleccionar
                   </button>
                 )}
                 {canAdd && inCart && (
-                  <div className="gift-qty-control">
+                  <div className="gift-qty-control" onClick={e => e.stopPropagation()}>
                     <button className="btn btn-ghost gift-qty-btn"
                       onClick={() => updateCartQty(gift.id, cart.get(gift.id).quantity - 1)}>
                       −

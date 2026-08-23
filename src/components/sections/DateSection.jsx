@@ -73,7 +73,7 @@ export default function DateSection() {
         <DecorSlot url={cornerFloralTr} label="Adorno esquina" aspectRatio="1"
           className="corner-floral corner-floral--tr" />
 
-        <span className="kicker reveal-on-scroll">Reserva el día</span>
+        <span className="kicker corner-floral-clearance reveal-on-scroll">Reserva el día</span>
         <h2 className="section-title reveal-on-scroll">Nuestra fecha</h2>
 
         {/* Envelope + calendar — one full illustration; the art already

@@ -52,7 +52,7 @@ export default function WeddingInfo() {
         <DecorSlot url={cornerFloralTr} label="Adorno esquina" aspectRatio="1"
           className="corner-floral corner-floral--sm corner-floral--tr" />
 
-        <h2 className="section-title reveal-on-scroll" style={{ textAlign: 'center' }}>El lugar</h2>
+        <h2 className="section-title corner-floral-clearance reveal-on-scroll" style={{ textAlign: 'center' }}>El lugar</h2>
         <p className="section-subtitle reveal-on-scroll" style={{ textAlign: 'center' }}>
           {get('venue_name', 'Altos del Paico')}
         </p>
@@ -61,11 +61,13 @@ export default function WeddingInfo() {
             under the title. Arrows/dots live inside the carousel itself
             now (see PhotoCardCarousel) — nothing renders below the frame. ── */}
         <div className="framed-media reveal-on-scroll" style={{ marginTop: '1.5rem' }}>
-          {venuePhotos.length > 0 ? (
-            <PhotoCardCarousel photos={venuePhotos} landscape />
-          ) : (
-            <PhotoPlaceholder size="lg" label="Sube fotos del lugar" />
-          )}
+          <div className="framed-media-content">
+            {venuePhotos.length > 0 ? (
+              <PhotoCardCarousel photos={venuePhotos} landscape />
+            ) : (
+              <PhotoPlaceholder size="lg" label="Sube fotos del lugar" />
+            )}
+          </div>
           {venuePhotoFrame && (
             <img src={venuePhotoFrame} alt="" className="framed-media-overlay" aria-hidden="true"
               onError={e => { e.target.style.display = 'none' }} />

@@ -418,7 +418,7 @@
    viewport width. */
 .corner-floral {
   position: absolute;
-  width: clamp(130px, 34vw, 280px);
+  width: clamp(150px, 40vw, 320px);
   height: auto;
   pointer-events: none;
   z-index: 2;
@@ -427,7 +427,16 @@
 .corner-floral--tr { top: 0.5rem; right: calc(var(--stationery-border-w) + 2px); }
 .corner-floral--bl { bottom: 0.5rem; left: calc(var(--stationery-border-w) + 2px); }
 .corner-floral--br { bottom: 0.5rem; right: calc(var(--stationery-border-w) + 2px); }
-.corner-floral--sm { width: clamp(90px, 22vw, 190px); }
+.corner-floral--sm { width: clamp(110px, 28vw, 230px); }
+
+/* Guaranteed clearance under the top corner florals for whatever text
+   comes right after them (a kicker, a title) — independent of the
+   floral art's exact proportions, so bigger/smaller uploads can never
+   start covering the title again. Same growth rate as `.corner-floral`
+   itself (40vw) so the gap scales together with it. */
+.corner-floral-clearance {
+  margin-top: clamp(7rem, 40vw, 12rem) !important;
+}
 
 /* Small stone urn — reused between "La celebración" and "El lugar", same
    size both places so it reads as the same recurring motif. */
@@ -482,7 +491,7 @@
 .date-celebration-content {
   position: absolute;
   top: 34%; bottom: 6%;
-  left: 13%; right: 13%;
+  left: 24%; right: 24%;
   display: flex; flex-direction: column; justify-content: center;
   /* No `overflow: hidden` — losing the calendar buttons off the bottom
      edge is worse than the text running a little past the oval. */
@@ -521,8 +530,14 @@
 .paper-tag--bare .paper-tag-value { font-size: clamp(0.68rem, 2.3vw, 0.85rem); line-height: 1.25; }
 .paper-tag--bare .paper-tag-hint { font-size: clamp(0.58rem, 1.9vw, 0.7rem); margin-top: 0; }
 .paper-tag--bare .cal-add {
-  margin-top: clamp(0.3rem, 1.5vw, 0.5rem);
-  padding-top: clamp(0.3rem, 1.5vw, 0.5rem);
+  /* Right up against the recommendation text — no divider line. The parent
+     (`.paper-tag-body`) puts a flex `gap` between every row including this
+     one; cancel it back out with a negative margin instead of trying to
+     zero a gap that's shared with the rows above it, per feedback
+     ("pegado" — stuck to the text, not just closer). */
+  margin-top: calc(-1 * clamp(0.4rem, 2vw, 0.7rem) + 0.1rem);
+  padding-top: 0;
+  border-top: none;
 }
 /* "Agrégalo a tu calendario" label dropped — just the two links, per feedback. */
 .paper-tag--bare .cal-add-label { display: none; }
@@ -554,6 +569,17 @@
      wider than the frame drawn on top of it, or past the border either. */
   overflow: hidden;
 }
+/* Use inside `.framed-media` when there's frame art on top — the frame's
+   own border sits inset from ITS edges, so the photo needs to be smaller
+   than the full box too, or it reads as sticking out past the border
+   instead of sitting inside it. `.framed-media` itself (and so the
+   overlay, which covers 100% of it) stays full-size; only the real content
+   gets this padding — and being padding on all four sides equally, it's
+   naturally centered too. Skipped for plain (unframed) images like the
+   map, which should stay fully edge-to-edge. */
+.framed-media-content {
+  padding: 6%;
+}
 .framed-media-overlay {
   position: absolute; inset: 0;
   width: 100%; height: 100%;
@@ -571,7 +597,7 @@
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  gap: clamp(1.5rem, 6vw, 3rem);
+  gap: clamp(2.5rem, 12vw, 5rem);
   /* Same horizontal inset as the carousel above (none) — they need to line
      up, not have the pets sit noticeably narrower than the photo. */
   padding: 1.5rem 2% 0;
@@ -633,16 +659,24 @@
   /* Slim on purpose — RSVP reuses this same wrapper and needs to stay
      close to full width; the florals should read as a thin delimiting
      edge, not a wide margin eating into the form/list. */
-  padding-left: clamp(26px, 6vw, 48px);
-  padding-right: clamp(26px, 6vw, 48px);
+  padding-left: clamp(22px, 5vw, 40px);
+  padding-right: clamp(22px, 5vw, 40px);
 }
 .timeline-floral {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  width: clamp(22px, 5vw, 40px);
+  width: clamp(26px, 5.5vw, 44px);
   height: auto;
   pointer-events: none;
+  /* Without this, the left one was losing to `.rsvp-letter` (also
+     `position: relative`, opaque background, and — critically — later in
+     the DOM than the left floral but before the right one): same z-index
+     tier (auto), so paint order fell to document order, and the letter's
+     background painted right over the left floral while the right one,
+     coming last, stayed on top. Explicit z-index takes both out of that
+     document-order tiebreak entirely. */
+  z-index: 2;
 }
 .timeline-floral--left { left: calc(var(--stationery-border-w) + 2px); }
 .timeline-floral--right { right: calc(var(--stationery-border-w) + 2px); }
@@ -651,7 +685,7 @@
    dress-code photo rather than its own separate card. */
 .dresscode-note-overlay {
   position: absolute;
-  left: 8%; right: 8%; bottom: 5%;
+  left: 21%; right: 21%; bottom: 5%;
   text-align: center;
   font-family: var(--font-heading);
   font-style: italic;
@@ -849,7 +883,7 @@
 .rsvp-section { text-align: center; }
 .rsvp-letter {
   position: relative;
-  width: min(100%, 560px);
+  width: min(100%, 720px);
   margin: 0 auto;
   background: linear-gradient(155deg,
     color-mix(in srgb, var(--paper) 92%, white),
