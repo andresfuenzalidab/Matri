@@ -356,7 +356,16 @@
   background-color: var(--color-bg);
   background-image: var(--stationery-paper, none);
   background-repeat: repeat;
-  background-size: 420px auto;
+  /* A fixed tile size repeats far more times across a wide desktop
+     viewport than a phone-width one — same tile, same seam every time it
+     repeats, just a lot more repeats (and so a lot more visible seams) on
+     a wide screen. Scaling with `vw`, capped at both ends, keeps roughly
+     the same *number* of repeats regardless of viewport width instead of
+     the same *size* of tile: 420px unchanged on mobile (where it wasn't a
+     problem), growing on wider screens so the seam shows up far less
+     often. Doesn't remove the seam itself — that's the source texture not
+     being a true seamless tile — but should make it much less noticeable. */
+  background-size: clamp(420px, 50vw, 900px) auto;
 }
 .stationery-main::before {
   content: '';
