@@ -397,16 +397,21 @@
    of the pair above. A `width: 100%` image inside a padded container only
    fills the padded *content* box, which is exactly why things like the
    envelope, the oval frame, and the carousel were stopping short of the
-   green with a visible margin. This cancels that same padding back out
-   with an equal negative margin, so the element's edge lands exactly where
-   the border begins — same guarantee as the padding fix, opposite
-   direction, same shared number driving both. Apply to any full-width
-   image/frame/carousel that should read as "part of the page," not "a
-   card sitting on the page." */
+   green with a visible margin.
+   `left`, not `margin-left`/`margin-right`: a block box with an explicit
+   `width` and BOTH margins pinned is over-constrained, and per spec the
+   browser silently discards the specified `margin-right` and recomputes it
+   to make the box fit — `margin-left` stays exactly as written, so any
+   sub-pixel rounding mismatch between the width calc() and the margin
+   calc()s (very possible mixing %, vw and rem) shows up as "left edge
+   exactly right, right edge quietly drifts" — precisely the "flush left,
+   gap on the right" bug this produced. `position: relative; left:` is a
+   pure visual offset, not a box-model constraint the browser is allowed to
+   override, so it can't be silently ignored the same way. */
 .full-bleed {
+  position: relative;
+  left: calc(-1 * var(--stationery-pad));
   width: calc(100% + 2 * var(--stationery-pad));
-  margin-left: calc(-1 * var(--stationery-pad));
-  margin-right: calc(-1 * var(--stationery-pad));
 }
 
 /* Corner florals — absolute positioning ignores an ancestor's own padding
@@ -611,14 +616,12 @@
 .pets-row {
   position: relative;
   z-index: 1;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  align-items: end;
-  justify-items: center;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: clamp(2.5rem, 12vw, 5rem);
   padding: 1.5rem 2% 0;
 }
-.wedding-timer-dog { width: 46%; max-width: 360px; }
-.wedding-timer-cat { width: 30%; max-width: 220px; }
 
 /* Dress-code cat — its own dedicated full-width background, separate from
    the pair above, and a smaller gif than before. */

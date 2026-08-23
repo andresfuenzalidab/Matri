@@ -938,15 +938,16 @@ textarea.input { min-height: 90px; resize: vertical; }
    blend needed. Dog reads as the lead, cat trails smaller beside it. Each
    is a `.framed-media` wrapper now (gif + optional overlay art on top),
    so the width/sizing lives on the wrapper, not the `<img>` directly.
-   Percentages are of each grid column now (`.pets-row` in stationery.css
-   — two equal 1fr columns, each centering its own animal), not of the row
-   as a whole, so they read roughly twice as large as they would in a
-   plain centered flex row for the same visual size. */
+   Percentages are of `.pets-row`'s full width (plain centered flex row,
+   see stationery.css) — NOTE: this used to be duplicated by a second,
+   later-loaded `.wedding-timer-dog`/`.wedding-timer-cat` rule in
+   stationery.css that silently won the cascade; that duplicate is gone
+   now, so this is the one rule that actually applies. */
 .wedding-timer-dog {
-  width: 90%; max-width: 320px;
+  width: 54%; max-width: 380px;
 }
 .wedding-timer-cat {
-  width: 62%; max-width: 220px;
+  width: 36%; max-width: 240px;
 }
 
 /* Dress code gif — stacked below the outfit reference image instead of
