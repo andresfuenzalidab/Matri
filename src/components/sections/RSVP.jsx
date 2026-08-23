@@ -135,6 +135,10 @@ export default function RSVP({ initialRsvp }) {
         // `sealing` has to be cleared here: the sealing view is checked before
         // `rsvp` below, so leaving it set pins the section on "Enviando…".
         setSealing(true)
+        // The guest may have scrolled well down a long form before hitting
+        // submit — without this, the thanks card renders above the current
+        // scroll position and looks like nothing happened.
+        document.getElementById('rsvp')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
         setTimeout(() => { setSealing(false); setRsvp(saved) }, 1700)
       } else {
         const d = await res.json().catch(() => ({}))
@@ -321,7 +325,7 @@ export default function RSVP({ initialRsvp }) {
               <label className="rsvp-field-label" htmlFor="dietary">{dietaryQuestion}</label>
               <input id="dietary" className="rsvp-input" type="text"
                 value={dietaryRestriction} onChange={e => setDietaryRestriction(e.target.value)}
-                placeholder="Escribe aquí si hay alguna restricción…" />
+                placeholder="Escribe aquí la restricción…" />
             </div>
           )}
 

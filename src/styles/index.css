@@ -1336,7 +1336,12 @@ body {
 
 /* Editorial section layout — centered, generous */
 .section {
-  padding: 5rem 2rem;
+  /* Vertical padding trimmed 5rem → 3rem per feedback: with every section
+     now carrying its own decorative separator art (top/bottom timeline
+     bars, the corner-floral clearance margin, `.stationery-scene`'s own
+     padding...) this outer padding was stacking on top of spacing the
+     separators already provide, doubling up the gap between sections. */
+  padding: 3rem 2rem;
   max-width: 820px;
   margin: 0 auto;
 }
@@ -1690,8 +1695,11 @@ body {
 @media (max-width: 420px) {
   .bottom-nav-tab { padding: 0.5rem 0.6rem; letter-spacing: 0.08em; }
 }
-/* Extra bottom padding so the last section isn't hidden under the nav bar */
-.editorial-main { padding-bottom: 5rem; }
+/* No extra bottom padding — per feedback the page should end exactly at the
+   foot of the flower-footer image, not beyond it. The floating pill nav is
+   `position: fixed`, so it still floats over the tail of that image at the
+   very bottom of the scroll, same as it floats over content anywhere else;
+   that's an acceptable trade since the image is decorative (aria-hidden). */
 /* Raise floating buttons above the bottom nav */
 .music-player-btn { bottom: 5.5rem; }
 .admin-fab { bottom: 5.5rem; }

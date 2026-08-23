@@ -345,22 +345,11 @@
      of bug structurally impossible: nothing can be "inside the border's
      width" and "past the border's edge" at the same time if both are
      defined from the same number. */
-  /* Below the content column's own 820px ceiling (`.section`'s max-width),
-     this is unchanged from before — the same `clamp()` that's been tuned
-     against every mobile/tablet bug already fixed in this file. Above it,
-     `.section` stops growing at 820px but this used to keep scaling only up
-     to a low fixed max (68px) — leaving a widening strip of plain cream
-     between the green border (pinned near the true viewport edge) and the
-     820px content box (centered, but not touching the border) on any wide
-     desktop screen: items stayed the same width, which was correct, but
-     the leftover space stayed cream instead of becoming more border. The
-     `max()` with `(100vw - 820px) / 2` picks up exactly where the content
-     column's own growth stops and grows the border to consume the rest, so
-     the border always sits flush against the 820px box with no gap,
-     however wide the screen — "keep every item the same width, let the
-     green fill whatever's left" — while every viewport at or below that
-     crossover (~953px) resolves to the exact same value as before. */
-  --stationery-border-w: max(clamp(24px, 7vw, 68px), calc((100vw - 820px) / 2));
+  /* Tried growing this past 820px to fill the leftover desktop space with
+     more green (so the border sat flush against the content box instead of
+     leaving a cream gap) — reverted per feedback: the old fixed clamp read
+     better. Back to the original. */
+  --stationery-border-w: clamp(24px, 7vw, 68px);
   /* The safe inset every section uses to clear the border — and, via
      `.full-bleed` below, the exact amount every "should touch the border"
      image cancels back out. One number driving both directions is what
@@ -558,7 +547,7 @@
 }
 .countdown-scene .countdown-section { flex: 1; justify-content: center; }
 .countdown-kicker { margin-bottom: 0.35rem; }
-.urn-image--sm { width: clamp(46px, 10vw, 84px); }
+.urn-image--sm { width: clamp(69px, 15vw, 126px); } /* +50% per feedback */
 /* Absolute, same offset as the corner florals — "on the same line" as
    them, rather than a normal-flow block stacked below. Center digits
    still land in the true middle: `.countdown-section` is the only flex
@@ -591,8 +580,8 @@
 .date-celebration-content {
   position: absolute;
   top: 34%; bottom: 6%;
-  /* Width narrowed ~10% (24% inset → 26.6%) per feedback. */
-  left: 26.6%; right: 26.6%;
+  /* Width narrowed ~10% twice per feedback (24% inset → 26.6% → 28.9%). */
+  left: 28.9%; right: 28.9%;
   display: flex; flex-direction: column; justify-content: center;
   /* No `overflow: hidden` — losing the calendar buttons off the bottom
      edge is worse than the text running a little past the oval. */
@@ -803,13 +792,14 @@
 /* RSVP-only variants — the letter form was asked to be as wide as possible,
    more than the Programa del día list next to the same floral art needs to
    stay legible. Both floral width and its matching `.timeline-flanked`
-   padding are scaled down together (~75%, padding kept at floral-width minus
-   the same ~8px buffer the base pair uses) so the letter gains real width
-   without the floral overlapping it — about +20% at typical mobile widths,
-   a bit less at the 820px desktop ceiling where there's already much more
+   padding are scaled down together (padding kept at floral-width minus the
+   same ~8px buffer the base pair uses) so the letter gains real width
+   without the floral overlapping it — first pass ~+20% at typical mobile
+   widths, then another +5% on top per feedback (~+26% combined here), a
+   bit less at the 820px desktop ceiling where there's already much more
    room relative to the floral either way. */
-.timeline-floral--rsvp { width: clamp(42px, 11vw, 84px); }
-.timeline-flanked--rsvp { padding-left: clamp(34px, calc(11vw - 8px), 76px); padding-right: clamp(34px, calc(11vw - 8px), 76px); }
+.timeline-floral--rsvp { width: clamp(35px, 9.2vw, 70px); }
+.timeline-flanked--rsvp { padding-left: clamp(28px, calc(9.2vw - 8px), 64px); padding-right: clamp(28px, calc(9.2vw - 8px), 64px); }
 
 /* Dress-code note ("mayores indicaciones") — drawn as a caption over the
    dress-code photo rather than its own separate card. */

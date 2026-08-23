@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import InvitationsManager from './InvitationsManager'
 import RSVPDashboard from './RSVPDashboard'
 import GiftsDashboard from './GiftsDashboard'
+import GiftReminder from './GiftReminder'
 import ContentEditor from './ContentEditor'
 import AppearanceEditor from './AppearanceEditor'
 import StoryManager from './StoryManager'
@@ -12,6 +13,7 @@ const TABS = [
   { id: 'invitations', label: 'Invitaciones' },
   { id: 'rsvp', label: 'RSVP' },
   { id: 'gifts', label: 'Regalos' },
+  { id: 'gift-reminder', label: 'Recordatorio' },
   { id: 'story', label: 'Historia' },
   { id: 'story-photos', label: 'Carrusel' },
   { id: 'venue', label: 'Lugar' },
@@ -57,6 +59,7 @@ export default function AdminPanel({ onClose }) {
           {tab === 'invitations' && <InvitationsManager />}
           {tab === 'rsvp' && <RSVPDashboard />}
           {tab === 'gifts' && <GiftsDashboard />}
+          {tab === 'gift-reminder' && <GiftReminder />}
           {tab === 'story' && <StoryManager />}
           {tab === 'story-photos' && <StoryPhotosManager />}
           {tab === 'venue' && <VenuePhotosManager />}
