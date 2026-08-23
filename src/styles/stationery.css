@@ -419,10 +419,19 @@
      overlapping the left border with a gap on the right. A utility class
      like this has exactly one job and must win regardless of what else is
      on the element or where it's declared; that's the textbook case for
-     `!important`, not a source-order accident to keep chasing. */
+     `!important`, not a source-order accident to keep chasing.
+
+     The offset itself: `--stationery-pad` (`--stationery-border-w + 1rem`)
+     is sized for TEXT clearance — the border width plus a bit of breathing
+     room. Cancelling the *whole* thing pushes content past the border's
+     inner edge (where the cream actually starts) and under the border
+     itself — visible content painting over the green, symmetric on both
+     sides once centering was fixed. Only the extra `1rem` buffer needs
+     cancelling to land exactly at the border's inner edge — the same
+     target `.corner-floral` already hits correctly. */
   position: relative;
-  left: calc(-1 * var(--stationery-pad)) !important;
-  width: calc(100% + 2 * var(--stationery-pad)) !important;
+  left: calc(-1 * (var(--stationery-pad) - var(--stationery-border-w))) !important;
+  width: calc(100% + 2 * (var(--stationery-pad) - var(--stationery-border-w))) !important;
 }
 
 /* Corner florals — absolute positioning ignores an ancestor's own padding
