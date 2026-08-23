@@ -1533,7 +1533,10 @@ body {
 }
 .photo-card {
   position: relative;
-  border-radius: 24px;
+  /* Rectangular, not rounded — both carousels now sit inside a rectangular
+     gold frame overlay, and a rounded photo peeking past square corners
+     read as inconsistent with it. */
+  border-radius: 0;
   overflow: hidden;
   /* Square rather than portrait (was 4/5) — a tall box cropped the top and
      bottom off most uploaded photos, which tend to be square-ish or wider. */

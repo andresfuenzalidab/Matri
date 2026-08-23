@@ -37,13 +37,24 @@ export default function CountdownSection() {
   const cornerFloralBr = get('corner_floral_br')
 
   return (
-    <div className="stationery-scene countdown-scene reveal-on-scroll">
+    // Same `<section className="section">` wrapper every other stationery
+    // section uses — it's the one and only source of horizontal padding
+    // now (see `.stationery-scene` in stationery.css); skipping it here
+    // was exactly why this was the one section that reached full width
+    // "by accident" while the others double-padded themselves.
+    <section className="section">
+      <div className="stationery-scene countdown-scene reveal-on-scroll">
       <DecorSlot url={cornerFloralTl} label="Adorno esquina" aspectRatio="1"
         className="corner-floral corner-floral--sm corner-floral--tl" />
       <DecorSlot url={cornerFloralTr} label="Adorno esquina" aspectRatio="1"
         className="corner-floral corner-floral--sm corner-floral--tr" />
 
-      <DecorSlot url={urnImage} label="Urna" aspectRatio="0.85" className="urn-image urn-image--sm" />
+      {/* Same urn top and bottom, on the same line as its corner-floral
+          pair (absolute, same offset) rather than stacked below it in
+          normal flow — that's what "aligned with the side arrangements"
+          actually takes. */}
+      <DecorSlot url={urnImage} label="Urna" aspectRatio="0.85"
+        className="urn-image urn-image--sm urn-image--top" />
 
       <div className="countdown-section">
         <p className="countdown-kicker">FALTAN</p>
@@ -70,14 +81,14 @@ export default function CountdownSection() {
         </div>
       </div>
 
-      {/* Same urn again, echoing the top one — closer to the bottom corners
-          rather than one big arrangement floating alone in the middle. */}
-      <DecorSlot url={urnImage} label="Urna" aspectRatio="0.85" className="urn-image urn-image--sm" />
+      <DecorSlot url={urnImage} label="Urna" aspectRatio="0.85"
+        className="urn-image urn-image--sm urn-image--bottom" />
 
       <DecorSlot url={cornerFloralBl} label="Adorno esquina" aspectRatio="1"
         className="corner-floral corner-floral--sm corner-floral--bl" />
       <DecorSlot url={cornerFloralBr} label="Adorno esquina" aspectRatio="1"
         className="corner-floral corner-floral--sm corner-floral--br" />
-    </div>
+      </div>
+    </section>
   )
 }

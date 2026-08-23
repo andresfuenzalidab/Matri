@@ -8,6 +8,7 @@ import Loader from './components/Loader'
 import ThemeInjector from './components/ThemeInjector'
 import WelcomeModal from './components/WelcomeModal'
 import MusicPlayer from './components/MusicPlayer'
+import DecorSlot from './components/DecorSlot'
 import Home from './components/sections/Home'
 import DateSection from './components/sections/DateSection'
 import CountdownSection from './components/sections/CountdownSection'
@@ -68,6 +69,17 @@ function StationeryMain({ children }) {
       '--stationery-border': border ? `url(${border})` : undefined,
     }}>
       {children}
+    </div>
+  )
+}
+
+/** One customizable horizontal image, right after Gifts and before FAQ/Contact. */
+function GiftsClosingSeparator() {
+  const { get } = useApp()
+  return (
+    <div className="gifts-closing-separator">
+      <DecorSlot url={get('gifts_closing_separator_image')} label="Separador (regalos → dudas)"
+        aspectRatio="7" className="timeline-separator full-bleed" style={{ margin: 0 }} />
     </div>
   )
 }
@@ -189,6 +201,7 @@ function MainApp({ token, guest, rsvp }) {
             <OurStory />
             <RSVP initialRsvp={rsvp} />
             <Gifts />
+            <GiftsClosingSeparator />
             <FAQ />
             {/* Closing note — the last thing on the page */}
             <Contact />

@@ -41,7 +41,7 @@ export default function OurStory() {
       )}
 
       {storyPhotos.length > 0 && (
-        <div className="framed-media" style={{ marginTop: '2rem' }}>
+        <div className="framed-media full-bleed" style={{ marginTop: '2rem' }}>
           <PhotoCardCarousel photos={storyPhotos} />
           {storyFrame && (
             <img src={storyFrame} alt="" className="framed-media-overlay" aria-hidden="true" />

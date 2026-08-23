@@ -60,7 +60,7 @@ export default function WeddingInfo() {
         {/* ── Venue photos — one carousel, framed, full width, straight
             under the title. Arrows/dots live inside the carousel itself
             now (see PhotoCardCarousel) — nothing renders below the frame. ── */}
-        <div className="framed-media reveal-on-scroll" style={{ marginTop: '1.5rem' }}>
+        <div className="framed-media full-bleed reveal-on-scroll" style={{ marginTop: '1.5rem' }}>
           {venuePhotos.length > 0 ? (
             <PhotoCardCarousel photos={venuePhotos} landscape />
           ) : (
@@ -86,7 +86,7 @@ export default function WeddingInfo() {
 
         {/* ── Dog + cat share one full-width background/frame — not one
             each — with real space between them. ── */}
-        <div className="framed-media reveal-on-scroll" style={{ marginTop: '2.5rem' }}>
+        <div className="framed-media full-bleed reveal-on-scroll" style={{ marginTop: '2.5rem' }}>
           <div className="pets-row">
             <div className="wedding-timer-dog">
               <img src={descriptionDogGif} alt="" style={{ width: '100%', display: 'block' }} />
@@ -105,13 +105,13 @@ export default function WeddingInfo() {
       {!isPartyOnly && timelineItems.length > 0 && (
         <div className="wedding-detail-block timeline-block reveal-on-scroll">
           <DecorSlot url={timelineSeparatorTop} label="Separador horizontal (arriba)" aspectRatio="7"
-            className="timeline-separator" />
+            className="timeline-separator full-bleed" />
 
           <h3 className="wedding-detail-title">{get('timeline_title', 'Programa del día')}</h3>
 
           {/* The florals are delimiters the list sits inside of, not
-              decoration drawn over it — see .timeline-flanked .timeline
-              in stationery.css for the inset that keeps the two apart. */}
+              decoration drawn over it — see .timeline-flanked in
+              stationery.css for the padding that keeps the two apart. */}
           <div className="timeline-flanked">
             <DecorSlot url={timelineFloralLeft} label="Adorno vertical" aspectRatio="0.18"
               className="timeline-floral timeline-floral--left" />
@@ -121,19 +121,23 @@ export default function WeddingInfo() {
           </div>
 
           <DecorSlot url={timelineSeparatorBottom} label="Separador horizontal (cierre)" aspectRatio="7"
-            className="timeline-separator" />
+            className="timeline-separator full-bleed" />
         </div>
       )}
 
-      {/* ── Map / diagram of the grounds ── */}
+      {/* ── Map / diagram of the grounds — image and placeholder both
+          wrapped the same way, so there's no width mismatch between "an
+          image is set" and "it isn't yet" ── */}
       <div className="wedding-detail-block wedding-map-slot reveal-on-scroll">
         <h3 className="wedding-detail-title">{get('venue_map_title', 'Plano del lugar')}</h3>
-        {venueMapImage ? (
-          <img src={venueMapImage} alt="Plano del lugar" className="wedding-detail-img"
-            onError={e => e.target.style.display = 'none'} />
-        ) : (
-          <PhotoPlaceholder size="lg" label="Sube aquí el plano o mapa del lugar" />
-        )}
+        <div className="framed-media full-bleed wedding-detail-img">
+          {venueMapImage ? (
+            <img src={venueMapImage} alt="Plano del lugar" style={{ width: '100%', display: 'block' }}
+              onError={e => e.target.style.display = 'none'} />
+          ) : (
+            <PhotoPlaceholder size="lg" label="Sube aquí el plano o mapa del lugar" />
+          )}
+        </div>
       </div>
 
       {/* ── Dress code — a single image (no corner florals here), a
@@ -141,7 +145,7 @@ export default function WeddingInfo() {
           own dedicated full-width background (not the dog+cat one). ── */}
       <div className="wedding-detail-block reveal-on-scroll">
         <h3 className="wedding-detail-title">Código de vestimenta</h3>
-        <div className="framed-media wedding-detail-img">
+        <div className="framed-media full-bleed wedding-detail-img">
           {dressCodeImage ? (
             <img src={dressCodeImage} alt="Código de vestimenta" style={{ width: '100%', display: 'block' }}
               onError={e => e.target.style.display = 'none'} />
@@ -150,7 +154,7 @@ export default function WeddingInfo() {
           )}
           {dressCodeNote && <p className="dresscode-note-overlay">{dressCodeNote}</p>}
         </div>
-        <div className="framed-media" style={{ marginTop: '1.5rem' }}>
+        <div className="framed-media full-bleed" style={{ marginTop: '1.5rem' }}>
           <div className="dresscode-pet-row">
             <div className="framed-media">
               <img src={dressCodeGif} alt="" style={{ width: '100%', display: 'block' }} />
