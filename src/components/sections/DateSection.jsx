@@ -79,7 +79,7 @@ export default function DateSection() {
         {/* Envelope + calendar — one full illustration; the art already
             has the month, the grid and the wedding day marked, so nothing
             draws on top of it. */}
-        <div className="cal-envelope-stage full-bleed reveal-on-scroll">
+        <div className="cal-envelope-stage reveal-on-scroll">
           {envelopeImage ? (
             <img src={envelopeImage} alt={`Calendario — ${longDateLabel(dateStr)}`} className="cal-envelope-image"
               onError={e => { e.target.style.visibility = 'hidden' }} />
@@ -92,7 +92,7 @@ export default function DateSection() {
 
         {/* Same idea for the oval frame — the citación details draw inside
             its open window instead of sitting on their own paper card. */}
-        <div className="date-celebration-frame full-bleed reveal-on-scroll">
+        <div className="date-celebration-frame reveal-on-scroll">
           {ovalFrame ? (
             <img src={ovalFrame} alt="" className="date-celebration-frame-image"
               onError={e => { e.target.style.visibility = 'hidden' }} />

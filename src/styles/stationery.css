@@ -449,7 +449,7 @@
 }
 .countdown-scene .countdown-section { flex: 1; justify-content: center; }
 .countdown-kicker { margin-bottom: 0.35rem; }
-.urn-image--sm { width: clamp(70px, 15vw, 120px); }
+.urn-image--sm { width: clamp(46px, 10vw, 84px); }
 /* Absolute, same offset as the corner florals — "on the same line" as
    them, rather than a normal-flow block stacked below. Center digits
    still land in the true middle: `.countdown-section` is the only flex
@@ -549,6 +549,10 @@
 .framed-media {
   position: relative;
   width: 100%;
+  /* Belt-and-suspenders: whatever is inside (a carousel, a gif row) is
+     never allowed to visually escape this box, so it can never end up
+     wider than the frame drawn on top of it, or past the border either. */
+  overflow: hidden;
 }
 .framed-media-overlay {
   position: absolute; inset: 0;
@@ -567,8 +571,10 @@
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  gap: clamp(2rem, 8vw, 4rem);
-  padding: 1.5rem 8% 0;
+  gap: clamp(1.5rem, 6vw, 3rem);
+  /* Same horizontal inset as the carousel above (none) — they need to line
+     up, not have the pets sit noticeably narrower than the photo. */
+  padding: 1.5rem 2% 0;
 }
 .wedding-timer-dog { width: 46%; max-width: 360px; }
 .wedding-timer-cat { width: 30%; max-width: 220px; }

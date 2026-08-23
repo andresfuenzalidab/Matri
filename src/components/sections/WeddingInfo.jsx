@@ -60,7 +60,7 @@ export default function WeddingInfo() {
         {/* ── Venue photos — one carousel, framed, full width, straight
             under the title. Arrows/dots live inside the carousel itself
             now (see PhotoCardCarousel) — nothing renders below the frame. ── */}
-        <div className="framed-media full-bleed reveal-on-scroll" style={{ marginTop: '1.5rem' }}>
+        <div className="framed-media reveal-on-scroll" style={{ marginTop: '1.5rem' }}>
           {venuePhotos.length > 0 ? (
             <PhotoCardCarousel photos={venuePhotos} landscape />
           ) : (
@@ -86,7 +86,7 @@ export default function WeddingInfo() {
 
         {/* ── Dog + cat share one full-width background/frame — not one
             each — with real space between them. ── */}
-        <div className="framed-media full-bleed reveal-on-scroll" style={{ marginTop: '2.5rem' }}>
+        <div className="framed-media reveal-on-scroll" style={{ marginTop: '2.5rem' }}>
           <div className="pets-row">
             <div className="wedding-timer-dog">
               <img src={descriptionDogGif} alt="" style={{ width: '100%', display: 'block' }} />
