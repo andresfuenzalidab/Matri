@@ -423,10 +423,20 @@
   pointer-events: none;
   z-index: 2;
 }
-.corner-floral--tl { top: 0.5rem; left: calc(var(--stationery-border-w) + 2px); }
-.corner-floral--tr { top: 0.5rem; right: calc(var(--stationery-border-w) + 2px); }
-.corner-floral--bl { bottom: 0.5rem; left: calc(var(--stationery-border-w) + 2px); }
-.corner-floral--br { bottom: 0.5rem; right: calc(var(--stationery-border-w) + 2px); }
+/* Containing block for these is `.stationery-scene`'s own box — which,
+   since it carries no horizontal padding of its own, sits `--stationery-pad`
+   in from the true edge already (that inset comes from `.section`, one
+   level up). `left: var(--stationery-border-w)` alone was measuring from
+   `.stationery-scene`'s edge as if THAT were the true edge — double
+   counting the same inset that `.section` already applied once. Net
+   effect: florals sitting `--stationery-pad` too far in, every side, at
+   every corner (not an asymmetry bug — every corner was equally wrong).
+   Subtracting `--stationery-pad` back out lands them at the actual
+   intended distance from the border. */
+.corner-floral--tl { top: 0.5rem; left: calc(var(--stationery-border-w) + 2px - var(--stationery-pad)); }
+.corner-floral--tr { top: 0.5rem; right: calc(var(--stationery-border-w) + 2px - var(--stationery-pad)); }
+.corner-floral--bl { bottom: 0.5rem; left: calc(var(--stationery-border-w) + 2px - var(--stationery-pad)); }
+.corner-floral--br { bottom: 0.5rem; right: calc(var(--stationery-border-w) + 2px - var(--stationery-pad)); }
 .corner-floral--sm { width: clamp(150px, 46vw, 300px); }
 
 /* Guaranteed clearance under the top corner florals for whatever text
@@ -679,8 +689,12 @@
      document-order tiebreak entirely. */
   z-index: 2;
 }
-.timeline-floral--left { left: calc(var(--stationery-border-w) + 2px); }
-.timeline-floral--right { right: calc(var(--stationery-border-w) + 2px); }
+/* Same double-counted-inset bug as `.corner-floral` above — `.timeline-flanked`
+   is itself a non-padded pass-through sitting `--stationery-pad` in from the
+   true edge (from `.section`, or `<section id="rsvp">` for the RSVP reuse),
+   so this needs the same correction. */
+.timeline-floral--left { left: calc(var(--stationery-border-w) + 2px - var(--stationery-pad)); }
+.timeline-floral--right { right: calc(var(--stationery-border-w) + 2px - var(--stationery-pad)); }
 
 /* Dress-code note ("mayores indicaciones") — drawn as a caption over the
    dress-code photo rather than its own separate card. */
