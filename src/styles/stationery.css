@@ -403,7 +403,13 @@
    happened to add its own padding. One source of the padding, always. */
 .stationery-scene {
   position: relative;
-  padding: 1.5rem 0;
+  /* Vertical padding trimmed 1.5rem → 0.5rem per feedback: `.section`
+     (the ancestor every user of this class sits inside) already carries
+     its own generous vertical padding, so this was pure redundant stacking
+     on top of it at every section boundary — the same "double padding"
+     class of bug the horizontal side of this rule was already written to
+     avoid (see comment above), just on the other axis. */
+  padding: 0.5rem 0;
 }
 
 /* Full-bleed — the "should touch the border, not sit inset from it" half
@@ -524,7 +530,14 @@
    which read as a big dead gap now that the florals themselves are sized
    well. Trimmed down closer to the title. */
 .corner-floral-clearance {
-  margin-top: clamp(3.5rem, 20vw, 6rem) !important;
+  /* Roughly halved per feedback — the `20vw` term was the single biggest
+     contributor to the dead space some sections showed above their title
+     (≈75px of it alone on a 375px phone, on top of the section padding
+     stacked around it). If a real corner floral ever renders tall enough
+     to actually touch the title at this smaller clearance, that's a much
+     easier thing to spot and fix precisely than a blank gap with nothing
+     in it to point at. */
+  margin-top: clamp(2rem, 9vw, 3.25rem) !important;
 }
 
 /* Small stone urn — reused between "La celebración" and "El lugar", same
