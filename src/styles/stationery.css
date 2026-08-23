@@ -409,9 +409,20 @@
    pure visual offset, not a box-model constraint the browser is allowed to
    override, so it can't be silently ignored the same way. */
 .full-bleed {
+  /* `!important` on the two properties that matter, deliberately: this is
+     always paired with a component class (`.framed-media`, `.cal-envelope-
+     stage`, `.date-celebration-frame`, `.timeline-separator`...) that ALSO
+     sets its own `width` — and several of those happen to be declared
+     later in this file, which silently won the `width` (same specificity,
+     later rule) while `left` had no competing declaration and applied
+     fine. Net effect: shifted left without the matching width increase —
+     overlapping the left border with a gap on the right. A utility class
+     like this has exactly one job and must win regardless of what else is
+     on the element or where it's declared; that's the textbook case for
+     `!important`, not a source-order accident to keep chasing. */
   position: relative;
-  left: calc(-1 * var(--stationery-pad));
-  width: calc(100% + 2 * var(--stationery-pad));
+  left: calc(-1 * var(--stationery-pad)) !important;
+  width: calc(100% + 2 * var(--stationery-pad)) !important;
 }
 
 /* Corner florals — absolute positioning ignores an ancestor's own padding
