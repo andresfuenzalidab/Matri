@@ -124,7 +124,7 @@ const SECTIONS = [
       { key: 'gifts_section_title', label: 'Título principal', type: 'text' },
       { key: 'gifts_intro', label: 'Párrafo introductorio', type: 'textarea' },
       { key: 'gifts_thanks_message', label: 'Mensaje de gracias al confirmar regalo (usa {nombre} para el apodo)', type: 'text' },
-      { key: 'gifts_closing_separator_image', label: 'Imagen separadora al final de los regalos (antes de FAQ/Dudas)', type: 'image' },
+      { key: 'gifts_closing_separator_image', label: 'Imagen separadora al final de los regalos (antes de FAQ)', type: 'image' },
     ],
   },
   {

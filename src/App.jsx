@@ -73,12 +73,12 @@ function StationeryMain({ children }) {
   )
 }
 
-/** One customizable horizontal image, right after Gifts and before FAQ/Contact. */
-function GiftsClosingSeparator() {
+/** One customizable horizontal image between two top-level sections. */
+function ClosingSeparator({ contentKey, label }) {
   const { get } = useApp()
   return (
-    <div className="gifts-closing-separator">
-      <DecorSlot url={get('gifts_closing_separator_image')} label="Separador (regalos → dudas)"
+    <div className="closing-separator">
+      <DecorSlot url={get(contentKey)} label={label}
         aspectRatio="7" className="timeline-separator full-bleed" style={{ margin: 0 }} />
     </div>
   )
@@ -201,7 +201,7 @@ function MainApp({ token, guest, rsvp }) {
             <OurStory />
             <RSVP initialRsvp={rsvp} />
             <Gifts />
-            <GiftsClosingSeparator />
+            <ClosingSeparator contentKey="gifts_closing_separator_image" label="Separador (regalos → dudas)" />
             <FAQ />
             {/* Closing note — the last thing on the page */}
             <Contact />

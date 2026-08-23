@@ -708,9 +708,10 @@
   margin: 0 0 1.75rem;
 }
 
-/* One customizable image between Gifts and FAQ/Contact — same horizontal
-   clearance as every other section, own (small) vertical rhythm. */
-.gifts-closing-separator {
+/* One customizable image between two top-level sections (Gifts→FAQ,
+   FAQ→Contact) — same horizontal clearance as every other section, own
+   (small) vertical rhythm. */
+.closing-separator {
   padding: 1.5rem var(--stationery-pad);
 }
 /* Only the top margin needs to change here (closing spacing instead of
