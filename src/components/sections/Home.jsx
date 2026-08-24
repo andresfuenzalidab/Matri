@@ -16,14 +16,21 @@ export default function Home() {
         background: 'linear-gradient(180deg, transparent 65%, #eceae8 100%)',
       }} />
 
-      {/* Scroll hint */}
+      {/* Scroll hint — the only thing standing in for the nav bar (hidden
+          until the guest scrolls, see Nav.jsx) on this first screen, so it
+          needs to actually read as an instruction, not a faint caption.
+          Dark + a soft light halo instead of translucent white: white text
+          alone washed out against bright footage and left people stranded
+          not knowing to scroll. */}
       <div style={{
         position: 'absolute', bottom: 28, left: 0, right: 0,
         textAlign: 'center',
-        fontFamily: 'var(--font-heading)', fontSize: 12,
+        fontFamily: 'var(--font-heading)', fontSize: 13,
+        fontWeight: 600,
         letterSpacing: '0.3em', textTransform: 'uppercase',
-        color: 'rgba(255,255,255,0.85)',
-        opacity: 0.85, pointerEvents: 'none',
+        color: 'rgba(20,18,14,0.92)',
+        textShadow: '0 1px 3px rgba(255,255,255,0.55), 0 0 14px rgba(255,255,255,0.35)',
+        pointerEvents: 'none',
       }}>
         Desliza para continuar el jardín ↓
       </div>

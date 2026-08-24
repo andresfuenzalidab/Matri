@@ -629,9 +629,13 @@
 .paper-tag--bare .paper-tag-body { display: flex; flex-direction: column; gap: clamp(0.4rem, 2vw, 0.7rem); }
 .paper-tag--bare .paper-tag-row { text-align: center; }
 .paper-tag--bare .paper-tag-row + .paper-tag-row { margin-top: 0; }
-.paper-tag--bare .paper-tag-label { font-size: 0.44rem; margin-bottom: 0.15rem; }
-.paper-tag--bare .paper-tag-value { font-size: clamp(0.68rem, 2.3vw, 0.85rem); line-height: 1.25; }
-.paper-tag--bare .paper-tag-hint { font-size: clamp(0.58rem, 1.9vw, 0.7rem); margin-top: 0; }
+/* Font sizes bumped up per feedback (legibility) — same oval window width
+   as before, just larger type within it; the oval's own lack of
+   `overflow: hidden` (see `.date-celebration-content` above) already
+   tolerates text running a little past its edge if it ever needs to. */
+.paper-tag--bare .paper-tag-label { font-size: 0.56rem; margin-bottom: 0.15rem; }
+.paper-tag--bare .paper-tag-value { font-size: clamp(0.82rem, 2.9vw, 1.05rem); line-height: 1.25; }
+.paper-tag--bare .paper-tag-hint { font-size: clamp(0.7rem, 2.4vw, 0.86rem); margin-top: 0; }
 .paper-tag--bare .cal-add {
   /* Right up against the recommendation text — no divider line. The parent
      (`.paper-tag-body`) puts a flex `gap` between every row including this
@@ -823,7 +827,8 @@
   text-align: center;
   font-family: var(--font-heading);
   font-style: italic;
-  font-size: clamp(0.62rem, 1.9vw, 0.78rem);
+  /* Bumped up per feedback (legibility). */
+  font-size: clamp(0.76rem, 2.3vw, 0.94rem);
   line-height: 1.35;
   color: var(--color-accent);
   text-shadow: 0 1px 3px color-mix(in srgb, var(--color-bg) 70%, transparent);

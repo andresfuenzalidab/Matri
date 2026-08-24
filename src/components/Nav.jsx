@@ -12,6 +12,11 @@ const LINKS = [
 
 export default function Nav() {
   const [active, setActive] = useState('inicio')
+  // Hidden on the hero video so the "Desliza para continuar" hint is the
+  // only call to action there — showing the nav on top of it competed with
+  // that instruction and buried it. Appears once the guest has actually
+  // scrolled, exactly when it becomes useful.
+  const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
     let raf = 0
@@ -39,6 +44,10 @@ export default function Nav() {
       if (atBottom) current = present[present.length - 1].id
 
       setActive(current)
+      // Half the hero's height is enough to register as "scrolled" — the
+      // guest has clearly acted on the hint by then, no need to wait for
+      // the full 100vh section to pass.
+      setScrolled(window.scrollY > window.innerHeight * 0.5)
     }
 
     function onScroll() {
@@ -61,7 +70,7 @@ export default function Nav() {
   }
 
   return (
-    <nav className="bottom-nav" aria-label="Navegación">
+    <nav className={`bottom-nav ${scrolled ? '' : 'bottom-nav--hidden'}`} aria-label="Navegación">
       {LINKS.map(({ id, label }) => (
         <a key={id} href={`#${id}`}
           className={`bottom-nav-tab ${active === id ? 'active' : ''}`}

@@ -19,7 +19,18 @@ export default function WeddingInfo() {
   // copy fetched once on mount.
   useEffect(() => { loadVenuePhotos() }, [loadVenuePhotos])
 
-  const mapsUrl = get('venue_maps_url')
+  // Built from the venue's name (+ address, if set) rather than used as
+  // pasted — an admin-pasted `venue_maps_url` was usually copied from a
+  // dropped pin, which opens Maps at raw coordinates with no place card.
+  // Google's search-by-query URL opens the actual "Altos del Paico" listing
+  // instead, same as searching it by hand. Falls back to the raw URL only
+  // if neither name nor address is set (shouldn't happen — venue_name has
+  // a default), so a saved override never gets stranded.
+  const venueMapsName = get('venue_name', 'Altos del Paico')
+  const venueMapsAddress = get('venue_address')
+  const mapsUrl = venueMapsName
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([venueMapsName, venueMapsAddress].filter(Boolean).join(', '))}`
+    : get('venue_maps_url')
   const isPartyOnly = guest?.invitationType === 'party_only'
   const dressCodeImage = normalizeImageUrl(get('dress_code_image') || '')
   const venueMapImage = normalizeImageUrl(get('venue_map_image') || '')

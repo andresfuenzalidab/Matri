@@ -29,7 +29,7 @@ export default function Gifts() {
   const [loading, setLoading] = useState(true)
   const [cart, setCart] = useState(new Map())
   const [modalOpen, setModalOpen] = useState(false)
-  const [sortBy, setSortBy] = useState('price-asc')
+  const [sortBy, setSortBy] = useState('price-desc')
   const [purchased, setPurchased] = useState(false)
   const [purchasedGifts, setPurchasedGifts] = useState([])
 
@@ -158,11 +158,19 @@ export default function Gifts() {
         <p className="gifts-hero-intro">
           {get('gifts_intro', 'El mejor regalo es tu presencia. Pero si deseas hacernos un obsequio, aquí van algunas ideas para nuestra luna de miel.')}
         </p>
+        {/* Fixed, not admin-editable content — the two things guests kept
+            missing: that the list takes more than one pick, and that these
+            are reference ideas/amounts, not a literal store to check out
+            of. */}
+        <p className="gifts-hero-hint">
+          Puedes agregar más de un regalo a tu selección — son ideas referenciales, no montos exactos.
+        </p>
       </div>
 
       {/* Sort filter — always applied to the single unified list below, so
-          "Precio ↑" (the default) genuinely orders every gift regardless of
-          which destino it belongs to, not just within each one's section. */}
+          "Precio ↓" (the default — highest first, per feedback) genuinely
+          orders every gift regardless of which destino it belongs to, not
+          just within each one's section. */}
       <div className="gift-filter-bar reveal-on-scroll">
         <span className="gift-filter-label">Ordenar por</span>
         {[
@@ -231,7 +239,7 @@ export default function Gifts() {
                   // Still a real <button>, so it stays focusable/keyboard-
                   // triggerable on its own, that click just bubbles up.
                   <button className="btn btn-ghost" style={{ width: '100%', letterSpacing: '0.08em', fontSize: '0.78rem', textTransform: 'uppercase' }}>
-                    Seleccionar
+                    Agregar
                   </button>
                 )}
                 {canAdd && inCart && (
