@@ -6,7 +6,13 @@ export default function Home() {
   useEffect(() => { loadContent() }, [loadContent])
 
   return (
-    <section id="inicio" style={{ position: 'relative', width: '100%', height: '100vh', minHeight: 640, overflow: 'hidden' }}>
+    <section id="inicio" style={{ position: 'relative', width: '100%', height: '100dvh', minHeight: 640, overflow: 'hidden' }}>
+      {/* `100dvh`, not `100vh`: on mobile, `100vh` counts the space still
+          hidden behind the browser's address bar, so anything anchored near
+          the bottom of a `100vh` box (the scroll hint below) sat below the
+          actually-visible fold until the browser chrome collapsed — exactly
+          the "I don't see it at the start" this was supposed to prevent.
+          `dvh` tracks the real visible viewport instead. */}
       {/* Show the fixed SharedHeroVideo through this transparent layer */}
       <div style={{ width: '100%', height: '100%', background: 'transparent' }} />
 
@@ -23,7 +29,7 @@ export default function Home() {
           alone washed out against bright footage and left people stranded
           not knowing to scroll. */}
       <div style={{
-        position: 'absolute', bottom: 28, left: 0, right: 0,
+        position: 'absolute', bottom: '16%', left: 0, right: 0,
         textAlign: 'center',
         fontFamily: 'var(--font-heading)', fontSize: 13,
         fontWeight: 600,

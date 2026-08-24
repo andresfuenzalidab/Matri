@@ -158,13 +158,6 @@ export default function Gifts() {
         <p className="gifts-hero-intro">
           {get('gifts_intro', 'El mejor regalo es tu presencia. Pero si deseas hacernos un obsequio, aquí van algunas ideas para nuestra luna de miel.')}
         </p>
-        {/* Fixed, not admin-editable content — the two things guests kept
-            missing: that the list takes more than one pick, and that these
-            are reference ideas/amounts, not a literal store to check out
-            of. */}
-        <p className="gifts-hero-hint">
-          Puedes agregar más de un regalo a tu selección — son ideas referenciales, no montos exactos.
-        </p>
       </div>
 
       {/* Sort filter — always applied to the single unified list below, so
