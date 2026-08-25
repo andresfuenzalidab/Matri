@@ -15,18 +15,45 @@
   background: var(--color-bg);
   overflow-y: auto;
 }
+/* Message + card, stacked and centered as one column — both derive their
+   width from THIS box, so they scale together at any viewport instead of
+   the message being sized independently of the art it sits above. Three
+   terms in the `min()`: viewport width, an absolute cap, and viewport
+   height converted through the card's own ratio (90vh × 1414/2000 ≈
+   63.6vh) so a short/landscape window shrinks the whole stack by height
+   instead of overflowing it. `margin: auto`, not `align-items: center` on
+   `.envelope-overlay`: a long personalised message can outgrow the
+   viewport, and centred flex items clip at the top instead of scrolling. */
+.envelope-stack {
+  width: min(92vw, 460px, 63.6vh);
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(0.7rem, 3.4vw, 1.15rem);
+}
+
+/* Above the card now, not overlaid on it — narrower than the full stack
+   width so it reads as its own line, not a full-bleed caption. */
+.envelope-message {
+  width: 84%;
+  text-align: center;
+  font-family: var(--font-heading);
+  font-style: italic; font-weight: 400;
+  font-size: clamp(0.85rem, 4vw, 1.05rem);
+  line-height: 1.55;
+  color: var(--paper-ink);
+}
+.envelope-message strong { font-weight: 600; font-style: normal; }
+
 .envelope {
   position: relative;
+  width: 100%;
   /* Locked to the artwork's own portrait ratio (1414:2000, see
      WelcomeModal.jsx) so the whole image always shows intact — never
      cropped, never stretched — instead of stretching to fill whatever
-     ratio the viewport happens to be. Three terms in `min()`: viewport
-     width, an absolute cap, and viewport height converted through that
-     same ratio (90vh × 1414/2000 ≈ 63.6vh), so a short/landscape window
-     shrinks the card by height instead of overflowing it. */
-  width: min(92vw, 460px, 63.6vh);
+     ratio it's given. */
   aspect-ratio: 1414 / 2000;
-  margin: auto;
   background: var(--envelope-cover-bg) center / cover no-repeat, var(--color-bg);
   border-radius: 3px;
   box-shadow: 0 24px 60px rgba(20,18,14,0.45);
@@ -38,23 +65,6 @@
   35%  { transform: scale(0.985); opacity: 1; }
   100% { transform: scale(1.07);  opacity: 0; }
 }
-
-/* Sits in the open cream band between the baked-in date and the envelope
-   art below it — tuned to that band in the reference art; not clipped to
-   the card (no `overflow: hidden` on `.envelope`) since a long guest
-   message should be free to run past the card's edge onto the page behind
-   it rather than get cut off. */
-.envelope-card-message {
-  position: absolute;
-  top: 33%; left: 10%; right: 10%;
-  text-align: center;
-  font-family: var(--font-heading);
-  font-style: italic; font-weight: 400;
-  font-size: clamp(0.82rem, 3.4vw, 1rem);
-  line-height: 1.55;
-  color: var(--paper-ink);
-}
-.envelope-card-message strong { font-weight: 600; font-style: normal; }
 
 /* Generous tap target over the envelope + "haz click aquí" already drawn
    in the art — deliberately bigger than just the wax seal so it doesn't
@@ -261,17 +271,24 @@
   --stationery-pad: calc(var(--stationery-border-w) + 1rem);
   position: relative;
   width: 100%;
-  /* The actual fix for "desktop should look like the mobile card, with
-     green filling everything past it": cap the WHOLE stationery skin
-     (border + cream + every section inside it) at a phone-sized width and
-     center it, instead of growing the border to try to chase a wide
-     desktop viewport. Everything above (border-w, pad, full-bleed,
-     corner-floral insets) is written in `vw`/`%`, relative to the true
-     viewport or to this box's own size — none of it needed to change for
-     this to work; capping the box these are computed inside of is enough
-     to make the whole card render exactly as it does on an actual ~480px
-     phone, at any desktop width. `.section`'s own 820px max-width is now
-     moot (this box never gets that wide), left as-is rather than removed. */
+  /* The fix for "desktop should look like the mobile card, with green
+     filling everything past it": cap the WHOLE stationery skin (border +
+     cream + every section inside it) at a phone-sized width and center it,
+     instead of growing the border to chase a wide desktop viewport.
+     `.section`'s own 820px max-width is now moot (this box never gets
+     that wide), left as-is rather than removed.
+     `--stationery-border-w`/`--stationery-pad` (insets, full-bleed) are
+     fine left on `vw` — they were already maxed out well before this cap
+     kicks in. What ISN'T fine on `vw` here: decorative art that's SIZED
+     (not just positioned) off the viewport, like `.corner-floral`'s own
+     width — its `vw` term was tuned assuming "viewport ≈ this card's
+     width", true before this cap existed, false on any desktop screen now
+     that the card freezes at 480px while the true viewport keeps growing.
+     That's what silently oversized the corner florals until they
+     overlapped section titles once this cap shipped. `container-type`
+     turns THIS box into the reference for `cqw` units, so anything sized
+     that way tracks the card's own (now-capped) width instead. */
+  container-type: inline-size;
   max-width: 480px;
   margin: 0 auto;
   background-color: var(--color-bg);
@@ -407,16 +424,16 @@
    the border's inner edge and never under it — on every section, at every
    viewport width. */
 .corner-floral {
-  /* Max bound is sized against `.section`'s own 820px design ceiling, not
-     the raw viewport — `vw` tracks the full viewport regardless of that
-     cap, so any screen ≥ ~800px (i.e. every laptop/desktop, not just
-     ultra-wide ones) was sitting at the OLD max the whole time. Two
-     corners at 320px each inside an 820px column leaves under a third of
-     the width for the title between them — that's the overlap, not a
-     rendering bug. ~205px keeps two corners comfortably clear of a
-     centered title even at the 820px ceiling. */
+  /* Sized off `cqw` — % of `.stationery-main`'s own (capped-at-480px)
+     width — not `vw`. This used to be tuned against `.section`'s old
+     820px ceiling; now that the card itself is capped at 480px on
+     desktop, the same `vw`-based size massively overshot it (two corners
+     at up to 205px each in a 480px-wide card leaves under a fifth of the
+     width for the title — real overlap, not a rendering bug). `cqw`
+     tracks the card's actual width at every size, mobile or capped
+     desktop, so this can't drift out of proportion with it again. */
   position: absolute;
-  width: clamp(150px, 40vw, 205px);
+  width: clamp(115px, 30cqw, 145px);
   height: auto;
   pointer-events: none;
   z-index: 2;
@@ -435,12 +452,10 @@
 .corner-floral--tr { top: 0.5rem; right: calc(var(--stationery-border-w) + 2px - var(--stationery-pad)); }
 .corner-floral--bl { bottom: 0.5rem; left: calc(var(--stationery-border-w) + 2px - var(--stationery-pad)); }
 .corner-floral--br { bottom: 0.5rem; right: calc(var(--stationery-border-w) + 2px - var(--stationery-pad)); }
-/* Same 820px-ceiling reasoning as `.corner-floral` above — only the max
-   changed (min/vw untouched, since mobile sizing here was already
-   confirmed correct). This variant has even more to fit at once (Countdown
-   uses all 4 corners plus 2 urns, competing for the same ~820px column),
-   so it's capped a bit tighter than the 2-corner case. */
-.corner-floral--sm { width: clamp(150px, 46vw, 180px); }
+/* Same `cqw` reasoning as `.corner-floral` above, scaled a bit smaller
+   still — this variant has even more to fit at once (Countdown uses all 4
+   corners plus 2 urns, competing for the same card width). */
+.corner-floral--sm { width: clamp(80px, 18cqw, 110px); }
 
 /* Clearance under the top corner florals for whatever text comes right
    after them (a kicker, a title) — enough that the florals' own art
@@ -449,14 +464,10 @@
    which read as a big dead gap now that the florals themselves are sized
    well. Trimmed down closer to the title. */
 .corner-floral-clearance {
-  /* Roughly halved per feedback — the `20vw` term was the single biggest
-     contributor to the dead space some sections showed above their title
-     (≈75px of it alone on a 375px phone, on top of the section padding
-     stacked around it). If a real corner floral ever renders tall enough
-     to actually touch the title at this smaller clearance, that's a much
-     easier thing to spot and fix precisely than a blank gap with nothing
-     in it to point at. */
-  margin-top: clamp(2rem, 9vw, 3.25rem) !important;
+  /* `cqw`, matching `.corner-floral`'s own new sizing above, so this stays
+     in step with however big the florals actually render at any card
+     width instead of drifting independently of them again. */
+  margin-top: clamp(2rem, 8cqw, 3.25rem) !important;
 }
 
 /* Small stone urn — reused between "La celebración" and "El lugar", same

@@ -45,22 +45,13 @@ export function downloadInvitationPDF(inv, content = {}) {
   const companion = (inv.companion_name || '').trim()
   // Formal names on the invitation, joined the same way as on the RSVP card.
   const guestName = companion ? `${inv.name} y ${companion}` : inv.name
-  const isPartyOnly = (inv.invitation_type || 'all_in') === 'party_only'
 
   const names = content.envelope_names || content.hero_title || 'Cata & Andrés'
-  const weddingDate = content.hero_date || 'Viernes 6 de noviembre de 2026'
-  const ceremonyTime = content.ceremony_time || '17:00'
-  const receptionTime = content.reception_time || '19:30'
-  const cta = content.envelope_cta_text || 'Toca aquí para abrir la invitación'
 
   const sealImage = absolute(content.envelope_seal_image)
   // Static asset (public/), not an admin field — this is the illustrated
   // background art itself, not something that changes per wedding.
   const bg = absolute('/pdf-invitation-bg.png')
-
-  const timingLine = isPartyOnly
-    ? `Citación a fiesta: ${receptionTime} hrs`
-    : `Citación a ceremonia: ${ceremonyTime} hrs`
 
   const html = `<!DOCTYPE html>
 <html lang="es">
@@ -82,8 +73,8 @@ body{font-family:'Lora',Georgia,serif;color:#4a4038}
    background-size:cover here doesn't crop or stretch it. "Andres y
    Catalina, 6 de noviembre, Altos del Paico" is already baked into the
    art; only what the art can't know — who this particular copy is for,
-   and the link to their actual invitation — is drawn on top, in the open
-   band across the top third. */
+   and the link to their actual invitation — is drawn on top, positioned
+   toward the middle of the page (see `.inner` below) per feedback. */
 .page{
   width:210mm;height:296mm;overflow:hidden;
   background:url('${bg}') center/cover no-repeat, #f7f3ea;
@@ -91,35 +82,41 @@ body{font-family:'Lora',Georgia,serif;color:#4a4038}
   break-inside:avoid;page-break-inside:avoid;
 }
 
+/* Repositioned toward the middle of the page per feedback — the only real
+   open gap there (besides the top band) is right after "Altos del Paico"
+   and before the roofline, so this starts right at that seam and flows
+   down from it; the arrow + "Click aquí" pair spilling a little onto the
+   soft sky in the illustration reads fine against that light a
+   background. */
 .inner{
-  position:absolute;top:16mm;left:14mm;right:14mm;
+  position:absolute;top:47%;left:14mm;right:14mm;
   display:flex;flex-direction:column;align-items:center;text-align:center;
 }
 
-.to-label{font-size:7.5pt;letter-spacing:.22em;text-transform:uppercase;color:#8a7a68;margin-bottom:3mm}
+.to-label{font-size:7.5pt;letter-spacing:.22em;text-transform:uppercase;color:#8a7a68;margin-bottom:2.5mm}
 .guest-name{
-  font-family:'Cormorant Garamond',serif;font-size:20pt;font-style:italic;
+  font-family:'Cormorant Garamond',serif;font-size:16pt;font-style:italic;
   font-weight:400;color:#4a4038;line-height:1.25;margin-bottom:4mm
 }
-.wd-times{font-size:9pt;color:#8a7a68;letter-spacing:.04em;margin-bottom:5mm}
 
-/* The wax seal, as on the envelope cover — the thing you press to open,
-   sized down to fit the open band instead of the full page it had before. */
+/* The wax seal, as on the envelope cover — the thing you press to open.
+   "Click aquí" above a deliberately bigger arrow, per feedback, so it's
+   unambiguous the seal is the button, not just decoration. */
 .seal-block{display:flex;flex-direction:column;align-items:center}
-.pointer{width:4.5mm;height:auto;color:#8a7a68;margin-bottom:1.5mm;display:block}
+.click-label{
+  font-size:10.5pt;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  color:#565c42;margin-bottom:1.5mm
+}
+.pointer{width:9mm;height:auto;color:#565c42;margin-bottom:2mm;display:block}
 .seal{
-  width:15mm;height:15mm;flex:0 0 auto;border-radius:50%;
+  width:16mm;height:16mm;flex:0 0 auto;border-radius:50%;
   background:radial-gradient(circle at 34% 30%, #6d7355 0%, #565c42 72%);
   display:flex;align-items:center;justify-content:center;
-  text-decoration:none;margin-bottom:2.5mm;
+  text-decoration:none;
   box-shadow:0 1mm 2.5mm rgba(40,44,30,0.3);
 }
 .seal-art{width:66%;height:66%}
 .seal img{width:100%;height:100%;object-fit:contain;border-radius:50%}
-.cta{
-  font-family:'Cormorant Garamond',serif;font-size:11pt;font-style:italic;
-  color:#565c42;max-width:70mm;line-height:1.4
-}
 
 @media print{
   html,body,.page,.seal{-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -131,14 +128,13 @@ body{font-family:'Lora',Georgia,serif;color:#4a4038}
   <div class="inner">
     <p class="to-label">Esta invitación es especialmente para</p>
     <div class="guest-name">${guestName}</div>
-    <p class="wd-times">${timingLine}</p>
 
     <div class="seal-block">
+      <p class="click-label">Click aquí</p>
       ${POINTER_ARROW}
       <a href="${link}" class="seal">
         ${sealImage ? `<img src="${sealImage}" alt="">` : SEAL_SPRIG}
       </a>
-      <p class="cta">${cta}</p>
     </div>
   </div>
 </div>

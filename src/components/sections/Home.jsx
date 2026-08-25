@@ -16,10 +16,16 @@ export default function Home() {
       {/* Show the fixed SharedHeroVideo through this transparent layer */}
       <div style={{ width: '100%', height: '100%', background: 'transparent' }} />
 
-      {/* Seamless fade to page bg at the bottom */}
+      {/* Seamless fade to page bg at the bottom — fades to green, not the
+          old cream: below this point the page is `.stationery-main` (the
+          capped, phone-width card) sitting on a green fill everywhere else
+          (see stationery.css), and green is what actually shows across
+          MOST of this width now. Fading to cream instead left a visibly
+          mismatched cream band right where the card is narrower than the
+          hero, before the card's own edge even begins. */}
       <div style={{
         position: 'absolute', inset: 0, pointerEvents: 'none',
-        background: 'linear-gradient(180deg, transparent 65%, #eceae8 100%)',
+        background: 'linear-gradient(180deg, transparent 65%, var(--stationery-fill-color) 100%)',
       }} />
 
       {/* Scroll hint — the only thing standing in for the nav bar (hidden

@@ -48,13 +48,11 @@ export default function WelcomeModal({ guest, onEnter }) {
       className="envelope-overlay"
       style={{ opacity: visible ? 1 : 0 }}
     >
-      <div
-        className={`envelope ${opening ? 'is-opening' : ''}`}
-        style={{ '--envelope-cover-bg': `url("${coverBg}")` }}
-      >
-        {/* Sits in the open cream band between the date and the envelope
-            art, matching the artwork's own text column width. */}
-        <p className="envelope-card-message">
+      {/* Message + card share this wrapper's width, so they scale together
+          as one unit at any viewport instead of the message being sized
+          independently of the art it sits above. */}
+      <div className="envelope-stack">
+        <p className="envelope-message">
           {message || (
             <>
               {pick(guest, 'Querido/a', 'Queridos')} <strong>{displayName}</strong>,{' '}
@@ -67,10 +65,15 @@ export default function WelcomeModal({ guest, onEnter }) {
           )}
         </p>
 
-        {/* Generous, roughly over the envelope + "haz click aquí" in the
-            art — deliberately bigger than just the wax seal so it doesn't
-            need pixel-perfect alignment with the artwork on every device. */}
-        <button type="button" className="envelope-card-open" onClick={handleEnter} aria-label={cta} />
+        <div
+          className={`envelope ${opening ? 'is-opening' : ''}`}
+          style={{ '--envelope-cover-bg': `url("${coverBg}")` }}
+        >
+          {/* Generous, roughly over the envelope + "haz click aquí" in the
+              art — deliberately bigger than just the wax seal so it doesn't
+              need pixel-perfect alignment with the artwork on every device. */}
+          <button type="button" className="envelope-card-open" onClick={handleEnter} aria-label={cta} />
+        </div>
       </div>
     </div>
   )
