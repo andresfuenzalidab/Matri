@@ -201,10 +201,10 @@ export default function InvitationsManager() {
     const pair = isPairInvite(guest)
     const p = (singular, plural) => pick(guest, singular, plural)
 
-    return `¡Hola ${name}! 💛\n\n` +
+    return `¡Hola ${name}!\n\n` +
       `Con mucha alegría ${p('te', 'les')} compartimos la invitación a nuestro matrimonio. ` +
       `${p('Te', 'Les')} dejamos el PDF adjunto para que ${p('lo guardes', 'lo guarden')}, ` +
-      `y aquí ${p('puedes', 'pueden')} ver todos los detalles y confirmar ${p('tu', 'su')} asistencia:\n\n` +
+      `${p('puedes', 'pueden')} acceder también a través de este link para ver más detalles y confirmar ${p('tu', 'su')} asistencia:\n\n` +
       `${getLink(inv)}\n\n` +
       `¡Esperamos poder celebrar este día tan especial ${p('contigo', 'con ustedes')}!\n\n` +
       `Con cariño,\nCata & Andrés`
