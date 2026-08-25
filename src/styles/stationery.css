@@ -636,13 +636,23 @@
    naturally centered too. Skipped for plain (unframed) images like the
    map, which should stay fully edge-to-edge, and for `.pets-row`, which
    never uses this wrapper (see `.framed-media` comment above).
-   The solid cream backing belongs HERE, not on `.framed-media`: this
-   wrapper is only ever used where there's an actual padded margin between
-   a photo and its frame art that needs a consistent fill — never around
-   something meant to stay transparent. */
+   The backing belongs HERE, not on `.framed-media`: this wrapper is only
+   ever used where there's an actual padded margin between a photo and its
+   frame art that needs a consistent fill — never around something meant
+   to stay transparent.
+   `var(--paper)` (a flat swatch) was the wrong fix here — same idea, wrong
+   value: it's a distinctly LIGHTER "card stock" tone than the page's own
+   grainy paper texture, so the padding margin read as a flat white-ish
+   patch against the textured cream all around it — a different, equally
+   visible seam. The actual page texture (`--stationery-paper`, same image
+   + tiling `.stationery-main` itself uses) is what's actually consistent
+   with its surroundings. */
 .framed-media-content {
   padding: 6%;
-  background: var(--paper);
+  background-color: var(--color-bg);
+  background-image: var(--stationery-paper, none);
+  background-repeat: repeat;
+  background-size: 600px auto;
 }
 .framed-media-overlay {
   position: absolute; inset: 0;
