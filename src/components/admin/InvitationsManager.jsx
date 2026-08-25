@@ -4,6 +4,7 @@ import { downloadInvitationPDF, inviteLink } from '../../utils/invitationPdf.js'
 import { downloadCSV } from '../../utils/exportCsv.js'
 import { parseCSV, cell } from '../../utils/parseCsv.js'
 import { totalInvitedHeadcount } from '../../utils/inviteCount.js'
+import { guestDisplayName, isPairInvite, pick } from '../../utils/guestName.js'
 
 // The single source of truth for the invitations CSV shape — used for both
 // export and import, so a file downloaded here always re-imports cleanly.
@@ -186,21 +187,27 @@ export default function InvitationsManager() {
     })
   }
 
-  /** Draft message for the WhatsApp send below — edit here to change the
-   *  wording for everyone at once. `{NOMBRE}` is swapped for the
-   *  invitation's own name, same convention as the gift reminder email. */
-  const WHATSAPP_MESSAGE_TEMPLATE =
-    '¡Hola {NOMBRE}! 💛\n\n' +
-    'Con mucha alegría te compartimos la invitación a nuestro matrimonio. ' +
-    'Te dejamos el PDF adjunto para que la guardes, y aquí puedes ver todos los detalles y confirmar tu asistencia:\n\n' +
-    '{LINK}\n\n' +
-    '¡Esperamos poder celebrar este día tan especial contigo!\n\n' +
-    'Con cariño,\nCata & Andrés'
-
+  // Draft message for the WhatsApp send below — edit the pieces here to
+  // change the wording for everyone at once.
+  //
+  // `inv` from this admin list is shaped with the DB's own snake_case
+  // columns (`companion_name`), not the camelCase `companionName` these
+  // helpers (shared with the RSVP/cover greeting logic) expect — adapted
+  // inline in `whatsappMessage` below rather than duplicating the
+  // nickname/singular-vs-plural rules here a second time.
   function whatsappMessage(inv) {
-    return WHATSAPP_MESSAGE_TEMPLATE
-      .replace(/\{NOMBRE\}/g, inv.name)
-      .replace('{LINK}', getLink(inv))
+    const guest = { name: inv.name, companionName: inv.companion_name, nickname: inv.nickname }
+    const name = guestDisplayName(guest) // nickname if set, else the formal name(s)
+    const pair = isPairInvite(guest)
+    const p = (singular, plural) => pick(guest, singular, plural)
+
+    return `¡Hola ${name}! 💛\n\n` +
+      `Con mucha alegría ${p('te', 'les')} compartimos la invitación a nuestro matrimonio. ` +
+      `${p('Te', 'Les')} dejamos el PDF adjunto para que ${p('lo guardes', 'lo guarden')}, ` +
+      `y aquí ${p('puedes', 'pueden')} ver todos los detalles y confirmar ${p('tu', 'su')} asistencia:\n\n` +
+      `${getLink(inv)}\n\n` +
+      `¡Esperamos poder celebrar este día tan especial ${p('contigo', 'con ustedes')}!\n\n` +
+      `Con cariño,\nCata & Andrés`
   }
 
   // Pre-fills the message (name + their own link) so there's nothing left
