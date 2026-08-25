@@ -82,19 +82,21 @@ body{font-family:'Lora',Georgia,serif;color:#4a4038}
   break-inside:avoid;page-break-inside:avoid;
 }
 
-/* Slightly above the middle per feedback — 2/5 down the page — landing
-   inside "CATALINA" and the "6 DE NOVIEMBRE" line baked into the art
-   below it; the arrow + "Click aquí" pair spilling onto that text/the
-   soft sky further down reads fine against that light a background. */
+/* Slightly above the middle per feedback — 2/5 down the page. The updated
+   artwork (re-synced from the repo root — see public/pdf-invitation-bg.png)
+   opened up a much bigger open band right around here (baked text now
+   ends near 40%, sky/roofline doesn't start until ~72%), so 40% now lands
+   right at the START of open space instead of on top of baked text —
+   there's room to size everything up properly, per feedback. */
 .inner{
   position:absolute;top:40%;left:14mm;right:14mm;
   display:flex;flex-direction:column;align-items:center;text-align:center;
 }
 
-.to-label{font-size:7.5pt;letter-spacing:.22em;text-transform:uppercase;color:#8a7a68;margin-bottom:2.5mm}
+.to-label{font-size:9.5pt;letter-spacing:.22em;text-transform:uppercase;color:#8a7a68;margin-bottom:3.5mm}
 .guest-name{
-  font-family:'Cormorant Garamond',serif;font-size:16pt;font-style:italic;
-  font-weight:400;color:#4a4038;line-height:1.25;margin-bottom:4mm
+  font-family:'Cormorant Garamond',serif;font-size:23pt;font-style:italic;
+  font-weight:400;color:#4a4038;line-height:1.3;margin-bottom:6mm
 }
 
 /* The wax seal, as on the envelope cover — the thing you press to open.
@@ -102,12 +104,12 @@ body{font-family:'Lora',Georgia,serif;color:#4a4038}
    unambiguous the seal is the button, not just decoration. */
 .seal-block{display:flex;flex-direction:column;align-items:center}
 .click-label{
-  font-size:10.5pt;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
-  color:#565c42;margin-bottom:1.5mm
+  font-size:13pt;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  color:#565c42;margin-bottom:2mm
 }
-.pointer{width:9mm;height:auto;color:#565c42;margin-bottom:2mm;display:block}
+.pointer{width:11mm;height:auto;color:#565c42;margin-bottom:2.5mm;display:block}
 .seal{
-  width:16mm;height:16mm;flex:0 0 auto;border-radius:50%;
+  width:20mm;height:20mm;flex:0 0 auto;border-radius:50%;
   background:radial-gradient(circle at 34% 30%, #6d7355 0%, #565c42 72%);
   display:flex;align-items:center;justify-content:center;
   text-decoration:none;

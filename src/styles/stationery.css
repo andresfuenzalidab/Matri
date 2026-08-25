@@ -106,7 +106,7 @@
 .date-section { text-align: center; padding-top: 0; }
 .cal-month {
   font-family: var(--font-heading);
-  font-size: clamp(2rem, 8vw, 3.1rem);
+  font-size: clamp(2rem, 8cqw, 3.1rem);
   font-style: italic; font-weight: 400;
   color: var(--color-accent);
   line-height: 1;
@@ -117,14 +117,14 @@
   letter-spacing: 0.28em;
   text-transform: uppercase;
   opacity: 0.5;
-  margin: 0.35rem 0 clamp(0.75rem, 3vw, 1.15rem);
+  margin: 0.35rem 0 clamp(0.75rem, 3cqw, 1.15rem);
 }
 .cal-grid { display: flex; flex-direction: column; }
 .cal-row { display: grid; grid-template-columns: repeat(7, 1fr); }
 .cal-row-head { margin-bottom: 0.35rem; }
 .cal-weekday {
   font-family: var(--font-heading);
-  font-size: clamp(0.6rem, 2.2vw, 0.78rem);
+  font-size: clamp(0.6rem, 2.2cqw, 0.78rem);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--color-accent);
@@ -136,7 +136,7 @@
   display: flex; align-items: center; justify-content: center;
   aspect-ratio: 1;
   font-family: var(--font-heading);
-  font-size: clamp(0.85rem, 3vw, 1.15rem);
+  font-size: clamp(0.85rem, 3cqw, 1.15rem);
   font-weight: 400;
   color: var(--paper-ink);
   opacity: 0.85;
@@ -159,10 +159,10 @@
 .paper-tag {
   position: relative;
   width: min(100%, 460px);
-  margin: clamp(2rem, 7vw, 3.25rem) auto 0;
+  margin: clamp(2rem, 7cqw, 3.25rem) auto 0;
   background: var(--paper);
   border-radius: 16px;
-  padding: clamp(2.9rem, 9vw, 3.75rem) clamp(1.35rem, 5vw, 2.5rem) clamp(1.75rem, 5vw, 2.5rem);
+  padding: clamp(2.9rem, 9cqw, 3.75rem) clamp(1.35rem, 5cqw, 2.5rem) clamp(1.75rem, 5cqw, 2.5rem);
   box-shadow: 0 12px 34px color-mix(in srgb, var(--color-text) 14%, transparent);
   text-align: center;
 }
@@ -174,13 +174,13 @@
   pointer-events: none;
 }
 .paper-tag-holes {
-  position: absolute; top: clamp(0.95rem, 3.5vw, 1.4rem);
+  position: absolute; top: clamp(0.95rem, 3.5cqw, 1.4rem);
   left: 0; right: 0;
   display: flex; justify-content: center;
-  gap: clamp(0.7rem, 3vw, 1.2rem);
+  gap: clamp(0.7rem, 3cqw, 1.2rem);
 }
 .paper-tag-holes span {
-  width: clamp(15px, 4.5vw, 24px);
+  width: clamp(15px, 4.5cqw, 24px);
   aspect-ratio: 1;
   border-radius: 50%;
   background: var(--color-bg);
@@ -189,12 +189,12 @@
 .paper-tag-body { position: relative; z-index: 1; }
 .paper-tag-title {
   font-family: var(--font-heading);
-  font-size: clamp(1.5rem, 5.5vw, 2.1rem);
+  font-size: clamp(1.5rem, 5.5cqw, 2.1rem);
   font-style: italic; font-weight: 400;
   color: var(--color-accent);
-  margin: 0 0 clamp(1rem, 4vw, 1.6rem);
+  margin: 0 0 clamp(1rem, 4cqw, 1.6rem);
 }
-.paper-tag-row + .paper-tag-row { margin-top: clamp(1.1rem, 4vw, 1.6rem); }
+.paper-tag-row + .paper-tag-row { margin-top: clamp(1.1rem, 4cqw, 1.6rem); }
 .paper-tag-index {
   display: block;
   font-family: var(--font-heading);
@@ -211,7 +211,7 @@
 }
 .paper-tag-value {
   font-family: var(--font-heading);
-  font-size: clamp(1.05rem, 3.6vw, 1.4rem);
+  font-size: clamp(1.05rem, 3.6cqw, 1.4rem);
   font-weight: 400;
   line-height: 1.5;
   color: var(--paper-ink);
@@ -220,7 +220,7 @@
 .paper-tag-hint {
   font-family: var(--font-heading);
   font-style: italic;
-  font-size: clamp(0.9rem, 3vw, 1.05rem);
+  font-size: clamp(0.9rem, 3cqw, 1.05rem);
   opacity: 0.6;
   margin: 0.15rem 0 0;
 }
@@ -273,15 +273,23 @@
      that wide), left as-is rather than removed.
      `--stationery-border-w`/`--stationery-pad` (insets, full-bleed) are
      fine left on `vw` — they were already maxed out well before this cap
-     kicks in. What ISN'T fine on `vw` here: decorative art that's SIZED
-     (not just positioned) off the viewport, like `.corner-floral`'s own
-     width — its `vw` term was tuned assuming "viewport ≈ this card's
-     width", true before this cap existed, false on any desktop screen now
-     that the card freezes at 480px while the true viewport keeps growing.
-     That's what silently oversized the corner florals until they
-     overlapped section titles once this cap shipped. `container-type`
-     turns THIS box into the reference for `cqw` units, so anything sized
-     that way tracks the card's own (now-capped) width instead. */
+     kicks in, and don't scale content, only position it. Almost EVERY
+     OTHER `vw` in this file wasn't fine, though: every font-size, gap and
+     decorative-art width sized off the viewport (not just positioned by
+     it) was tuned assuming "viewport ≈ this card's width" — true before
+     this cap existed, false on any desktop screen now that the card
+     freezes at 480px while the true viewport keeps growing past it. Their
+     `vw` terms kept resolving against the (irrelevant) true viewport, so
+     everything sized that way rendered at whatever it looked like on some
+     WIDE viewport — text overflowing/wrapping badly, florals overlapping
+     titles — instead of at how it already looked, correctly, on an actual
+     ~480px phone. `container-type` here turns this box into the reference
+     for `cqw` units; every `vw` below this point in the file (except the
+     two above, deliberately) has been converted to `cqw` for exactly this
+     reason — a plain unit swap is enough (not new numbers) because it
+     makes each value resolve exactly as it already did on a real phone,
+     which is exactly the frozen look this cap is supposed to reproduce at
+     every width. */
   container-type: inline-size;
   max-width: 480px;
   margin: 0 auto;
@@ -468,7 +476,7 @@
    size both places so it reads as the same recurring motif. */
 .urn-image {
   display: block;
-  width: clamp(120px, 26vw, 220px);
+  width: clamp(120px, 26cqw, 220px);
   height: auto;
   margin: 0 auto;
 }
@@ -484,7 +492,7 @@
 }
 .countdown-scene .countdown-section { flex: 1; justify-content: center; }
 .countdown-kicker { margin-bottom: 0.35rem; }
-.urn-image--sm { width: clamp(69px, 15vw, 126px); } /* +50% per feedback */
+.urn-image--sm { width: clamp(69px, 15cqw, 126px); } /* +50% per feedback */
 /* Absolute, same offset as the corner florals — "on the same line" as
    them, rather than a normal-flow block stacked below. Center digits
    still land in the true middle: `.countdown-section` is the only flex
@@ -507,7 +515,7 @@
 .date-celebration-frame {
   position: relative;
   width: 100%;
-  margin-top: clamp(2.5rem, 7vw, 4rem);
+  margin-top: clamp(2.5rem, 7cqw, 4rem);
   /* Query container for the citation text below — sizing that text off
      `cqw` (this box's own rendered width) instead of the viewport is what
      makes it "always proportional to the image": the oval frame image
@@ -536,7 +544,7 @@
    art already has the month, the grid and the wedding day marked. */
 .cal-envelope-stage {
   width: 100%;
-  margin-top: clamp(1.5rem, 5vw, 2.5rem);
+  margin-top: clamp(1.5rem, 5cqw, 2.5rem);
 }
 .cal-envelope-image {
   display: block;
@@ -557,7 +565,7 @@
 .paper-tag--bare::before,
 .paper-tag--bare .paper-tag-holes,
 .paper-tag--bare .paper-tag-index { display: none; }
-.paper-tag--bare .paper-tag-body { display: flex; flex-direction: column; gap: clamp(0.4rem, 2vw, 0.7rem); }
+.paper-tag--bare .paper-tag-body { display: flex; flex-direction: column; gap: clamp(0.4rem, 2cqw, 0.7rem); }
 .paper-tag--bare .paper-tag-row { text-align: center; }
 .paper-tag--bare .paper-tag-row + .paper-tag-row { margin-top: 0; }
 /* Sized off `cqw` — % of `.date-celebration-frame`'s own rendered width
@@ -574,7 +582,7 @@
      one; cancel it back out with a negative margin instead of trying to
      zero a gap that's shared with the rows above it, per feedback
      ("pegado" — stuck to the text, not just closer). */
-  margin-top: calc(-1 * clamp(0.4rem, 2vw, 0.7rem) + 0.1rem);
+  margin-top: calc(-1 * clamp(0.4rem, 2cqw, 0.7rem) + 0.1rem);
   padding-top: 0;
   border-top: none;
 }
@@ -583,7 +591,7 @@
 /* Forced onto one line, smaller — there isn't room for these to wrap
    inside the oval's narrow window. */
 .paper-tag--bare .cal-add-actions { flex-wrap: nowrap; gap: 0.4rem; }
-.paper-tag--bare .cal-add-btn { font-size: clamp(0.52rem, 1.7vw, 0.6rem); gap: 0.2rem; white-space: nowrap; }
+.paper-tag--bare .cal-add-btn { font-size: clamp(0.52rem, 1.7cqw, 0.6rem); gap: 0.2rem; white-space: nowrap; }
 .paper-tag--bare .cal-add-icon { width: 8px; height: 8px; }
 .paper-tag--bare .cal-add-sep { width: 3px; height: 3px; }
 
@@ -642,7 +650,7 @@
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  gap: clamp(2.5rem, 12vw, 5rem);
+  gap: clamp(2.5rem, 12cqw, 5rem);
   padding: 1.5rem 2% 0;
 }
 
@@ -712,14 +720,14 @@
      (floral's own inset from its containing block, minus a small ~6px
      buffer) rather than a generous margin — RSVP reuses this same wrapper
      and needs every bit of width it can get. */
-  padding-left: clamp(47px, 14vw, 102px);
-  padding-right: clamp(47px, 14vw, 102px);
+  padding-left: clamp(47px, 14cqw, 102px);
+  padding-right: clamp(47px, 14cqw, 102px);
 }
 .timeline-floral {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  width: clamp(55px, 15vw, 110px);
+  width: clamp(55px, 15cqw, 110px);
   height: auto;
   pointer-events: none;
   /* Without this, the left one was losing to `.rsvp-letter` (also
@@ -747,8 +755,8 @@
    widths, then another +5% on top per feedback (~+26% combined here), a
    bit less at the 820px desktop ceiling where there's already much more
    room relative to the floral either way. */
-.timeline-floral--rsvp { width: clamp(35px, 9.2vw, 70px); }
-.timeline-flanked--rsvp { padding-left: clamp(28px, calc(9.2vw - 8px), 64px); padding-right: clamp(28px, calc(9.2vw - 8px), 64px); }
+.timeline-floral--rsvp { width: clamp(35px, 9.2cqw, 70px); }
+.timeline-flanked--rsvp { padding-left: clamp(28px, calc(9.2cqw - 8px), 64px); padding-right: clamp(28px, calc(9.2cqw - 8px), 64px); }
 
 /* Dress-code note ("mayores indicaciones") — drawn as a caption over the
    dress-code photo rather than its own separate card. */
@@ -757,7 +765,7 @@
 
 @media (max-width: 480px) {
   .stationery-scene { padding-top: 2rem; padding-bottom: 2rem; }
-  .corner-floral { width: clamp(64px, 26vw, 110px); }
+  .corner-floral { width: clamp(64px, 26cqw, 110px); }
 }
 
 /* ── 4b. Venue map slot ──
@@ -775,7 +783,7 @@
   display: block;
   font-family: var(--font-heading);
   font-style: italic;
-  font-size: clamp(0.9rem, 3vw, 1.05rem);
+  font-size: clamp(0.9rem, 3cqw, 1.05rem);
   opacity: 0.7;
 }
 /* No rounding/shadow here (dropped per feedback) — every other image on
@@ -786,8 +794,8 @@
 
 /* ── 4c. "Save the date" buttons, at the foot of the paper tag ── */
 .cal-add {
-  margin-top: clamp(1.5rem, 5vw, 2.25rem);
-  padding-top: clamp(1rem, 4vw, 1.5rem);
+  margin-top: clamp(1.5rem, 5cqw, 2.25rem);
+  padding-top: clamp(1rem, 4cqw, 1.5rem);
   border-top: 1px solid var(--paper-edge);
 }
 .cal-add-label {
@@ -802,7 +810,7 @@
   align-items: center;
   justify-content: center;
   flex-wrap: wrap;
-  gap: 0.4rem clamp(0.6rem, 3vw, 1.1rem);
+  gap: 0.4rem clamp(0.6rem, 3cqw, 1.1rem);
 }
 .cal-add-btn {
   display: inline-flex;
@@ -813,7 +821,7 @@
   padding: 0.25rem 0;
   cursor: pointer;
   font-family: var(--font-heading);
-  font-size: clamp(0.95rem, 3.2vw, 1.12rem);
+  font-size: clamp(0.95rem, 3.2cqw, 1.12rem);
   font-style: italic;
   color: var(--color-accent);
   text-decoration: none;
@@ -843,8 +851,8 @@
 .timeline {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
-  column-gap: clamp(0.9rem, 4vw, 2.25rem);
-  row-gap: clamp(2rem, 7vw, 3.5rem);
+  column-gap: clamp(0.9rem, 4cqw, 2.25rem);
+  row-gap: clamp(2rem, 7cqw, 3.5rem);
   align-items: center;
   max-width: 640px;
   margin: 0 auto;
@@ -877,7 +885,7 @@
   position: absolute;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: clamp(26px, 7vw, 34px);
+  width: clamp(26px, 7cqw, 34px);
   aspect-ratio: 1;
   border-radius: 50%;
   background: var(--color-bg);
@@ -898,7 +906,7 @@
 }
 .timeline-row-icon.is-reached { opacity: 0.85; transform: none; }
 .timeline-icon-art {
-  width: clamp(52px, 15vw, 88px);
+  width: clamp(52px, 15cqw, 88px);
   height: auto;
 }
 .timeline-row-body {
@@ -911,7 +919,7 @@
 .timeline-row-body.is-reached { opacity: 1; transform: none; }
 .timeline-row-title {
   font-family: var(--font-heading);
-  font-size: clamp(1.3rem, 5vw, 2.1rem);
+  font-size: clamp(1.3rem, 5cqw, 2.1rem);
   font-style: italic; font-weight: 400;
   color: var(--color-accent);
   line-height: 1.15;
@@ -919,21 +927,21 @@
 }
 .timeline-row-time {
   font-family: var(--font-heading);
-  font-size: clamp(1.15rem, 4.2vw, 1.6rem);
+  font-size: clamp(1.15rem, 4.2cqw, 1.6rem);
   font-weight: 400;
   margin: 0 0 0.2rem;
 }
 .timeline-row-note {
   font-family: var(--font-heading);
   font-style: italic;
-  font-size: clamp(0.92rem, 3.2vw, 1.1rem);
+  font-size: clamp(0.92rem, 3.2cqw, 1.1rem);
   line-height: 1.5;
   opacity: 0.7;
   margin: 0;
 }
 @media (max-width: 560px) {
   .timeline {
-    grid-template-columns: clamp(48px, 16vw, 64px) auto 1fr;
+    grid-template-columns: clamp(48px, 16cqw, 64px) auto 1fr;
     column-gap: 0.75rem;
   }
   .timeline-row-icon { justify-self: center; }
@@ -951,7 +959,7 @@
     var(--paper) 55%,
     color-mix(in srgb, var(--paper) 92%, black));
   border-radius: 6px;
-  padding: clamp(1.75rem, 6vw, 3rem) clamp(1.25rem, 5vw, 3rem);
+  padding: clamp(1.75rem, 6cqw, 3rem) clamp(1.25rem, 5cqw, 3rem);
   box-shadow: 0 18px 50px color-mix(in srgb, var(--color-text) 16%, transparent);
   text-align: center;
   color: var(--paper-ink);
@@ -975,7 +983,7 @@
 .rsvp-letter-inner { position: relative; z-index: 1; }
 .rsvp-letter-heading {
   font-family: var(--font-heading);
-  font-size: clamp(1.9rem, 8vw, 3rem);
+  font-size: clamp(1.9rem, 8cqw, 3rem);
   font-weight: 400;
   letter-spacing: 0.34em;
   text-indent: 0.34em;
@@ -983,11 +991,11 @@
   margin: 0;
 }
 .wave-rule {
-  width: clamp(90px, 26vw, 130px);
+  width: clamp(90px, 26cqw, 130px);
   height: auto;
   color: var(--color-accent);
   opacity: 0.7;
-  margin: 0.35rem auto clamp(1.25rem, 4vw, 1.9rem);
+  margin: 0.35rem auto clamp(1.25rem, 4cqw, 1.9rem);
   display: block;
 }
 .rsvp-letter-line {
@@ -995,12 +1003,12 @@
   gap: 0.65rem;
   border-bottom: 1px solid var(--paper-edge);
   padding-bottom: 0.4rem;
-  margin-bottom: clamp(1.1rem, 4vw, 1.6rem);
+  margin-bottom: clamp(1.1rem, 4cqw, 1.6rem);
   text-align: left;
 }
 .rsvp-letter-line-name {
   font-family: var(--font-heading);
-  font-size: clamp(1.15rem, 4vw, 1.6rem);
+  font-size: clamp(1.15rem, 4cqw, 1.6rem);
   font-style: italic;
   color: var(--color-accent);
   line-height: 1.3;
@@ -1008,17 +1016,17 @@
 .rsvp-letter-prompt {
   font-family: var(--font-heading);
   font-style: italic;
-  font-size: clamp(1rem, 3.2vw, 1.2rem);
+  font-size: clamp(1rem, 3.2cqw, 1.2rem);
   line-height: 1.6;
   opacity: 0.75;
-  margin: 0 auto clamp(1.25rem, 4vw, 1.9rem);
+  margin: 0 auto clamp(1.25rem, 4cqw, 1.9rem);
   max-width: 34ch;
 }
 
 .rsvp-choices {
   display: flex; flex-direction: column;
   gap: 0.6rem;
-  margin-bottom: clamp(1rem, 3.5vw, 1.5rem);
+  margin-bottom: clamp(1rem, 3.5cqw, 1.5rem);
 }
 .rsvp-choice {
   position: relative;
@@ -1045,7 +1053,7 @@
 }
 .rsvp-choice-text {
   font-family: var(--font-heading);
-  font-size: clamp(1rem, 3.4vw, 1.2rem);
+  font-size: clamp(1rem, 3.4cqw, 1.2rem);
   line-height: 1.35;
 }
 .rsvp-choice.is-picked {
@@ -1061,7 +1069,7 @@
 /* One tick box per person on a pair invitation */
 .rsvp-attendees {
   text-align: left;
-  margin-bottom: clamp(0.9rem, 3vw, 1.3rem);
+  margin-bottom: clamp(0.9rem, 3cqw, 1.3rem);
 }
 .rsvp-attendees .rsvp-field-label { display: block; margin-bottom: 0.5rem; }
 .rsvp-attendees .rsvp-field-hint { display: block; margin-top: 0.45rem; }
@@ -1091,7 +1099,7 @@
 }
 .rsvp-attendee-name {
   font-family: var(--font-heading);
-  font-size: clamp(0.98rem, 3.2vw, 1.15rem);
+  font-size: clamp(0.98rem, 3.2cqw, 1.15rem);
   line-height: 1.35;
   transition: opacity 0.15s ease;
 }
@@ -1110,7 +1118,7 @@
   text-align: left;
   font-size: 0.9rem;
   line-height: 1.5;
-  margin-bottom: clamp(0.9rem, 3vw, 1.3rem);
+  margin-bottom: clamp(0.9rem, 3cqw, 1.3rem);
 }
 .rsvp-note-check input[type="checkbox"] {
   margin-top: 3px; width: 16px; height: 16px;
@@ -1121,7 +1129,7 @@
   display: flex; flex-direction: column;
   gap: 0.3rem;
   text-align: left;
-  margin-bottom: clamp(0.9rem, 3vw, 1.3rem);
+  margin-bottom: clamp(0.9rem, 3cqw, 1.3rem);
 }
 .rsvp-field-label {
   font-size: 0.58rem;
@@ -1139,7 +1147,7 @@
   border-radius: 0;
   padding: 0.4rem 0.15rem;
   font-family: var(--font-heading);
-  font-size: clamp(1rem, 3.2vw, 1.15rem);
+  font-size: clamp(1rem, 3.2cqw, 1.15rem);
   color: var(--paper-ink);
   transition: border-color 0.18s ease;
 }
@@ -1150,9 +1158,9 @@
 .rsvp-letter-deadline {
   font-family: var(--font-heading);
   font-style: italic;
-  font-size: clamp(0.92rem, 3vw, 1.08rem);
+  font-size: clamp(0.92rem, 3cqw, 1.08rem);
   opacity: 0.62;
-  margin: clamp(1rem, 3.5vw, 1.5rem) 0 0.9rem;
+  margin: clamp(1rem, 3.5cqw, 1.5rem) 0 0.9rem;
 }
 .rsvp-send {
   display: inline-flex; align-items: center; justify-content: center;
@@ -1164,7 +1172,7 @@
   border-radius: 3px;
   background: transparent;
   font-family: var(--font-heading);
-  font-size: clamp(0.95rem, 3.2vw, 1.1rem);
+  font-size: clamp(0.95rem, 3.2cqw, 1.1rem);
   letter-spacing: 0.06em;
   color: var(--color-accent);
   transition: background 0.18s ease, color 0.18s ease;
@@ -1219,7 +1227,7 @@
 .rsvp-envelope-img { mix-blend-mode: multiply; }
 .rsvp-sealing-caption {
   font-family: var(--font-heading); font-style: italic;
-  font-size: clamp(1rem, 3.2vw, 1.2rem);
+  font-size: clamp(1rem, 3.2cqw, 1.2rem);
   opacity: 0.65;
   margin-top: 1.25rem;
 }
@@ -1233,7 +1241,7 @@
 }
 .thanks-title {
   font-family: var(--font-heading);
-  font-size: clamp(1.8rem, 6vw, 2.8rem);
+  font-size: clamp(1.8rem, 6cqw, 2.8rem);
   font-style: italic; font-weight: 400;
   color: var(--color-accent);
   margin: 0;
@@ -1241,7 +1249,7 @@
 .thanks-message {
   font-family: var(--font-heading);
   font-style: italic;
-  font-size: clamp(1rem, 3.2vw, 1.2rem);
+  font-size: clamp(1rem, 3.2cqw, 1.2rem);
   line-height: 1.7;
   opacity: 0.78;
   max-width: 40ch;
@@ -1252,7 +1260,7 @@
 .faq-hint {
   font-family: var(--font-heading);
   font-style: italic;
-  font-size: clamp(0.88rem, 3vw, 1rem);
+  font-size: clamp(0.88rem, 3cqw, 1rem);
   opacity: 0.55;
   margin: 0.5rem 0 1.5rem;
 }

@@ -77,11 +77,14 @@ function StationeryMain({ children }) {
 }
 
 /**
- * `<main>` — set here, not on `StationeryMain` below it, specifically so
- * `--stationery-border` (the admin's own green damask art) is available to
- * `.editorial-main`'s own background too: on desktop, `.stationery-main`
- * is capped to a phone-sized card, and everything beside it needs to read
- * as "more of the same green," not a second, different-looking green.
+ * `<main>` — only sets `--stationery-border` (the admin's green damask
+ * art) for inheritance; paints no background of its own. It wraps `Home`
+ * too, and a background here was exactly the bug that erased the video
+ * outright: `.editorial-main`'s box covers its full height, hero included,
+ * so ANY non-transparent background painted directly on it — even meant
+ * only for "everything after the hero" — sat behind the video too,
+ * covering it completely regardless of Home's own fade. See `PageBody`
+ * below for where that fill actually belongs.
  */
 function EditorialMain({ children }) {
   const { get } = useApp()
@@ -91,6 +94,19 @@ function EditorialMain({ children }) {
       {children}
     </main>
   )
+}
+
+/**
+ * Wraps everything AFTER the hero (`StationeryMain` onward) — deliberately
+ * NOT the same element as `EditorialMain`, and deliberately NOT wrapping
+ * `Home` too. Structurally, not just visually: its box starts exactly
+ * where the hero ends, so its own opaque fill (the same green damask art
+ * as the side borders, tiled — the "everything outside the capped mobile-
+ * width card" background) can never paint over the video above it, no
+ * matter how that fill is implemented later.
+ */
+function PageBody({ children }) {
+  return <div className="page-body">{children}</div>
 }
 
 /** One customizable horizontal image between two top-level sections. */
@@ -216,19 +232,21 @@ function MainApp({ token, guest, rsvp }) {
           <Home />
 
           {/* ── Everything after the hero, on the paper + damask skin ── */}
-          <StationeryMain>
-            <DateSection />
-            <CountdownSection />
-            <WeddingInfo />
-            <OurStory />
-            <RSVP initialRsvp={rsvp} />
-            <Gifts />
-            <ClosingSeparator contentKey="gifts_closing_separator_image" label="Separador (regalos → dudas)" />
-            <FAQ />
-            {/* Closing note — the last thing on the page */}
-            <Contact />
-            <FlowerFooter />
-          </StationeryMain>
+          <PageBody>
+            <StationeryMain>
+              <DateSection />
+              <CountdownSection />
+              <WeddingInfo />
+              <OurStory />
+              <RSVP initialRsvp={rsvp} />
+              <Gifts />
+              <ClosingSeparator contentKey="gifts_closing_separator_image" label="Separador (regalos → dudas)" />
+              <FAQ />
+              {/* Closing note — the last thing on the page */}
+              <Contact />
+              <FlowerFooter />
+            </StationeryMain>
+          </PageBody>
         </EditorialMain>
         {guest?.isAdmin && (
           <>

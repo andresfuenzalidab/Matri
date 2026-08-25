@@ -1156,21 +1156,27 @@ body {
   background-image: none;
 }
 
-/* The main content wrapper sits above the fixed video.
-   Give it a solid background below the hero so sections
-   are NOT see-through onto the video. */
+/* The main content wrapper sits above the fixed video. Paints NO
+   background of its own — it wraps `Home` too, so anything opaque here
+   would sit behind the video across its full height and hide it outright,
+   which is exactly the bug this became. The actual fill lives on
+   `.page-body` below, a separate element that only wraps what comes AFTER
+   the hero. */
 .editorial-main {
   position: relative;
-  /* The admin's own damask border art (`--stationery-border`, set on this
-     element in App.jsx — see `EditorialMain`), tiled, not an invented flat
-     color: `.stationery-main` (the actual card) is capped to a phone-sized
-     max-width and centered inside this, so on any screen wider than that
-     cap there's real space on either side of it — this is what fills it,
-     the same asset already used for the border strips right next to it,
-     not a second, different-looking green. `--stationery-fill-color` only
-     as the fallback for when no border image is set at all. Nothing to
-     fade here — by this point in the layout the hero's own box (and its
-     own fade, in Home.jsx) has already ended. */
+}
+
+/* Everything after the hero (`PageBody` in App.jsx) — starts exactly
+   where the hero's box ends, so this fill can never paint over the video
+   above it. The admin's own damask border art (`--stationery-border`,
+   inherited from `.editorial-main`), tiled, not an invented flat color:
+   `.stationery-main` (the actual card) is capped to a phone-sized
+   max-width and centered inside this, so on any screen wider than that
+   cap there's real space on either side of it — this is what fills it,
+   the same asset already used for the border strips right next to it, not
+   a second, different-looking green. `--stationery-fill-color` only as
+   the fallback for when no border image is set at all. */
+.page-body {
   background: var(--stationery-border, var(--stationery-fill-color)) repeat;
 }
 
