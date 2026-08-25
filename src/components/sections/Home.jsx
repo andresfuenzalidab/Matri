@@ -29,7 +29,10 @@ export default function Home() {
           alone washed out against bright footage and left people stranded
           not knowing to scroll. */}
       <div style={{
-        position: 'absolute', bottom: '16%', left: 0, right: 0,
+        // `dvh`-based container + a small, fixed-feeling `%` (not a big one
+        // that could drift toward the middle) — always sits low, inside the
+        // lighter faded band near the bottom, at any resolution.
+        position: 'absolute', bottom: '6%', left: 0, right: 0,
         textAlign: 'center',
         fontFamily: 'var(--font-heading)', fontSize: 13,
         fontWeight: 600,
@@ -38,7 +41,7 @@ export default function Home() {
         textShadow: '0 1px 3px rgba(255,255,255,0.55), 0 0 14px rgba(255,255,255,0.35)',
         pointerEvents: 'none',
       }}>
-        Desliza para continuar el jardín ↓
+        Desliza ↓
       </div>
     </section>
   )

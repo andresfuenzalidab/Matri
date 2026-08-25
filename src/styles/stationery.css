@@ -17,18 +17,19 @@
 }
 .envelope {
   position: relative;
-  width: min(94vw, 520px);
-  /* `margin: auto` rather than `align-items: center`: a long personalised
-     message can outgrow the viewport, and centred flex items clip at the top
-     instead of scrolling. */
+  /* Locked to the artwork's own portrait ratio (1414:2000, see
+     WelcomeModal.jsx) so the whole image always shows intact — never
+     cropped, never stretched — instead of stretching to fill whatever
+     ratio the viewport happens to be. Three terms in `min()`: viewport
+     width, an absolute cap, and viewport height converted through that
+     same ratio (90vh × 1414/2000 ≈ 63.6vh), so a short/landscape window
+     shrinks the card by height instead of overflowing it. */
+  width: min(92vw, 460px, 63.6vh);
+  aspect-ratio: 1414 / 2000;
   margin: auto;
-  display: flex; flex-direction: column;
-  background: linear-gradient(158deg,
-    color-mix(in srgb, var(--paper) 92%, white) 0%,
-    var(--paper) 48%,
-    color-mix(in srgb, var(--paper) 90%, black) 100%);
-  border-radius: 4px;
-  box-shadow: 0 24px 60px rgba(20,18,14,0.45), inset 0 2px 0 rgba(255,255,255,0.5);
+  background: var(--envelope-cover-bg) center / cover no-repeat, var(--color-bg);
+  border-radius: 3px;
+  box-shadow: 0 24px 60px rgba(20,18,14,0.45);
   color: var(--paper-ink);
 }
 .envelope.is-opening { animation: envelopeOpen 0.62s cubic-bezier(0.4, 0, 0.6, 1) forwards; }
@@ -38,120 +39,32 @@
   100% { transform: scale(1.07);  opacity: 0; }
 }
 
-/* Paper folds, drawn as hairlines that stretch with the box */
-.envelope-fold {
-  position: absolute; inset: 0;
-  width: 100%; height: 100%;
-  color: var(--paper-edge);
-  pointer-events: none;
-}
-.envelope-top {
-  position: relative;
-  padding: clamp(1.75rem, 6vw, 2.75rem) clamp(1.25rem, 5vw, 2.25rem) clamp(2.75rem, 8vw, 3.5rem);
-  text-align: center;
-}
-.envelope-top-content { position: relative; z-index: 1; }
-.envelope-logo {
-  width: clamp(110px, 34vw, 180px);
-  height: auto;
-  margin: 0 auto clamp(0.75rem, 3vw, 1.25rem);
-  mix-blend-mode: multiply;
-}
-.envelope-names {
-  position: relative;
-  display: inline-block;
-  font-family: var(--font-heading);
-  font-size: clamp(1.9rem, 7.5vw, 3rem);
-  font-style: italic; font-weight: 400;
-  line-height: 1.15;
-  letter-spacing: 0.04em;
-  color: var(--color-accent);
-  margin: 0 0 clamp(0.6rem, 2.5vw, 1rem);
-}
-/* With no logo uploaded, the names carry an oval frame of their own. */
-.envelope-names-framed {
-  padding: clamp(1rem, 4vw, 1.5rem) clamp(1.4rem, 5vw, 2rem);
-}
-.envelope-monogram-ring {
-  position: absolute; inset: 0;
-  border: 1px solid var(--paper-edge);
-  border-radius: 50% / 42%;
-}
-.envelope-date {
-  font-size: 0.6rem;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-  opacity: 0.55;
-  margin-bottom: clamp(0.9rem, 3vw, 1.4rem);
-}
-.envelope-message {
-  font-family: var(--font-heading);
-  font-size: clamp(1.05rem, 3.4vw, 1.45rem);
-  font-style: italic; font-weight: 400;
-  line-height: 1.6;
-  margin: 0 auto;
-  max-width: 34ch;
-}
-.envelope-message strong { font-weight: 600; font-style: normal; }
-
-/* The seal sits on the fold, with an arrow pointing at it */
-.envelope-seal-slot {
+/* Sits in the open cream band between the baked-in date and the envelope
+   art below it — tuned to that band in the reference art; not clipped to
+   the card (no `overflow: hidden` on `.envelope`) since a long guest
+   message should be free to run past the card's edge onto the page behind
+   it rather than get cut off. */
+.envelope-card-message {
   position: absolute;
-  left: 50%; bottom: 0;
-  transform: translate(-50%, 50%);
-  z-index: 3;
-  display: flex; flex-direction: column; align-items: center;
-}
-.envelope-arrow {
-  width: clamp(16px, 4vw, 20px);
-  height: auto;
-  color: var(--color-accent);
-  margin-bottom: 0.2rem;
-  animation: arrowNudge 1.6s ease-in-out infinite;
-}
-@keyframes arrowNudge {
-  0%, 100% { transform: translateY(-3px); opacity: 0.55; }
-  50%      { transform: translateY(3px);  opacity: 0.95; }
-}
-.envelope-seal {
-  width: clamp(58px, 16vw, 78px);
-  aspect-ratio: 1;
-  border-radius: 50%;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  display: grid; place-items: center;
-  background: radial-gradient(circle at 34% 30%, var(--seal) 0%, var(--seal-deep) 72%);
-  color: rgba(255,255,255,0.9);
-  box-shadow: 0 4px 14px rgba(40,44,30,0.4), inset 0 1px 3px rgba(255,255,255,0.25);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-.envelope-seal:hover { transform: scale(1.06); box-shadow: 0 6px 20px rgba(40,44,30,0.48); }
-.envelope-seal:active { transform: scale(0.96); }
-.envelope-seal-art { width: 66%; height: 66%; }
-.envelope-seal img {
-  width: 100%; height: 100%;
-  object-fit: contain; border-radius: 50%;
-}
-
-.envelope-bottom {
-  position: relative;
-  padding: clamp(2.75rem, 8vw, 3.5rem) clamp(1.25rem, 5vw, 2rem) clamp(1.75rem, 6vw, 2.5rem);
+  top: 33%; left: 10%; right: 10%;
   text-align: center;
+  font-family: var(--font-heading);
+  font-style: italic; font-weight: 400;
+  font-size: clamp(0.82rem, 3.4vw, 1rem);
+  line-height: 1.55;
+  color: var(--paper-ink);
 }
-.envelope-cta {
-  position: relative; z-index: 1;
+.envelope-card-message strong { font-weight: 600; font-style: normal; }
+
+/* Generous tap target over the envelope + "haz click aquí" already drawn
+   in the art — deliberately bigger than just the wax seal so it doesn't
+   need pixel-perfect alignment with the artwork on every device. */
+.envelope-card-open {
+  position: absolute;
+  top: 40%; bottom: 3%; left: 8%; right: 8%;
   background: none; border: none; padding: 0;
   cursor: pointer;
-  font-family: var(--font-heading);
-  font-size: clamp(1.15rem, 4vw, 1.6rem);
-  font-style: italic; font-weight: 400;
-  line-height: 1.5;
-  color: var(--seal-deep);
-  max-width: 22ch;
-  transition: color 0.2s ease;
 }
-.envelope-cta:hover { color: var(--color-accent); }
 
 /* ── 1b. Loading spinner ──
    Same sheet of cream as the cover and the page, so the hand-off between
@@ -172,20 +85,10 @@
   .app-loader-spinner { animation-duration: 2s; }
 }
 
-/* ── 1c. Replaceable stationery background ──
-   The cover envelope (WelcomeModal) is the one surface still drawn with a
-   plain CSS gradient by default; it accepts an admin-uploaded photo that
-   replaces the gradient outright, under a translucent wash of the paper
-   color so its text stays legible over whatever is uploaded. The calendar
-   card and citation tag used to have the same mechanism, but both are now
-   drawn on top of a full illustration instead (see section 3 below). */
-.envelope.has-custom-bg {
-  background-image:
-    linear-gradient(160deg, color-mix(in srgb, var(--paper) 80%, transparent) 0%, color-mix(in srgb, var(--paper) 88%, transparent) 100%),
-    var(--custom-bg-image);
-  background-size: cover;
-  background-position: center;
-}
+/* `.envelope.has-custom-bg` (a translucent wash over an admin-uploaded
+   photo) dropped — the cover is one illustrated background image now (see
+   `.envelope` above and WelcomeModal.jsx), the same mechanism the calendar
+   card and citation tag already moved to (section 3 below). */
 
 /* ── 3. Date section: calendar over the envelope illustration ──
    The envelope + calendar used to be drawn with CSS (paper-fold gradients,
@@ -345,10 +248,11 @@
      of bug structurally impossible: nothing can be "inside the border's
      width" and "past the border's edge" at the same time if both are
      defined from the same number. */
-  /* Tried growing this past 820px to fill the leftover desktop space with
-     more green (so the border sat flush against the content box instead of
-     leaving a cream gap) — reverted per feedback: the old fixed clamp read
-     better. Back to the original. */
+  /* Deliberately untouched by the desktop cap below — every corner-floral,
+     full-bleed and padding calculation in this file keys off this same
+     `clamp()`, and it already stops growing past ~971px viewport width
+     (mobile/tablet behaviour is identical to before). What changes on
+     desktop is `.stationery-main`'s own box (below), not this. */
   --stationery-border-w: clamp(24px, 7vw, 68px);
   /* The safe inset every section uses to clear the border — and, via
      `.full-bleed` below, the exact amount every "should touch the border"
@@ -357,19 +261,34 @@
   --stationery-pad: calc(var(--stationery-border-w) + 1rem);
   position: relative;
   width: 100%;
+  /* The actual fix for "desktop should look like the mobile card, with
+     green filling everything past it": cap the WHOLE stationery skin
+     (border + cream + every section inside it) at a phone-sized width and
+     center it, instead of growing the border to try to chase a wide
+     desktop viewport. Everything above (border-w, pad, full-bleed,
+     corner-floral insets) is written in `vw`/`%`, relative to the true
+     viewport or to this box's own size — none of it needed to change for
+     this to work; capping the box these are computed inside of is enough
+     to make the whole card render exactly as it does on an actual ~480px
+     phone, at any desktop width. `.section`'s own 820px max-width is now
+     moot (this box never gets that wide), left as-is rather than removed. */
+  max-width: 480px;
+  margin: 0 auto;
   background-color: var(--color-bg);
   background-image: var(--stationery-paper, none);
   background-repeat: repeat;
-  /* A fixed tile size repeats far more times across a wide desktop
-     viewport than a phone-width one — same tile, same seam every time it
-     repeats, just a lot more repeats (and so a lot more visible seams) on
-     a wide screen. Scaling with `vw`, capped at both ends, keeps roughly
-     the same *number* of repeats regardless of viewport width instead of
-     the same *size* of tile: 420px unchanged on mobile (where it wasn't a
-     problem), growing on wider screens so the seam shows up far less
-     often. Doesn't remove the seam itself — that's the source texture not
-     being a true seamless tile — but should make it much less noticeable. */
-  background-size: clamp(420px, 50vw, 900px) auto;
+  /* Fixed, not `vw`-scaled: a previous version scaled this with the true
+     viewport specifically to reduce seam frequency on wide desktop screens
+     — but at exactly `50vw` a tile boundary sits at exactly the viewport's
+     horizontal center on EVERY viewport width, which is exactly where this
+     card is centered, so it guaranteed a seam right down the middle
+     instead of reducing it. Now that the visible card is capped at 480px
+     (above), a single fixed tile wider than that is simply never repeated
+     within it — no seam possible, on mobile or desktop. `background-
+     position: center` is extra insurance for the narrow band of viewports
+     right at the 480px cap where the box isn't quite capped yet. */
+  background-size: 600px auto;
+  background-position: center top;
 }
 .stationery-main::before {
   content: '';
@@ -584,6 +503,13 @@
   position: relative;
   width: 100%;
   margin-top: clamp(2.5rem, 7vw, 4rem);
+  /* Query container for the citation text below — sizing that text off
+     `cqw` (this box's own rendered width) instead of the viewport is what
+     makes it "always proportional to the image": the oval frame image
+     scales with this box already (`width: 100%`), so type sized the same
+     way scales exactly in step with it, at any viewport, including past
+     the desktop card's own width cap. */
+  container-type: inline-size;
 }
 .date-celebration-frame-image {
   display: block;
@@ -629,13 +555,14 @@
 .paper-tag--bare .paper-tag-body { display: flex; flex-direction: column; gap: clamp(0.4rem, 2vw, 0.7rem); }
 .paper-tag--bare .paper-tag-row { text-align: center; }
 .paper-tag--bare .paper-tag-row + .paper-tag-row { margin-top: 0; }
-/* Font sizes bumped up per feedback (legibility) — same oval window width
-   as before, just larger type within it; the oval's own lack of
-   `overflow: hidden` (see `.date-celebration-content` above) already
-   tolerates text running a little past its edge if it ever needs to. */
-.paper-tag--bare .paper-tag-label { font-size: 0.56rem; margin-bottom: 0.15rem; }
-.paper-tag--bare .paper-tag-value { font-size: clamp(0.82rem, 2.9vw, 1.05rem); line-height: 1.25; }
-.paper-tag--bare .paper-tag-hint { font-size: clamp(0.7rem, 2.4vw, 0.86rem); margin-top: 0; }
+/* Sized off `cqw` — % of `.date-celebration-frame`'s own rendered width
+   (see `container-type` there) — instead of `vw`, so this scales exactly
+   with the oval image itself ("always proportional to the image") rather
+   than the viewport. Dialed back down from an earlier, too-large bump;
+   still bigger than the original mobile-only sizing for legibility. */
+.paper-tag--bare .paper-tag-label { font-size: clamp(0.42rem, 2.2cqw, 0.52rem); margin-bottom: 0.15rem; }
+.paper-tag--bare .paper-tag-value { font-size: clamp(0.7rem, 3.6cqw, 0.92rem); line-height: 1.25; }
+.paper-tag--bare .paper-tag-hint { font-size: clamp(0.6rem, 3cqw, 0.78rem); margin-top: 0; }
 .paper-tag--bare .cal-add {
   /* Right up against the recommendation text — no divider line. The parent
      (`.paper-tag-body`) puts a flex `gap` between every row including this
@@ -820,19 +747,8 @@
 
 /* Dress-code note ("mayores indicaciones") — drawn as a caption over the
    dress-code photo rather than its own separate card. */
-.dresscode-note-overlay {
-  position: absolute;
-  /* Width narrowed ~10% (21% inset → 23.9%) per feedback. */
-  left: 23.9%; right: 23.9%; bottom: 5%;
-  text-align: center;
-  font-family: var(--font-heading);
-  font-style: italic;
-  /* Bumped up per feedback (legibility). */
-  font-size: clamp(0.76rem, 2.3vw, 0.94rem);
-  line-height: 1.35;
-  color: var(--color-accent);
-  text-shadow: 0 1px 3px color-mix(in srgb, var(--color-bg) 70%, transparent);
-}
+/* .dresscode-note-overlay dropped — the note is baked into the uploaded
+   image now (see WeddingInfo.jsx), not drawn as a text overlay. */
 
 @media (max-width: 480px) {
   .stationery-scene { padding-top: 2rem; padding-bottom: 2rem; }
@@ -857,10 +773,11 @@
   font-size: clamp(0.9rem, 3vw, 1.05rem);
   opacity: 0.7;
 }
-.wedding-map-slot .wedding-detail-img {
-  border-radius: 4px;
-  box-shadow: 0 10px 30px color-mix(in srgb, var(--color-text) 14%, transparent);
-}
+/* No rounding/shadow here (dropped per feedback) — every other image on
+   the site blends straight into the page full-bleed, no separate "card"
+   treatment; the rounded corners + drop shadow made this one the only
+   image that read as a floating rectangle instead, especially since the
+   map art already has its own illustrated border baked in. */
 
 /* ── 4c. "Save the date" buttons, at the foot of the paper tag ── */
 .cal-add {

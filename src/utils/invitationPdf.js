@@ -17,27 +17,6 @@ function absolute(url) {
   return u.startsWith('/') ? `${window.location.origin}${u}` : u
 }
 
-/* The flourish used between sections on the site, and the wax-seal sprig from
-   the envelope cover — same art, so the PDF reads as part of the same set. */
-const FLOURISH = `
-<svg class="flourish" viewBox="0 0 300 40" fill="none" stroke="currentColor"
-  stroke-width="0.9" stroke-linecap="round" aria-hidden="true">
-  <path d="M6 20h108" opacity="0.35"/>
-  <path d="M186 20h108" opacity="0.35"/>
-  <path d="M114 20c8 0 14-2 19-6"/>
-  <path d="M124 18c-1.5-3.4-1-6 1.6-7.8.9 3.3.2 5.9-1.6 7.8z"/>
-  <path d="M131 14.6c-2.4-2.7-2.6-5.4-.7-8 2 2.8 2.2 5.5.7 8z"/>
-  <path d="M114 20c8 0 14 2 19 6"/>
-  <path d="M124 22c-1.5 3.4-1 6 1.6 7.8.9-3.3.2-5.9-1.6-7.8z"/>
-  <path d="M186 20c-8 0-14-2-19-6"/>
-  <path d="M176 18c1.5-3.4 1-6-1.6-7.8-.9 3.3-.2 5.9 1.6 7.8z"/>
-  <path d="M169 14.6c2.4-2.7 2.6-5.4.7-8-2 2.8-2.2 5.5-.7 8z"/>
-  <path d="M186 20c-8 0-14 2-19 6"/>
-  <path d="M176 22c1.5 3.4 1 6-1.6 7.8-.9-3.3-.2-5.9 1.6-7.8z"/>
-  <path d="M150 12.5 156 20l-6 7.5-6-7.5z"/>
-  <circle cx="150" cy="20" r="1.6" fill="currentColor" stroke="none"/>
-</svg>`
-
 /** The arrow from the cover, pointing down at the seal you press. */
 const POINTER_ARROW = `
 <svg class="pointer" viewBox="0 0 24 30" fill="none" stroke="currentColor"
@@ -70,14 +49,14 @@ export function downloadInvitationPDF(inv, content = {}) {
 
   const names = content.envelope_names || content.hero_title || 'Cata & Andrés'
   const weddingDate = content.hero_date || 'Viernes 6 de noviembre de 2026'
-  const venueName = content.venue_name || 'Altos del Paico'
-  const venueAddress = content.venue_address || ''
   const ceremonyTime = content.ceremony_time || '17:00'
   const receptionTime = content.reception_time || '19:30'
   const cta = content.envelope_cta_text || 'Toca aquí para abrir la invitación'
 
-  const logo = absolute(content.envelope_logo_image)
   const sealImage = absolute(content.envelope_seal_image)
+  // Static asset (public/), not an admin field — this is the illustrated
+  // background art itself, not something that changes per wedding.
+  const bg = absolute('/pdf-invitation-bg.png')
 
   const timingLine = isPartyOnly
     ? `Citación a fiesta: ${receptionTime} hrs`
@@ -98,84 +77,48 @@ export function downloadInvitationPDF(inv, content = {}) {
 html,body{width:210mm;height:296mm;overflow:hidden;background:#f7f3ea}
 body{font-family:'Lora',Georgia,serif;color:#4a4038}
 
+/* The illustrated card art IS the page now — it's drawn at the same
+   portrait ratio as the A4 sheet (1414x2000px, same as 210x296mm), so
+   background-size:cover here doesn't crop or stretch it. "Andres y
+   Catalina, 6 de noviembre, Altos del Paico" is already baked into the
+   art; only what the art can't know — who this particular copy is for,
+   and the link to their actual invitation — is drawn on top, in the open
+   band across the top third. */
 .page{
   width:210mm;height:296mm;overflow:hidden;
-  background:linear-gradient(158deg,#faf6ee 0%,#f7f3ea 48%,#f0eadd 100%);
-  position:relative;display:flex;flex-direction:column;align-items:center;
-  text-align:center;padding:20mm 22mm 12mm;
+  background:url('${bg}') center/cover no-repeat, #f7f3ea;
+  position:relative;
   break-inside:avoid;page-break-inside:avoid;
 }
-/* Double hairline frame, matching the card borders on the site */
-.frame{position:absolute;inset:9mm;border:1px solid #c09045;pointer-events:none}
-.frame::before{content:'';position:absolute;inset:1.4mm;border:1px solid rgba(192,144,69,0.32)}
-.corner{position:absolute;width:6mm;height:6mm;border-color:#b68235;border-style:solid}
-.tl{top:9mm;left:9mm;border-width:1.5px 0 0 1.5px;margin:-1px}
-.tr{top:9mm;right:9mm;border-width:1.5px 1.5px 0 0;margin:-1px}
-.bl{bottom:9mm;left:9mm;border-width:0 0 1.5px 1.5px;margin:-1px}
-.br{bottom:9mm;right:9mm;border-width:0 1.5px 1.5px 0;margin:-1px}
 
-.inner{position:relative;z-index:1;width:100%;display:flex;flex-direction:column;align-items:center}
-
-.kicker{
-  font-size:7.5pt;letter-spacing:.24em;text-transform:uppercase;
-  color:#b68235;margin-bottom:5mm
-}
-/* Capped in both directions: a portrait logo would otherwise grow the page. */
-.logo{
-  width:38mm;max-width:38mm;max-height:32mm;height:auto;
-  object-fit:contain;margin:0 auto 4mm;display:block
-}
-/* No logo uploaded → the names take the oval frame from the cover */
-.names{
-  position:relative;display:inline-block;
-  font-family:'Cormorant Garamond',serif;font-size:27pt;font-style:italic;
-  font-weight:400;letter-spacing:.04em;color:#b68235;line-height:1.15;
-  margin-bottom:1.5mm
-}
-.names.framed{padding:6mm 9mm}
-.ring{
-  position:absolute;inset:0;border:1px solid rgba(192,144,69,0.4);
-  border-radius:50% / 42%
+.inner{
+  position:absolute;top:16mm;left:14mm;right:14mm;
+  display:flex;flex-direction:column;align-items:center;text-align:center;
 }
 
-.flourish{width:66mm;height:auto;color:#b68235;opacity:.6;margin:4.5mm auto}
-
-.to-label{font-size:7pt;letter-spacing:.2em;text-transform:uppercase;color:#b68235;margin-bottom:2mm}
+.to-label{font-size:7.5pt;letter-spacing:.22em;text-transform:uppercase;color:#8a7a68;margin-bottom:3mm}
 .guest-name{
-  font-family:'Cormorant Garamond',serif;font-size:22pt;font-style:italic;
-  font-weight:400;color:#4a4038;line-height:1.25
+  font-family:'Cormorant Garamond',serif;font-size:20pt;font-style:italic;
+  font-weight:400;color:#4a4038;line-height:1.25;margin-bottom:4mm
 }
-.intro{
-  font-family:'Cormorant Garamond',serif;font-size:12pt;font-style:italic;
-  line-height:1.7;color:#5a5048;max-width:114mm;margin:4mm auto 0
-}
+.wd-times{font-size:9pt;color:#8a7a68;letter-spacing:.04em;margin-bottom:5mm}
 
-.details{display:flex;flex-direction:column;align-items:center;gap:1.5mm}
-.wd-date{font-family:'Cormorant Garamond',serif;font-size:18pt;font-weight:600;color:#4a4038;letter-spacing:.03em}
-.wd-times{font-size:9pt;color:#b68235;letter-spacing:.05em}
-.wd-venue{font-family:'Cormorant Garamond',serif;font-size:13.5pt;font-weight:600;color:#4a4038}
-.wd-address{font-size:8.5pt;color:#8a7a68;font-style:italic}
-
-/* The wax seal, as on the envelope cover — the thing you press to open */
+/* The wax seal, as on the envelope cover — the thing you press to open,
+   sized down to fit the open band instead of the full page it had before. */
 .seal-block{display:flex;flex-direction:column;align-items:center}
-.pointer{width:5.5mm;height:auto;color:#b68235;margin-bottom:2mm;display:block}
+.pointer{width:4.5mm;height:auto;color:#8a7a68;margin-bottom:1.5mm;display:block}
 .seal{
-  width:22mm;height:22mm;flex:0 0 auto;border-radius:50%;
+  width:15mm;height:15mm;flex:0 0 auto;border-radius:50%;
   background:radial-gradient(circle at 34% 30%, #6d7355 0%, #565c42 72%);
   display:flex;align-items:center;justify-content:center;
-  text-decoration:none;margin-bottom:3.5mm;
-  box-shadow:0 1mm 3mm rgba(40,44,30,0.32);
+  text-decoration:none;margin-bottom:2.5mm;
+  box-shadow:0 1mm 2.5mm rgba(40,44,30,0.3);
 }
 .seal-art{width:66%;height:66%}
 .seal img{width:100%;height:100%;object-fit:contain;border-radius:50%}
 .cta{
-  font-family:'Cormorant Garamond',serif;font-size:15pt;font-style:italic;
-  color:#565c42;max-width:78mm;line-height:1.45
-}
-
-.footer{
-  margin-top:auto;padding-top:5mm;font-size:8pt;color:#a09080;
-  letter-spacing:.06em
+  font-family:'Cormorant Garamond',serif;font-size:11pt;font-style:italic;
+  color:#565c42;max-width:70mm;line-height:1.4
 }
 
 @media print{
@@ -185,37 +128,10 @@ body{font-family:'Lora',Georgia,serif;color:#4a4038}
 </head>
 <body>
 <div class="page">
-  <div class="frame"></div>
-  <div class="corner tl"></div>
-  <div class="corner tr"></div>
-  <div class="corner bl"></div>
-  <div class="corner br"></div>
-
   <div class="inner">
-    <p class="kicker">Invitación de Matrimonio</p>
-
-    ${logo ? `<img src="${logo}" class="logo" alt="">` : ''}
-    <div class="names${logo ? '' : ' framed'}">
-      ${logo ? '' : '<span class="ring"></span>'}${names}
-    </div>
-
-    ${FLOURISH}
-
-    <p class="to-label">Para</p>
+    <p class="to-label">Esta invitación es especialmente para</p>
     <div class="guest-name">${guestName}</div>
-
-    <p class="intro">Con todo nuestro amor, tenemos el placer de ${companion ? 'invitarlos' : 'invitarte'} a celebrar con nosotros el día más especial de nuestras vidas. ${companion ? 'Su' : 'Tu'} presencia hará de este momento algo aún más mágico.</p>
-
-    ${FLOURISH}
-
-    <div class="details">
-      <div class="wd-date">${weddingDate}</div>
-      <div class="wd-times">${timingLine}</div>
-      <div class="wd-venue">${venueName}</div>
-      ${venueAddress ? `<div class="wd-address">${venueAddress}</div>` : ''}
-    </div>
-
-    ${FLOURISH}
+    <p class="wd-times">${timingLine}</p>
 
     <div class="seal-block">
       ${POINTER_ARROW}
@@ -225,8 +141,6 @@ body{font-family:'Lora',Georgia,serif;color:#4a4038}
       <p class="cta">${cta}</p>
     </div>
   </div>
-
-  <div class="footer">Con amor, ${names} &nbsp;•&nbsp; ${weddingDate}</div>
 </div>
 <script>window.addEventListener('load',()=>setTimeout(()=>window.print(),900))</script>
 </body>

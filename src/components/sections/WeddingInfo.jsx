@@ -7,10 +7,6 @@ import PhotoCardCarousel from '../PhotoCardCarousel'
 import Timeline from '../Timeline'
 import DecorSlot from '../DecorSlot'
 
-const DRESS_CODE_NOTE_DEFAULT =
-  'Queremos verlos elegantes y disfrutando. Pueden elegir los colores que más les gusten; ' +
-  'solo les pedimos no usar el blanco, crema, marfil o tonos similares reservados para la novia.'
-
 export default function WeddingInfo() {
   const { get, guest, venuePhotos, loadVenuePhotos } = useApp()
 
@@ -50,7 +46,6 @@ export default function WeddingInfo() {
   const timelineSeparatorBottom = get('timeline_separator_bottom_image')
   const timelineFloralLeft = get('timeline_floral_left')
   const timelineFloralRight = get('timeline_floral_right')
-  const dressCodeNote = get('dress_code_note', DRESS_CODE_NOTE_DEFAULT)
 
   const savedTimeline = parseTimelineItems(get('timeline_items'))
   const timelineItems = savedTimeline.length ? savedTimeline : DEFAULT_TIMELINE_ITEMS
@@ -153,9 +148,10 @@ export default function WeddingInfo() {
         </div>
       </div>
 
-      {/* ── Dress code — a single image (no corner florals here), a
-          customizable note drawn over it, and the cat gif below with its
-          own dedicated full-width background (not the dog+cat one). ── */}
+      {/* ── Dress code — a single image (no corner florals here), and the
+          cat gif below with its own dedicated full-width background (not
+          the dog+cat one). The note used to be drawn as a text overlay
+          here — dropped per feedback, now baked into the image itself. ── */}
       <div className="wedding-detail-block reveal-on-scroll">
         <h3 className="wedding-detail-title">Código de vestimenta</h3>
         <div className="framed-media full-bleed wedding-detail-img">
@@ -165,7 +161,6 @@ export default function WeddingInfo() {
           ) : (
             <PhotoPlaceholder size="lg" label="Imagen de código de vestimenta" />
           )}
-          {dressCodeNote && <p className="dresscode-note-overlay">{dressCodeNote}</p>}
         </div>
         <div className="framed-media full-bleed" style={{ marginTop: '1.5rem' }}>
           <div className="dresscode-pet-row">

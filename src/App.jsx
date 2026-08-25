@@ -104,9 +104,11 @@ function FlowerFooter() {
  */
 function CoverLayer({ guest, onEnter }) {
   const { get, contentLoaded } = useApp()
-  const logo = normalizeImageUrl(get('envelope_logo_image') || '')
-  const seal = normalizeImageUrl(get('envelope_seal_image') || '')
-  const artReady = useImagesReady([logo, seal], contentLoaded)
+  // The cover is one background image now (see WelcomeModal.jsx) — this
+  // used to wait on the old logo/seal fields, which it no longer renders
+  // at all, so the modal could flash in before its actual art was ready.
+  const coverBg = normalizeImageUrl(get('envelope_background_image') || '') || '/welcome-cover-bg.png'
+  const artReady = useImagesReady([coverBg], contentLoaded)
 
   if (!contentLoaded || !artReady) return <Loader />
   return <WelcomeModal guest={guest} onEnter={onEnter} />

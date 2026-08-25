@@ -8,11 +8,15 @@ const SECTIONS = [
   {
     label: 'Sobre de entrada (lo primero que se ve)',
     fields: [
-      { key: 'envelope_logo_image', label: 'Logo del sobre (PNG con fondo transparente)', type: 'image' },
-      { key: 'envelope_names', label: 'Nombres bajo el logo (ej. Cata & Andrés)', type: 'text' },
-      { key: 'envelope_seal_image', label: 'Sello de cera (PNG con fondo transparente, opcional)', type: 'image' },
-      { key: 'envelope_cta_text', label: 'Texto del botón para abrir', type: 'text' },
-      { key: 'envelope_background_image', label: 'Fondo del sobre (reemplaza el color de fondo por tu foto)', type: 'image' },
+      // The cover is one illustrated background image now (names/date/
+      // seal/"haz click aquí" all baked into it) — only the background and
+      // the button's accessible label still apply here. `envelope_names`
+      // and `envelope_seal_image` are still used, just only by the
+      // downloadable PDF invitation now, not this screen.
+      { key: 'envelope_background_image', label: 'Fondo del sobre (imagen completa — nombres, fecha y sello ya van incluidos en ella)', type: 'image' },
+      { key: 'envelope_cta_text', label: 'Texto accesible del botón para abrir (no se ve en pantalla, solo lectores de accesibilidad)', type: 'text' },
+      { key: 'envelope_names', label: 'Nombres (solo para la invitación en PDF descargable)', type: 'text' },
+      { key: 'envelope_seal_image', label: 'Sello de cera — PNG con fondo transparente (solo para la invitación en PDF descargable)', type: 'image' },
     ],
   },
   {
@@ -87,8 +91,7 @@ const SECTIONS = [
       { key: 'venue_maps_url', label: 'Link de Google Maps', type: 'text' },
       { key: 'venue_map_title', label: 'Título del plano del lugar', type: 'text' },
       { key: 'venue_map_image', label: 'Imagen del plano / mapa del lugar', type: 'image' },
-      { key: 'dress_code_image', label: 'Imagen código de vestimenta', type: 'image' },
-      { key: 'dress_code_note', label: 'Nota sobre la imagen (ya viene con un texto por defecto — edítalo o bórralo)', type: 'textarea' },
+      { key: 'dress_code_image', label: 'Imagen código de vestimenta (el texto va incluido en la imagen)', type: 'image' },
       { key: 'description_dog_url', label: 'Gif del perro (bajo el carrusel del lugar)', type: 'image' },
     ],
   },
