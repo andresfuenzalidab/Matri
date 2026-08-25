@@ -311,7 +311,7 @@ textarea.input { min-height: 90px; resize: vertical; }
 
 /* Countdown */
 .countdown {
-  display: flex; gap: clamp(1rem, 4vw, 2.5rem);
+  display: flex; gap: clamp(1rem, 4cqw, 2.5rem);
   margin: 2.5rem 0; justify-content: center;
 }
 .countdown-unit { text-align: center; }
@@ -1337,7 +1337,14 @@ body {
 /* Editorial section titles ── */
 .section-title {
   font-family: var(--font-heading);
-  font-size: clamp(2.5rem, 7vw, 4.5rem);
+  /* `cqw`, not `vw`: this is used inside `.stationery-main` (El lugar,
+     Nuestra historia, FAQ, Nuestra fecha...), which is capped to a
+     phone-sized max-width on desktop (see stationery.css) — sizing off
+     the true (much wider) viewport kept reaching this clamp's old, much
+     bigger max, cramming a title tuned for a wide screen into a narrow
+     card. `cqw` resolves against the card's own (now-capped) width, same
+     as it already did on an actual phone. */
+  font-size: clamp(2.5rem, 7cqw, 4.5rem);
   font-weight: 400;
   font-style: italic;
   color: var(--color-accent);
@@ -1371,7 +1378,8 @@ body {
 /* Wedding detail titles ── */
 .wedding-detail-title {
   font-family: var(--font-heading);
-  font-size: clamp(1.8rem, 4vw, 2.5rem);
+  /* `cqw`, same reasoning as `.section-title` above. */
+  font-size: clamp(1.8rem, 4cqw, 2.5rem);
   font-weight: 400;
   font-style: italic;
   color: var(--color-accent);
@@ -1426,7 +1434,9 @@ body {
 }
 .countdown-section-timer::after { display: none; }
 .countdown-number {
-  font-size: clamp(3rem, 9vw, 5.5rem);
+  /* `cqw`, same reasoning as `.section-title` above — this is what made
+     the countdown digits render huge on desktop. */
+  font-size: clamp(3rem, 9cqw, 5.5rem);
   font-weight: 400;
 }
 .countdown-label {
@@ -1438,7 +1448,7 @@ body {
 /* Gifts ── */
 .gifts-hero-title {
   font-family: var(--font-heading);
-  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-size: clamp(2rem, 5cqw, 3.5rem);
   font-weight: 400;
   font-style: italic;
   color: var(--color-accent);
@@ -1453,14 +1463,14 @@ body {
 /* Contact ── editorial closing */
 .contact-heading {
   font-family: var(--font-heading);
-  font-size: clamp(2.5rem, 7vw, 4.5rem);
+  font-size: clamp(2.5rem, 7cqw, 4.5rem);
   font-weight: 400;
   font-style: italic;
   color: var(--color-accent);
 }
 .contact-closing-script {
   font-family: var(--font-heading);
-  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-size: clamp(2rem, 5cqw, 3.5rem);
   font-style: italic;
   font-weight: 400;
   color: var(--color-accent);
@@ -1599,7 +1609,11 @@ body {
   transition: opacity 0.3s ease;
 }
 .photo-card--landscape {
-  aspect-ratio: 16/9;
+  /* Matches the reference frame's own proportions (~1072×646, ≈5:3) more
+     closely than the previous 16:9 (1.78 vs 1.67) — close enough before
+     that a frame drawn for this ratio was visibly cropping/gapping
+     against a 16:9 photo underneath it. */
+  aspect-ratio: 5/3;
 }
 .photo-card-fading { opacity: 0; }
 .photo-card img {

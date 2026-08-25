@@ -29,7 +29,10 @@ export default function OurStory() {
           lineHeight: 2,
           fontFamily: 'var(--font-heading)',
           fontStyle: 'italic',
-          fontSize: 'clamp(1.05rem, 2.5vw, 1.3rem)',
+          // `cqw`, not `vw` — sized off `.stationery-main`'s own (capped-
+          // at-480px) width, not the true viewport, so this doesn't grow
+          // past its real mobile size once the card freezes on desktop.
+          fontSize: 'clamp(1.05rem, 2.5cqw, 1.3rem)',
           fontWeight: 400,
           opacity: 0.82,
           color: 'var(--color-text)',

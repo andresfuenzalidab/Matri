@@ -89,7 +89,7 @@ body{font-family:'Lora',Georgia,serif;color:#4a4038}
    right at the START of open space instead of on top of baked text —
    there's room to size everything up properly, per feedback. */
 .inner{
-  position:absolute;top:40%;left:14mm;right:14mm;
+  position:absolute;top:35%;left:14mm;right:14mm;
   display:flex;flex-direction:column;align-items:center;text-align:center;
 }
 

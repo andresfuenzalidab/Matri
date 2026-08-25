@@ -7,7 +7,7 @@ import { sendEmail } from '../_email.js'
 async function eligibleRecipients(env) {
   const [invRes, confirmedRes] = await Promise.all([
     env.DB.prepare(`
-      SELECT i.id, i.name, i.email AS inv_email, r.email AS rsvp_email, r.attending
+      SELECT i.id, i.name, i.token, i.email AS inv_email, r.email AS rsvp_email, r.attending
       FROM invitations i
       LEFT JOIN rsvp_responses r ON r.invitation_id = i.id
       WHERE i.is_admin = 0
@@ -19,6 +19,7 @@ async function eligibleRecipients(env) {
     .map(r => ({
       id: r.id,
       name: r.name,
+      token: r.token,
       email: (r.rsvp_email || r.inv_email || '').trim(),
       attending: r.attending,
     }))
@@ -46,14 +47,20 @@ export async function onRequestPost({ request, env }) {
 
     const emailFrom = (await env.DB.prepare("SELECT value FROM site_content WHERE key = 'email_from'").first())?.value
     if (!emailFrom) return err('Configura primero el correo remitente (email_from) en la pestaña Contenido.')
+    // Same lookup/format `gifts/checkout.js` uses for its own back-link.
+    const siteUrl = ((await env.DB.prepare("SELECT value FROM site_content WHERE key = 'site_url'").first())?.value || '').replace(/\/$/, '')
 
     const recipients = await eligibleRecipients(env)
     let sent = 0, failed = 0
     for (const r of recipients) {
+      // Each guest's own invite link — takes them straight back into their
+      // own session (their RSVP, their name) instead of the bare homepage.
+      const link = `${siteUrl}/?token=${r.token}#regalos`
       const paragraphs = message.split('\n').filter(p => p.trim())
         .map(p => `<p>${p.replace(/\{NOMBRE\}/gi, r.name)}</p>`).join('')
       const html = `<div style="font-family:sans-serif;max-width:500px;margin:0 auto">
         ${paragraphs}
+        <p style="margin-top:1.5rem"><a href="${link}" style="color:#8B7355">Ver la lista de regalos →</a></p>
         <p style="margin-top:1.5rem;font-size:0.9rem;opacity:0.7">Con cariño,</p>
         <p style="font-size:0.9rem;opacity:0.7">Cata & Andrés</p>
       </div>`

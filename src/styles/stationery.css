@@ -611,6 +611,14 @@
 .framed-media {
   position: relative;
   width: 100%;
+  /* Solid backing, not transparent: the 6% padding below (between the
+     photo and the frame art's own outer edge) used to show whatever was
+     behind `.framed-media` — the page's own mottled paper TEXTURE — right
+     up against the frame art's own painted, flat cream margin. Two
+     visibly different creams meeting at a seam read as the photo/frame
+     "mixing" with the page background. A solid, matching cream fill here
+     means that margin is consistent regardless of what's behind it. */
+  background: var(--paper);
   /* Belt-and-suspenders: whatever is inside (a carousel, a gif row) is
      never allowed to visually escape this box, so it can never end up
      wider than the frame drawn on top of it, or past the border either. */
