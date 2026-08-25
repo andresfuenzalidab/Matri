@@ -16,24 +16,19 @@ export default function Home() {
       {/* Show the fixed SharedHeroVideo through this transparent layer */}
       <div style={{ width: '100%', height: '100%', background: 'transparent' }} />
 
-      {/* Seamless fade to the page background at the bottom — reveals the
-          SAME tiled damask art `.editorial-main` fills the rest of the
-          desktop background with (`--stationery-border`, inherited from
-          `EditorialMain` in App.jsx; this section is inside it), not a
-          flat invented color: below this point is exactly that pattern
-          across most of the width now that `.stationery-main` is capped
-          to a phone-width card, so fading into anything else left a
-          visibly mismatched band right where the two meet.
-          `mask-image`, not a background-color gradient: a gradient can
-          only fade between colors, and what needs revealing here is an
-          image. The mask makes the tiled background itself fade from
-          fully hidden (video showing through) to fully visible over the
-          same last third of the hero used before. */}
+      {/* Seamless fade to the page background at the bottom. Was briefly a
+          `mask-image` reveal of the tiled damask pattern instead of a flat
+          color — reverted: it rendered as fully opaque across the WHOLE
+          hero instead of just fading in over the last third, hiding the
+          video entirely. Back to the proven mechanism: a plain color
+          gradient (`--stationery-fill-color`, the same fallback tone used
+          elsewhere) fading the video out, handing off to `.editorial-main`
+          — which starts exactly at this point and shows the real tiled
+          border art — for the textured look, rather than trying to fade
+          into the texture itself mid-gradient. */}
       <div style={{
         position: 'absolute', inset: 0, pointerEvents: 'none',
-        background: 'var(--stationery-border, var(--stationery-fill-color)) repeat',
-        WebkitMaskImage: 'linear-gradient(180deg, transparent 65%, black 100%)',
-        maskImage: 'linear-gradient(180deg, transparent 65%, black 100%)',
+        background: 'linear-gradient(180deg, transparent 65%, var(--stationery-fill-color) 100%)',
       }} />
 
       {/* Scroll hint — the only thing standing in for the nav bar (hidden

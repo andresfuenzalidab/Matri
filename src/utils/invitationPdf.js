@@ -82,14 +82,12 @@ body{font-family:'Lora',Georgia,serif;color:#4a4038}
   break-inside:avoid;page-break-inside:avoid;
 }
 
-/* Repositioned toward the middle of the page per feedback — the only real
-   open gap there (besides the top band) is right after "Altos del Paico"
-   and before the roofline, so this starts right at that seam and flows
-   down from it; the arrow + "Click aquí" pair spilling a little onto the
-   soft sky in the illustration reads fine against that light a
-   background. */
+/* Slightly above the middle per feedback — 2/5 down the page — landing
+   inside "CATALINA" and the "6 DE NOVIEMBRE" line baked into the art
+   below it; the arrow + "Click aquí" pair spilling onto that text/the
+   soft sky further down reads fine against that light a background. */
 .inner{
-  position:absolute;top:47%;left:14mm;right:14mm;
+  position:absolute;top:40%;left:14mm;right:14mm;
   display:flex;flex-direction:column;align-items:center;text-align:center;
 }
 

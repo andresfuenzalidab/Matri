@@ -45,16 +45,16 @@
 /* Back on the art itself per feedback (not a separate block above it),
    sized/positioned in % of `.envelope`'s own box so it scales exactly
    with the image at any size. Sits on the open cream of the envelope's
-   flap, above the wax seal — narrower than the card (60%, not the ~74%
-   the envelope itself spans there) so it stays inside the envelope's own
-   drawn edges instead of running out onto the bouquet/cream beside it. */
+   flap, above the wax seal — narrowed again per feedback (46%, not 60%)
+   so it clears the envelope's own lace-trimmed edges with real margin,
+   not just its outer boundary. */
 .envelope-message {
   position: absolute;
-  top: 46%; left: 20%; right: 20%;
+  top: 46%; left: 27%; right: 27%;
   text-align: center;
   font-family: var(--font-heading);
   font-style: italic; font-weight: 400;
-  font-size: clamp(0.68rem, 3.2vw, 0.85rem);
+  font-size: clamp(0.64rem, 3vw, 0.8rem);
   line-height: 1.45;
   color: var(--paper-ink);
 }
