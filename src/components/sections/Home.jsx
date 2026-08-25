@@ -16,16 +16,24 @@ export default function Home() {
       {/* Show the fixed SharedHeroVideo through this transparent layer */}
       <div style={{ width: '100%', height: '100%', background: 'transparent' }} />
 
-      {/* Seamless fade to page bg at the bottom — fades to green, not the
-          old cream: below this point the page is `.stationery-main` (the
-          capped, phone-width card) sitting on a green fill everywhere else
-          (see stationery.css), and green is what actually shows across
-          MOST of this width now. Fading to cream instead left a visibly
-          mismatched cream band right where the card is narrower than the
-          hero, before the card's own edge even begins. */}
+      {/* Seamless fade to the page background at the bottom — reveals the
+          SAME tiled damask art `.editorial-main` fills the rest of the
+          desktop background with (`--stationery-border`, inherited from
+          `EditorialMain` in App.jsx; this section is inside it), not a
+          flat invented color: below this point is exactly that pattern
+          across most of the width now that `.stationery-main` is capped
+          to a phone-width card, so fading into anything else left a
+          visibly mismatched band right where the two meet.
+          `mask-image`, not a background-color gradient: a gradient can
+          only fade between colors, and what needs revealing here is an
+          image. The mask makes the tiled background itself fade from
+          fully hidden (video showing through) to fully visible over the
+          same last third of the hero used before. */}
       <div style={{
         position: 'absolute', inset: 0, pointerEvents: 'none',
-        background: 'linear-gradient(180deg, transparent 65%, var(--stationery-fill-color) 100%)',
+        background: 'var(--stationery-border, var(--stationery-fill-color)) repeat',
+        WebkitMaskImage: 'linear-gradient(180deg, transparent 65%, black 100%)',
+        maskImage: 'linear-gradient(180deg, transparent 65%, black 100%)',
       }} />
 
       {/* Scroll hint — the only thing standing in for the nav bar (hidden

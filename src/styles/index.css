@@ -1161,13 +1161,17 @@ body {
    are NOT see-through onto the video. */
 .editorial-main {
   position: relative;
-  /* Green, not cream: `.stationery-main` (the actual card) is now capped
-     to a phone-sized max-width and centered inside this, so on any screen
-     wider than that cap there's real space on either side of it — this is
-     what shows there. `.stationery-main`'s own opaque background paints
-     over this wherever the card itself sits, so nothing below the hero
-     changes on mobile (where the card already fills the full width). */
-  background: linear-gradient(to bottom, transparent 100vh, var(--stationery-fill-color) 100vh);
+  /* The admin's own damask border art (`--stationery-border`, set on this
+     element in App.jsx — see `EditorialMain`), tiled, not an invented flat
+     color: `.stationery-main` (the actual card) is capped to a phone-sized
+     max-width and centered inside this, so on any screen wider than that
+     cap there's real space on either side of it — this is what fills it,
+     the same asset already used for the border strips right next to it,
+     not a second, different-looking green. `--stationery-fill-color` only
+     as the fallback for when no border image is set at all. Nothing to
+     fade here — by this point in the layout the hero's own box (and its
+     own fade, in Home.jsx) has already ended. */
+  background: var(--stationery-border, var(--stationery-fill-color)) repeat;
 }
 
 /* Sections: transparent (they inherit from editorial-main's cream bg) */
