@@ -46,8 +46,6 @@ export function downloadInvitationPDF(inv, content = {}) {
   // Formal names on the invitation, joined the same way as on the RSVP card.
   const guestName = companion ? `${inv.name} y ${companion}` : inv.name
 
-  const names = content.envelope_names || content.hero_title || 'Cata & Andrés'
-
   const sealImage = absolute(content.envelope_seal_image)
   // Static asset (public/), not an admin field — this is the illustrated
   // background art itself, not something that changes per wedding.
@@ -57,7 +55,7 @@ export function downloadInvitationPDF(inv, content = {}) {
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Invitación — ${names}</title>
+<title>Invitación ${guestName} - Matrimonio Catalina y Andrés</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400;1,600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}

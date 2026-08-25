@@ -186,9 +186,31 @@ export default function InvitationsManager() {
     })
   }
 
-  function openWhatsApp(phone) {
-    const digits = phone.replace(/\D/g, '')
-    window.open(`https://wa.me/${digits}`, '_blank', 'noopener')
+  /** Draft message for the WhatsApp send below — edit here to change the
+   *  wording for everyone at once. `{NOMBRE}` is swapped for the
+   *  invitation's own name, same convention as the gift reminder email. */
+  const WHATSAPP_MESSAGE_TEMPLATE =
+    '¡Hola {NOMBRE}! 💛\n\n' +
+    'Con mucha alegría te compartimos la invitación a nuestro matrimonio. ' +
+    'Te dejamos el PDF adjunto para que la guardes, y aquí puedes ver todos los detalles y confirmar tu asistencia:\n\n' +
+    '{LINK}\n\n' +
+    '¡Esperamos poder celebrar este día tan especial contigo!\n\n' +
+    'Con cariño,\nCata & Andrés'
+
+  function whatsappMessage(inv) {
+    return WHATSAPP_MESSAGE_TEMPLATE
+      .replace(/\{NOMBRE\}/g, inv.name)
+      .replace('{LINK}', getLink(inv))
+  }
+
+  // Pre-fills the message (name + their own link) so there's nothing left
+  // to type by hand — just attach the PDF (already downloaded via the
+  // button next to this one) and hit send. WhatsApp's own share links
+  // can't attach a file for you; that one step still has to be manual.
+  function openWhatsApp(inv) {
+    const digits = (inv.phone || '').replace(/\D/g, '')
+    const text = encodeURIComponent(whatsappMessage(inv))
+    window.open(`https://wa.me/${digits}?text=${text}`, '_blank', 'noopener')
   }
 
   async function toggleSent(inv) {
@@ -646,7 +668,7 @@ export default function InvitationsManager() {
                       </button>
                       {inv.phone && (
                         <button className="btn btn-ghost" style={{ fontSize: '0.75rem', padding: '2px 6px', color: '#25D366' }}
-                          onClick={() => openWhatsApp(inv.phone)} title="Abrir WhatsApp">
+                          onClick={() => openWhatsApp(inv)} title="Abrir WhatsApp con el mensaje y el link ya listos">
                           WA
                         </button>
                       )}
