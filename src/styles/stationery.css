@@ -434,8 +434,10 @@
      width for the title — real overlap, not a rendering bug). `cqw`
      tracks the card's actual width at every size, mobile or capped
      desktop, so this can't drift out of proportion with it again. */
+  /* Cut further per feedback — still reading as too big even at the
+     mobile-equivalent (`cqw`) size above. */
   position: absolute;
-  width: clamp(115px, 30cqw, 145px);
+  width: clamp(85px, 22cqw, 105px);
   height: auto;
   pointer-events: none;
   z-index: 2;
@@ -457,7 +459,7 @@
 /* Same `cqw` reasoning as `.corner-floral` above, scaled a bit smaller
    still — this variant has even more to fit at once (Countdown uses all 4
    corners plus 2 urns, competing for the same card width). */
-.corner-floral--sm { width: clamp(80px, 18cqw, 110px); }
+.corner-floral--sm { width: clamp(60px, 13cqw, 80px); }
 
 /* Clearance under the top corner florals for whatever text comes right
    after them (a kicker, a title) — enough that the florals' own art
@@ -469,7 +471,7 @@
   /* `cqw`, matching `.corner-floral`'s own new sizing above, so this stays
      in step with however big the florals actually render at any card
      width instead of drifting independently of them again. */
-  margin-top: clamp(2rem, 8cqw, 3.25rem) !important;
+  margin-top: clamp(1.5rem, 5.8cqw, 2.4rem) !important;
 }
 
 /* Small stone urn — reused between "La celebración" and "El lugar", same
@@ -611,14 +613,15 @@
 .framed-media {
   position: relative;
   width: 100%;
-  /* Solid backing, not transparent: the 6% padding below (between the
-     photo and the frame art's own outer edge) used to show whatever was
-     behind `.framed-media` — the page's own mottled paper TEXTURE — right
-     up against the frame art's own painted, flat cream margin. Two
-     visibly different creams meeting at a seam read as the photo/frame
-     "mixing" with the page background. A solid, matching cream fill here
-     means that margin is consistent regardless of what's behind it. */
-  background: var(--paper);
+  /* NOT a solid background — deliberately transparent. This class is also
+     used for things that are SUPPOSED to be see-through, like the pet
+     gifs (transparent-background PNGs meant to sit right on the page's
+     own paper texture, no card behind them) — a solid fill here painted
+     an opaque cream rectangle behind every one of them, which is exactly
+     the bug just reported ("images that were transparent, no longer
+     transparent"). The actual fix for the frame-vs-photo seam belongs on
+     `.framed-media-content` below, which only the carousel cases (the
+     ones that actually have a padded margin to fill) opt into. */
   /* Belt-and-suspenders: whatever is inside (a carousel, a gif row) is
      never allowed to visually escape this box, so it can never end up
      wider than the frame drawn on top of it, or past the border either. */
@@ -631,9 +634,15 @@
    overlay, which covers 100% of it) stays full-size; only the real content
    gets this padding — and being padding on all four sides equally, it's
    naturally centered too. Skipped for plain (unframed) images like the
-   map, which should stay fully edge-to-edge. */
+   map, which should stay fully edge-to-edge, and for `.pets-row`, which
+   never uses this wrapper (see `.framed-media` comment above).
+   The solid cream backing belongs HERE, not on `.framed-media`: this
+   wrapper is only ever used where there's an actual padded margin between
+   a photo and its frame art that needs a consistent fill — never around
+   something meant to stay transparent. */
 .framed-media-content {
   padding: 6%;
+  background: var(--paper);
 }
 .framed-media-overlay {
   position: absolute; inset: 0;

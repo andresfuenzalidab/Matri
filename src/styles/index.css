@@ -1344,7 +1344,8 @@ body {
      bigger max, cramming a title tuned for a wide screen into a narrow
      card. `cqw` resolves against the card's own (now-capped) width, same
      as it already did on an actual phone. */
-  font-size: clamp(2.5rem, 7cqw, 4.5rem);
+  /* Cut further per feedback — still reading as too big. */
+  font-size: clamp(2rem, 5.5cqw, 3.5rem);
   font-weight: 400;
   font-style: italic;
   color: var(--color-accent);
@@ -1379,7 +1380,7 @@ body {
 .wedding-detail-title {
   font-family: var(--font-heading);
   /* `cqw`, same reasoning as `.section-title` above. */
-  font-size: clamp(1.8rem, 4cqw, 2.5rem);
+  font-size: clamp(1.5rem, 3.2cqw, 2.1rem);
   font-weight: 400;
   font-style: italic;
   color: var(--color-accent);
@@ -1436,7 +1437,7 @@ body {
 .countdown-number {
   /* `cqw`, same reasoning as `.section-title` above — this is what made
      the countdown digits render huge on desktop. */
-  font-size: clamp(3rem, 9cqw, 5.5rem);
+  font-size: clamp(2.4rem, 7cqw, 4.3rem);
   font-weight: 400;
 }
 .countdown-label {
@@ -1448,7 +1449,7 @@ body {
 /* Gifts ── */
 .gifts-hero-title {
   font-family: var(--font-heading);
-  font-size: clamp(2rem, 5cqw, 3.5rem);
+  font-size: clamp(1.6rem, 4cqw, 2.8rem);
   font-weight: 400;
   font-style: italic;
   color: var(--color-accent);
@@ -1463,14 +1464,14 @@ body {
 /* Contact ── editorial closing */
 .contact-heading {
   font-family: var(--font-heading);
-  font-size: clamp(2.5rem, 7cqw, 4.5rem);
+  font-size: clamp(2rem, 5.5cqw, 3.5rem);
   font-weight: 400;
   font-style: italic;
   color: var(--color-accent);
 }
 .contact-closing-script {
   font-family: var(--font-heading);
-  font-size: clamp(2rem, 5cqw, 3.5rem);
+  font-size: clamp(1.6rem, 4cqw, 2.8rem);
   font-style: italic;
   font-weight: 400;
   color: var(--color-accent);
