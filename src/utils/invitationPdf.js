@@ -74,7 +74,7 @@ body{font-family:'Lora',Georgia,serif;color:#4a4038}
    Catalina, 6 de noviembre, Altos del Paico" is already baked into the
    art; only what the art can't know — who this particular copy is for,
    and the link to their actual invitation — is drawn on top, positioned
-   toward the middle of the page (see `.inner` below) per feedback. */
+   toward the middle of the page (see .inner below) per feedback. */
 .page{
   width:210mm;height:296mm;overflow:hidden;
   background:url('${bg}') center/cover no-repeat, #f7f3ea;

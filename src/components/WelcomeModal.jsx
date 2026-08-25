@@ -48,10 +48,16 @@ export default function WelcomeModal({ guest, onEnter }) {
       className="envelope-overlay"
       style={{ opacity: visible ? 1 : 0 }}
     >
-      {/* Message + card share this wrapper's width, so they scale together
-          as one unit at any viewport instead of the message being sized
-          independently of the art it sits above. */}
-      <div className="envelope-stack">
+      <div
+        className={`envelope ${opening ? 'is-opening' : ''}`}
+        style={{ '--envelope-cover-bg': `url("${coverBg}")` }}
+      >
+        {/* Overlaid on the art itself, not a separate element above it —
+            sized/positioned in % of `.envelope`'s own box, so it scales
+            exactly with the image at any size. Sits on the open cream of
+            the envelope's flap, above the wax seal, narrower than the
+            card so it stays within the envelope's own drawn width rather
+            than running out past its edges onto the bouquet/cream. */}
         <p className="envelope-message">
           {message || (
             <>
@@ -65,15 +71,10 @@ export default function WelcomeModal({ guest, onEnter }) {
           )}
         </p>
 
-        <div
-          className={`envelope ${opening ? 'is-opening' : ''}`}
-          style={{ '--envelope-cover-bg': `url("${coverBg}")` }}
-        >
-          {/* Generous, roughly over the envelope + "haz click aquí" in the
-              art — deliberately bigger than just the wax seal so it doesn't
-              need pixel-perfect alignment with the artwork on every device. */}
-          <button type="button" className="envelope-card-open" onClick={handleEnter} aria-label={cta} />
-        </div>
+        {/* Generous, roughly over the envelope + "haz click aquí" in the
+            art — deliberately bigger than just the wax seal so it doesn't
+            need pixel-perfect alignment with the artwork on every device. */}
+        <button type="button" className="envelope-card-open" onClick={handleEnter} aria-label={cta} />
       </div>
     </div>
   )

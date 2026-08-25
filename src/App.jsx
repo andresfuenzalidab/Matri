@@ -62,14 +62,34 @@ const SharedHeroVideo = forwardRef(function SharedHeroVideo({ onCanPlay, onError
 function StationeryMain({ children }) {
   const { get } = useApp()
   const paper = normalizeImageUrl(get('stationery_paper_texture') || '')
-  const border = normalizeImageUrl(get('stationery_side_border') || '')
   return (
     <div className="stationery-main" style={{
       '--stationery-paper': paper ? `url(${paper})` : undefined,
-      '--stationery-border': border ? `url(${border})` : undefined,
+      // `--stationery-border` itself is set higher up, on `EditorialMain`
+      // (see below) — it inherits down to here same as any custom
+      // property, and is ALSO needed there, to fill the green area beside
+      // this card on desktop with the same asset instead of an invented
+      // flat color (see `.editorial-main` in index.css).
     }}>
       {children}
     </div>
+  )
+}
+
+/**
+ * `<main>` — set here, not on `StationeryMain` below it, specifically so
+ * `--stationery-border` (the admin's own green damask art) is available to
+ * `.editorial-main`'s own background too: on desktop, `.stationery-main`
+ * is capped to a phone-sized card, and everything beside it needs to read
+ * as "more of the same green," not a second, different-looking green.
+ */
+function EditorialMain({ children }) {
+  const { get } = useApp()
+  const border = normalizeImageUrl(get('stationery_side_border') || '')
+  return (
+    <main className="editorial-main" style={{ '--stationery-border': border ? `url(${border})` : undefined }}>
+      {children}
+    </main>
   )
 }
 
@@ -184,7 +204,7 @@ function MainApp({ token, guest, rsvp }) {
       }}>
         <Nav />
 
-        <main className="editorial-main">
+        <EditorialMain>
           {/* ── Ambient warm glows ── */}
           <div className="ambient-glow" style={{ top: 900, left: '8%' }} aria-hidden="true"/>
           <div className="ambient-glow" style={{ top: 2200, right: '6%', left: 'auto' }} aria-hidden="true"/>
@@ -209,7 +229,7 @@ function MainApp({ token, guest, rsvp }) {
             <Contact />
             <FlowerFooter />
           </StationeryMain>
-        </main>
+        </EditorialMain>
         {guest?.isAdmin && (
           <>
             <div className="admin-fab">

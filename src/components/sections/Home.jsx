@@ -31,9 +31,8 @@ export default function Home() {
       {/* Scroll hint — the only thing standing in for the nav bar (hidden
           until the guest scrolls, see Nav.jsx) on this first screen, so it
           needs to actually read as an instruction, not a faint caption.
-          Dark + a soft light halo instead of translucent white: white text
-          alone washed out against bright footage and left people stranded
-          not knowing to scroll. */}
+          White + bold, with a dark shadow for contrast against whatever
+          the video happens to be showing at that moment. */}
       <div style={{
         // `dvh`-based container + a small, fixed-feeling `%` (not a big one
         // that could drift toward the middle) — always sits low, inside the
@@ -41,10 +40,10 @@ export default function Home() {
         position: 'absolute', bottom: '6%', left: 0, right: 0,
         textAlign: 'center',
         fontFamily: 'var(--font-heading)', fontSize: 13,
-        fontWeight: 600,
+        fontWeight: 700,
         letterSpacing: '0.3em', textTransform: 'uppercase',
-        color: 'rgba(20,18,14,0.92)',
-        textShadow: '0 1px 3px rgba(255,255,255,0.55), 0 0 14px rgba(255,255,255,0.35)',
+        color: '#ffffff',
+        textShadow: '0 1px 4px rgba(0,0,0,0.55), 0 0 12px rgba(0,0,0,0.3)',
         pointerEvents: 'none',
       }}>
         Desliza ↓
