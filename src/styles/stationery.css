@@ -649,10 +649,28 @@
    with its surroundings. */
 .framed-media-content {
   padding: 6%;
+  /* Fills whatever height `.framed-media` itself resolves to — needed now
+     that `.framed-media--carousel` below gives it an explicit one, so the
+     padded photo area (and the `.photo-card` inside it) actually reaches
+     the frame's own edges instead of being sized by its own content. */
+  height: 100%;
   background-color: var(--color-bg);
   background-image: var(--stationery-paper, none);
   background-repeat: repeat;
   background-size: 600px auto;
+}
+/* The two photo carousels (El lugar, Nuestra historia) — locks the WHOLE
+   box (and so the gold frame overlay, stretched to fill it via `inset:0`)
+   to the frame art's own proportions, given as 350×225px. Without this,
+   `.framed-media`'s height came from its CONTENT (the photo, sized by
+   `.photo-card--landscape`'s own aspect-ratio below) instead of the
+   other way around — any mismatch between the two left the frame overlay
+   stretched to a box narrower or shorter than its own art actually is,
+   showing as empty gaps on the sides. Now the frame's ratio drives
+   everything, and the photo (via `.photo-card--landscape`, `height:100%`)
+   just fills whatever space that leaves. */
+.framed-media--carousel {
+  aspect-ratio: 350 / 225;
 }
 .framed-media-overlay {
   position: absolute; inset: 0;
@@ -679,6 +697,22 @@
   justify-content: center;
   gap: clamp(2.5rem, 12cqw, 5rem);
   padding: 1.5rem 2% 0;
+  /* Fills whatever height `.framed-media--pets` resolves to (below) —
+     the dog/cat pair themselves stay sized by their own images (`align-
+     items: flex-end` keeps them pinned to the bottom of this box, not
+     stretched), this just gives the row itself the full height to anchor
+     against. */
+  height: 100%;
+}
+
+/* Locks `.framed-media` (and so `pets_overlay_image`, stretched to fill
+   it via `inset: 0`) to the overlay art's own proportions, given as
+   1200×800px (3:2) — without this the box was sized by its CONTENT (the
+   dog + cat gifs) instead, and any mismatch between that and the
+   overlay's real ratio squashed the overlay's own flowers toward square,
+   same root cause as the carousel frame fix above. */
+.framed-media--pets {
+  aspect-ratio: 1200 / 800;
 }
 
 /* Dress-code cat — layered directly on the dress-code artwork now, not in
@@ -687,13 +721,13 @@
    WeddingInfo.jsx). Position/size tuned against that reference image's
    own bottom-center flower cluster — a differently-composed upload would
    need these nudged to match its own artwork instead.
-   `bottom` raised 2% → 16% per feedback: the actual render sat the cat
-   below the flower cluster entirely rather than on it — my first estimate
-   of where that cluster sits was off; this is corrected against the
-   actual screenshot, not the raw source file. */
+   `bottom` went 2% → 16% → 9% across two rounds of feedback against the
+   actual rendered screenshots (first too low, then too high) rather than
+   the raw source file — this is the one to keep nudging directly if it's
+   still off, not the original file's own coordinates. */
 .dresscode-cat-overlay {
   position: absolute;
-  left: 50%; bottom: 16%;
+  left: 50%; bottom: 9%;
   transform: translateX(-50%);
   width: 24%;
   height: auto;

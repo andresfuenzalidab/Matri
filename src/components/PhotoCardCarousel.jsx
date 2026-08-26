@@ -27,13 +27,29 @@ export default function PhotoCardCarousel({ photos, landscape = false, autoPlay 
     photos.forEach(p => { new Image().src = normalizeImageUrl(p.image_url) })
   }, [photos])
 
+  // Guards against overlapping transitions: without this, autoplay firing
+  // (or a fast double-click) while a fade was already in flight queued a
+  // SECOND timeout on top of the first — whichever finished last won,
+  // discarding the other's `current`/`fading` update mid-animation, which
+  // is exactly what "stuck for a while, caption doesn't match" looked
+  // like. Reading `fading` via the functional updater (not the outer
+  // closure) means `go` never needs it as a dependency either.
   const go = useCallback((idx) => {
-    setFading(true)
-    setTimeout(() => { setCurrent(idx); setFading(false) }, 280)
+    setFading(prevFading => {
+      if (prevFading) return prevFading
+      setTimeout(() => { setCurrent(idx); setFading(false) }, 280)
+      return true
+    })
   }, [])
 
-  const prev = useCallback(() => go((current - 1 + photos.length) % photos.length), [current, go, photos.length])
-  const next = useCallback(() => go((current + 1) % photos.length), [current, go, photos.length])
+  // `current` read via a ref, not a dependency — otherwise `next` (and so
+  // the autoplay interval below, which depends on it) was recreated on
+  // every single slide change, tearing down and restarting the 5s timer
+  // from zero each time instead of a steady interval.
+  const currentRef = useRef(current)
+  currentRef.current = current
+  const prev = useCallback(() => go((currentRef.current - 1 + photos.length) % photos.length), [go, photos.length])
+  const next = useCallback(() => go((currentRef.current + 1) % photos.length), [go, photos.length])
 
   useEffect(() => {
     if (!autoPlay || photos.length <= 1) return

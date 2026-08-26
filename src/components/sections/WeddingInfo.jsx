@@ -67,7 +67,7 @@ export default function WeddingInfo() {
         {/* ── Venue photos — one carousel, framed, full width, straight
             under the title. Arrows/dots live inside the carousel itself
             now (see PhotoCardCarousel) — nothing renders below the frame. ── */}
-        <div className="framed-media full-bleed reveal-on-scroll" style={{ marginTop: '1.5rem' }}>
+        <div className="framed-media framed-media--carousel full-bleed reveal-on-scroll" style={{ marginTop: '1.5rem' }}>
           <div className="framed-media-content">
             {venuePhotos.length > 0 ? (
               <PhotoCardCarousel photos={venuePhotos} landscape />
@@ -95,7 +95,7 @@ export default function WeddingInfo() {
 
         {/* ── Dog + cat share one full-width background/frame — not one
             each — with real space between them. ── */}
-        <div className="framed-media full-bleed reveal-on-scroll" style={{ marginTop: '2.5rem' }}>
+        <div className="framed-media framed-media--pets full-bleed reveal-on-scroll" style={{ marginTop: '2.5rem' }}>
           <div className="pets-row">
             <div className="wedding-timer-dog">
               <img src={descriptionDogGif} alt="" style={{ width: '100%', height: 'auto', display: 'block', objectFit: 'contain' }} />
@@ -151,11 +151,11 @@ export default function WeddingInfo() {
 
       {/* ── Dress code — one image now, not two: the cat gif sits directly
           on top of it (over the flowers baked into the artwork's own
-          bottom edge) instead of getting its own separate box below. The
-          note used to be drawn as a text overlay here too — dropped per
-          feedback, now baked into the image itself. ── */}
+          bottom edge) instead of getting its own separate box below. No
+          live title either — "Código de vestimenta" is baked into the
+          artwork itself, same as the note; a live `<h3>` on top of it
+          just duplicated it with its own margin/space added on top. ── */}
       <div className="wedding-detail-block reveal-on-scroll">
-        <h3 className="wedding-detail-title">Código de vestimenta</h3>
         <div className="framed-media full-bleed wedding-detail-img">
           {dressCodeImage ? (
             <img src={dressCodeImage} alt="Código de vestimenta" style={{ width: '100%', display: 'block' }}

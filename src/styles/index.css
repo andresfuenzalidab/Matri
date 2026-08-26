@@ -1595,6 +1595,7 @@ body {
 /* ── Photo card carousel (matches reference) ── */
 .photo-card-carousel {
   width: 100%;
+  height: 100%;
 }
 .photo-card {
   position: relative;
@@ -1610,11 +1611,14 @@ body {
   transition: opacity 0.3s ease;
 }
 .photo-card--landscape {
-  /* Matches the reference frame's own proportions (~1072×646, ≈5:3) more
-     closely than the previous 16:9 (1.78 vs 1.67) — close enough before
-     that a frame drawn for this ratio was visibly cropping/gapping
-     against a 16:9 photo underneath it. */
-  aspect-ratio: 5/3;
+  /* `height: 100%`, not its own `aspect-ratio` — the frame's exact ratio
+     (350×225) now lives on `.framed-media--carousel` (the actual box the
+     gold frame art stretches to fill), one level up in stationery.css;
+     this just fills whatever height that leaves after the 6% padding,
+     rather than asserting its own (previously slightly different) ratio
+     and leaving gaps between the photo and the frame around it. */
+  width: 100%;
+  height: 100%;
 }
 .photo-card-fading { opacity: 0; }
 .photo-card img {

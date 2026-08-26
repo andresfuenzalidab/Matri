@@ -44,11 +44,11 @@ export default function OurStory() {
       )}
 
       {storyPhotos.length > 0 && (
-        <div className="framed-media full-bleed" style={{ marginTop: '2rem' }}>
+        <div className="framed-media framed-media--carousel full-bleed" style={{ marginTop: '2rem' }}>
           <div className="framed-media-content">
-            {/* Same aspect ratio as the venue carousel — a frame drawn for
-                a landscape window (16:9) looked asymmetric wrapped around
-                the default square crop. */}
+            {/* Same frame ratio as the venue carousel (`.framed-media--carousel`,
+                350×225) — a frame drawn for that window looked asymmetric
+                wrapped around the default square crop. */}
             <PhotoCardCarousel photos={storyPhotos} landscape />
           </div>
           {storyFrame && (
