@@ -50,7 +50,6 @@ const SECTIONS = [
       { key: 'date_oval_frame_image', label: 'Marco ovalado "La celebración" (detrás de la tarjeta de citación)', type: 'image' },
       { key: 'venue_photo_frame_image', label: 'Marco dorado para el carrusel de fotos del lugar (PNG con centro transparente)', type: 'image' },
       { key: 'pets_overlay_image', label: 'Fondo/adorno compartido para el perro + gato de "El lugar" (una sola imagen para ambos)', type: 'image' },
-      { key: 'dresscode_pet_overlay_image', label: 'Fondo/adorno para el gato del código de vestimenta (imagen aparte, no la de arriba)', type: 'image' },
       { key: 'timeline_separator_top_image', label: 'Separador horizontal del programa del día — arriba', type: 'image' },
       { key: 'timeline_separator_bottom_image', label: 'Separador horizontal del programa del día — cierre (puede ser distinto al de arriba)', type: 'image' },
       { key: 'timeline_floral_left', label: 'Adorno vertical — lado izquierdo del programa del día (también enmarca el RSVP)', type: 'image' },
@@ -91,7 +90,7 @@ const SECTIONS = [
       { key: 'venue_maps_url', label: 'Link de Google Maps', type: 'text' },
       { key: 'venue_map_title', label: 'Título del plano del lugar', type: 'text' },
       { key: 'venue_map_image', label: 'Imagen del plano / mapa del lugar', type: 'image' },
-      { key: 'dress_code_image', label: 'Imagen código de vestimenta (el texto va incluido en la imagen)', type: 'image' },
+      { key: 'dress_code_image', label: 'Imagen código de vestimenta (el texto va incluido en la imagen; el gato del campo de abajo se dibuja encima, sobre las flores del borde inferior)', type: 'image' },
       { key: 'description_dog_url', label: 'Gif del perro (bajo el carrusel del lugar)', type: 'image' },
     ],
   },
@@ -165,7 +164,7 @@ const SECTIONS = [
     label: 'Gifs de las secciones',
     fields: [
       { key: 'background_video_url', label: 'Gif del gato del timer (bajo el carrusel del lugar)', type: 'image' },
-      { key: 'dresscode_video_url', label: 'Gif del código de vestimenta', type: 'image' },
+      { key: 'dresscode_video_url', label: 'Gif del gato del código de vestimenta (se dibuja sobre la imagen de arriba, no aparte)', type: 'image' },
     ],
   },
   {

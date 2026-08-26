@@ -17,6 +17,16 @@ export default function PhotoCardCarousel({ photos, landscape = false, autoPlay 
   const [fading, setFading] = useState(false)
   const dragRef = useRef(null)
 
+  // Without this, switching to a photo the browser hasn't fetched yet
+  // meant the caption (plain text, instant) updated the moment `current`
+  // changed while the new `<img src>` was still loading — for however long
+  // that took, the card showed the OLD photo (or a blank flash) under the
+  // NEW caption. Firing every photo's request up front means they're
+  // already decoded and cached by the time `go()` ever swaps to them.
+  useEffect(() => {
+    photos.forEach(p => { new Image().src = normalizeImageUrl(p.image_url) })
+  }, [photos])
+
   const go = useCallback((idx) => {
     setFading(true)
     setTimeout(() => { setCurrent(idx); setFading(false) }, 280)

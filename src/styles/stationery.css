@@ -681,16 +681,24 @@
   padding: 1.5rem 2% 0;
 }
 
-/* Dress-code cat — its own dedicated full-width background, separate from
-   the pair above, and a smaller gif than before. */
-.dresscode-pet-row {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  justify-content: center;
-  padding: 1.5rem 0;
+/* Dress-code cat — layered directly on the dress-code artwork now, not in
+   its own separate box below it (that box always just repeated the same
+   flowers already baked into the bottom of the reference art — see
+   WeddingInfo.jsx). Position/size tuned against that reference image's
+   own bottom-center flower cluster — a differently-composed upload would
+   need these nudged to match its own artwork instead.
+   `bottom` raised 2% → 16% per feedback: the actual render sat the cat
+   below the flower cluster entirely rather than on it — my first estimate
+   of where that cluster sits was off; this is corrected against the
+   actual screenshot, not the raw source file. */
+.dresscode-cat-overlay {
+  position: absolute;
+  left: 50%; bottom: 16%;
+  transform: translateX(-50%);
+  width: 24%;
+  height: auto;
+  pointer-events: none;
 }
-.dresscode-pet-row .framed-media { width: 30%; max-width: 170px; }
 
 /* Placeholder for any DecorSlot without art yet — same idea as
    .photo-placeholder, but sized by aspect-ratio instead of a fixed height

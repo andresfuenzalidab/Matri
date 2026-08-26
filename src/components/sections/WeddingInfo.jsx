@@ -28,7 +28,11 @@ export default function WeddingInfo() {
     ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([venueMapsName, venueMapsAddress].filter(Boolean).join(', '))}`
     : get('venue_maps_url')
   const isPartyOnly = guest?.invitationType === 'party_only'
-  const dressCodeImage = normalizeImageUrl(get('dress_code_image') || '')
+  // Defaults to the reference artwork (flowers baked into its own bottom
+  // edge) — the cat overlay below is positioned to sit on top of that, so
+  // any replacement uploaded through admin should keep a similar bottom-
+  // center open spot if it's meant to still work with the overlay.
+  const dressCodeImage = normalizeImageUrl(get('dress_code_image') || '') || '/dresscode-bg.png'
   const venueMapImage = normalizeImageUrl(get('venue_map_image') || '')
   const dressCodeGif = normalizeImageUrl(get('dresscode_video_url')) || '/dresscode_cat.gif'
   const timerCatGif = normalizeImageUrl(get('background_video_url')) || '/timer_cat.gif'
@@ -38,10 +42,7 @@ export default function WeddingInfo() {
   const cornerFloralTl = get('corner_floral_tl')
   const cornerFloralTr = get('corner_floral_tr')
   const venuePhotoFrame = normalizeImageUrl(get('venue_photo_frame_image') || '')
-  // One shared background for the dog+cat pair, and a separate, dedicated
-  // one for the dress-code cat — two different spots, two different images.
   const petsOverlay = normalizeImageUrl(get('pets_overlay_image') || '')
-  const dresscodePetOverlay = normalizeImageUrl(get('dresscode_pet_overlay_image') || '')
   const timelineSeparatorTop = get('timeline_separator_top_image')
   const timelineSeparatorBottom = get('timeline_separator_bottom_image')
   const timelineFloralLeft = get('timeline_floral_left')
@@ -97,10 +98,10 @@ export default function WeddingInfo() {
         <div className="framed-media full-bleed reveal-on-scroll" style={{ marginTop: '2.5rem' }}>
           <div className="pets-row">
             <div className="wedding-timer-dog">
-              <img src={descriptionDogGif} alt="" style={{ width: '100%', display: 'block' }} />
+              <img src={descriptionDogGif} alt="" style={{ width: '100%', height: 'auto', display: 'block', objectFit: 'contain' }} />
             </div>
             <div className="wedding-timer-cat">
-              <img src={timerCatGif} alt="" style={{ width: '100%', display: 'block' }} />
+              <img src={timerCatGif} alt="" style={{ width: '100%', height: 'auto', display: 'block', objectFit: 'contain' }} />
             </div>
           </div>
           {petsOverlay && (
@@ -148,10 +149,11 @@ export default function WeddingInfo() {
         </div>
       </div>
 
-      {/* ── Dress code — a single image (no corner florals here), and the
-          cat gif below with its own dedicated full-width background (not
-          the dog+cat one). The note used to be drawn as a text overlay
-          here — dropped per feedback, now baked into the image itself. ── */}
+      {/* ── Dress code — one image now, not two: the cat gif sits directly
+          on top of it (over the flowers baked into the artwork's own
+          bottom edge) instead of getting its own separate box below. The
+          note used to be drawn as a text overlay here too — dropped per
+          feedback, now baked into the image itself. ── */}
       <div className="wedding-detail-block reveal-on-scroll">
         <h3 className="wedding-detail-title">Código de vestimenta</h3>
         <div className="framed-media full-bleed wedding-detail-img">
@@ -161,16 +163,7 @@ export default function WeddingInfo() {
           ) : (
             <PhotoPlaceholder size="lg" label="Imagen de código de vestimenta" />
           )}
-        </div>
-        <div className="framed-media full-bleed" style={{ marginTop: '1.5rem' }}>
-          <div className="dresscode-pet-row">
-            <div className="framed-media">
-              <img src={dressCodeGif} alt="" style={{ width: '100%', display: 'block' }} />
-            </div>
-          </div>
-          {dresscodePetOverlay && (
-            <img src={dresscodePetOverlay} alt="" className="framed-media-overlay" aria-hidden="true" />
-          )}
+          <img src={dressCodeGif} alt="" className="dresscode-cat-overlay" aria-hidden="true" />
         </div>
       </div>
     </section>
