@@ -69,9 +69,9 @@ export default function DateSection() {
     <section id="fecha" className="section date-section">
       <div className="stationery-scene">
         <DecorSlot url={cornerFloralTl} label="Adorno esquina" aspectRatio="1"
-          className="corner-floral corner-floral--tl" />
+          className="corner-floral corner-floral--sm corner-floral--tl" />
         <DecorSlot url={cornerFloralTr} label="Adorno esquina" aspectRatio="1"
-          className="corner-floral corner-floral--tr" />
+          className="corner-floral corner-floral--sm corner-floral--tr" />
 
         <span className="kicker corner-floral-clearance reveal-on-scroll">Reserva el día</span>
         <h2 className="section-title reveal-on-scroll">Nuestra fecha</h2>

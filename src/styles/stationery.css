@@ -432,7 +432,7 @@
   /* Cut further per feedback — still reading as too big even at the
      mobile-equivalent (`cqw`) size above. */
   position: absolute;
-  width: clamp(85px, 22cqw, 105px);
+  width: clamp(101px, 26.18cqw, 125px); /* +19% per feedback */
   height: auto;
   pointer-events: none;
   z-index: 2;
@@ -454,7 +454,7 @@
 /* Same `cqw` reasoning as `.corner-floral` above, scaled a bit smaller
    still — this variant has even more to fit at once (Countdown uses all 4
    corners plus 2 urns, competing for the same card width). */
-.corner-floral--sm { width: clamp(120px, 26cqw, 160px); } /* doubled per feedback (Countdown corners) */
+.corner-floral--sm { width: clamp(143px, 30.94cqw, 190px); } /* doubled, then +19% per feedback (Countdown corners) */
 
 /* Clearance under the top corner florals for whatever text comes right
    after them (a kicker, a title) — enough that the florals' own art
@@ -859,7 +859,7 @@
 
 @media (max-width: 480px) {
   .stationery-scene { padding-top: 2rem; padding-bottom: 2rem; }
-  .corner-floral { width: clamp(64px, 26cqw, 110px); }
+  .corner-floral { width: clamp(76px, 30.94cqw, 131px); } /* +19% per feedback */
 }
 
 /* ── 4b. Venue map slot ──
