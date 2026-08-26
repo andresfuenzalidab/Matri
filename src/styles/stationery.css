@@ -483,7 +483,12 @@
    centered in the remaining space down to the bottom corner florals,
    instead of hugging the top with a lot of dead air below it. */
 .countdown-scene {
-  min-height: min(48vh, 420px);
+  /* Raised (48vh/420px → 60vh/640px) — the corner florals and center urn
+     have gotten bigger over a few rounds of feedback (florals doubled,
+     urn +50% twice), but they're absolutely positioned, so none of that
+     growth pushed this box taller on its own; it just started crowding
+     into the centered digits at the old cap. */
+  min-height: min(60vh, 640px);
   display: flex;
   flex-direction: column;
 }
@@ -574,9 +579,16 @@
    text (the citation info inside "La Celebración") should read as solid
    black, not the muted secondary-text gray the base `.paper-tag-*`
    classes use elsewhere. */
-.paper-tag--bare .paper-tag-label { font-size: clamp(0.42rem, 2.2cqw, 0.52rem); margin-bottom: 0.15rem; color: #000; opacity: 1; }
-.paper-tag--bare .paper-tag-value { font-size: clamp(0.7rem, 3.6cqw, 0.92rem); line-height: 1.25; color: #000; }
-.paper-tag--bare .paper-tag-hint { font-size: clamp(0.6rem, 3cqw, 0.78rem); margin-top: 0; color: #000; opacity: 1; }
+/* Max bounds raised — these were tuned back when this container could
+   never exceed ~480px (the old frozen desktop cap), so they capped out at
+   a size that made sense there. Now that the oval frame scales up to a
+   genuinely wide desktop card, the text was hitting that same old
+   ceiling well before the image around it stopped growing, reading as
+   "too tiny" for its own frame. Same `cqw` coefficient (already correct
+   for the scaling relationship) — only the ceiling needed to move. */
+.paper-tag--bare .paper-tag-label { font-size: clamp(0.42rem, 2.2cqw, 0.95rem); margin-bottom: 0.15rem; color: #000; opacity: 1; }
+.paper-tag--bare .paper-tag-value { font-size: clamp(0.7rem, 3.6cqw, 1.6rem); line-height: 1.25; color: #000; }
+.paper-tag--bare .paper-tag-hint { font-size: clamp(0.6rem, 3cqw, 1.35rem); margin-top: 0; color: #000; opacity: 1; }
 .paper-tag--bare .cal-add {
   /* Right up against the recommendation text — no divider line. The parent
      (`.paper-tag-body`) puts a flex `gap` between every row including this
