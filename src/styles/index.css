@@ -966,11 +966,16 @@ textarea.input { min-height: 90px; resize: vertical; }
    later-loaded `.wedding-timer-dog`/`.wedding-timer-cat` rule in
    stationery.css that silently won the cascade; that duplicate is gone
    now, so this is the one rule that actually applies. */
+/* Sized down per feedback: `.framed-media--pets` (stationery.css) now
+   locks the box to a fixed 3:2 height instead of growing to fit whatever
+   these render at — at the old widths the dog's own (taller) natural
+   ratio rendered past that height and got clipped at the top by
+   `overflow: hidden`. Smaller widths keep both comfortably inside it. */
 .wedding-timer-dog {
-  width: 54%; max-width: 380px;
+  width: 42%; max-width: 300px;
 }
 .wedding-timer-cat {
-  width: 36%; max-width: 240px;
+  width: 28%; max-width: 190px;
 }
 
 /* Dress code gif — stacked below the outfit reference image instead of
@@ -1861,7 +1866,7 @@ body {
   .gift-price { font-size: 0.82rem; }
 
   .wedding-timer-gifs { gap: 0.5rem; }
-  .wedding-timer-dog { max-width: 180px; }
-  .wedding-timer-cat { max-width: 110px; }
+  .wedding-timer-dog { max-width: 140px; }
+  .wedding-timer-cat { max-width: 86px; }
   .wedding-dresscode-gif { max-width: 170px; }
 }

@@ -648,7 +648,9 @@
    + tiling `.stationery-main` itself uses) is what's actually consistent
    with its surroundings. */
 .framed-media-content {
-  padding: 6%;
+  /* Trimmed 6% → 3% per feedback — the photo wasn't reaching the frame
+     art's own inner window, leaving cream margin between them. */
+  padding: 3%;
   /* Fills whatever height `.framed-media` itself resolves to — needed now
      that `.framed-media--carousel` below gives it an explicit one, so the
      padded photo area (and the `.photo-card` inside it) actually reaches
@@ -721,13 +723,12 @@
    WeddingInfo.jsx). Position/size tuned against that reference image's
    own bottom-center flower cluster — a differently-composed upload would
    need these nudged to match its own artwork instead.
-   `bottom` went 2% → 16% → 9% across two rounds of feedback against the
-   actual rendered screenshots (first too low, then too high) rather than
-   the raw source file — this is the one to keep nudging directly if it's
-   still off, not the original file's own coordinates. */
+   `bottom` went 2% → 16% → 9% → 4% across rounds of feedback against the
+   actual rendered screenshots, not the raw source file — this is the one
+   to keep nudging directly if it's still off. */
 .dresscode-cat-overlay {
   position: absolute;
-  left: 50%; bottom: 9%;
+  left: 50%; bottom: 4%;
   transform: translateX(-50%);
   width: 24%;
   height: auto;
