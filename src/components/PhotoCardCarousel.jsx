@@ -87,8 +87,12 @@ export default function PhotoCardCarousel({ photos, landscape = false, autoPlay 
         onPointerCancel={() => { dragRef.current = null }}
         style={{ touchAction: 'pan-y' }}
       >
+        {/* Default crop anchor is top-biased (50% 20%), not centered —
+            per feedback, cropping to fit the frame should cut more off
+            the bottom of a photo than the top. A photo's own
+            `focal_point` (admin-set) still overrides this per-photo. */}
         <img src={src} alt={title || ''} draggable={false}
-          style={{ objectPosition: photo.focal_point || '50% 50%' }}
+          style={{ objectPosition: photo.focal_point || '50% 20%' }}
           onError={e => e.target.style.display = 'none'} />
         {title && (
           <div className="photo-card-overlay">
