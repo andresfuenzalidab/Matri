@@ -648,12 +648,15 @@
    + tiling `.stationery-main` itself uses) is what's actually consistent
    with its surroundings. */
 .framed-media-content {
-  /* Trimmed 6% → 3% → 1% per feedback — the photo kept not reaching the
-     frame art's own inner window, leaving cream margin between them. The
-     actual frame (per the real asset, thin border relative to its own
-     canvas) barely needs any inset at all — just enough that the photo
-     doesn't render flush at the exact pixel edge. */
-  padding: 1%;
+  /* Back to the original 6% (had gone 6% → 3% → 1% chasing a "not
+     reaching the frame" complaint) — that complaint almost certainly
+     traced back to `.framed-media--carousel`'s aspect-ratio being wrong
+     at the time (350×225 instead of the real 461×304), which shrank the
+     WHOLE box out of proportion, not this padding specifically. Once the
+     ratio was corrected, shrinking padding on top of that overshot the
+     other way — the photo reaching past the frame's own (genuinely thin)
+     border. */
+  padding: 6%;
   /* Fills whatever height `.framed-media` itself resolves to — needed now
      that `.framed-media--carousel` below gives it an explicit one, so the
      padded photo area (and the `.photo-card` inside it) actually reaches
