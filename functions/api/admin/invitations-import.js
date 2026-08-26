@@ -4,9 +4,9 @@ const YES = new Set(['si', 'sí', 'yes', 'true', '1', 'x'])
 const isYes = v => YES.has(String(v ?? '').trim().toLowerCase())
 
 /**
- * Bulk create/update from a parsed CSV (see src/utils/parseCsv.js on the
- * client — this endpoint receives already-parsed row objects, not raw CSV
- * text). Each row is matched to an existing invitation by its Token column:
+ * Bulk create/update from a parsed spreadsheet (see src/utils/spreadsheet.js
+ * on the client — this endpoint receives already-parsed row objects, not a
+ * raw .xlsx file). Each row is matched to an existing invitation by its Token column:
  * a blank token creates a new invitation, a token that matches an existing
  * one updates it, and a token that doesn't match anything is reported as an
  * error rather than silently creating a duplicate (the far more likely cause

@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useApp } from '../../context/AppContext'
 import { normalizeImageUrl } from '../../utils/imageUrl.js'
-import { downloadCSV } from '../../utils/exportCsv.js'
-import { parseCSV, cell } from '../../utils/parseCsv.js'
+import { downloadXLSX, parseXLSXFile, cell } from '../../utils/spreadsheet.js'
 
 function formatCLP(n) {
   if (n == null) return '—'
@@ -12,7 +11,7 @@ function formatCLP(n) {
 const EMPTY_GIFT = { name: '', price: '', description: '', image_url: '' }
 const EMPTY_TRIP = { name: '', description: '', image_url: '' }
 
-// Single source of truth for the gifts CSV shape, used by both export and
+// Single source of truth for the gifts spreadsheet shape, used by both export and
 // import. One row per gift; the trip (destino) it belongs to is named right
 // on the row and created automatically if it doesn't exist yet — most of the
 // bulk-editing work here is adding gifts, not destinations. The trailing
@@ -48,7 +47,7 @@ export default function GiftsDashboard() {
   const [newGift, setNewGift] = useState(EMPTY_GIFT)
   const [newGiftSaving, setNewGiftSaving] = useState(false)
 
-  // CSV import/export
+  // Excel import/export
   const importFileRef = useRef(null)
   const [importing, setImporting] = useState(false)
   const [importResult, setImportResult] = useState(null)
@@ -259,7 +258,7 @@ export default function GiftsDashboard() {
     ])
   }
 
-  // ── CSV import/export ──────────────────────────────────────
+  // ── Excel import/export ──────────────────────────────────────
 
   function exportGifts() {
     const rows = trips.flatMap(trip =>
@@ -280,7 +279,7 @@ export default function GiftsDashboard() {
         gift.messages || '',
       ])
     )
-    downloadCSV('regalos.csv', rows, GIFT_HEADERS)
+    downloadXLSX('regalos.xlsx', rows, GIFT_HEADERS)
   }
 
   async function handleImportFile(e) {
@@ -290,8 +289,7 @@ export default function GiftsDashboard() {
     setImportResult(null)
     setError('')
     try {
-      const text = await file.text()
-      const parsed = parseCSV(text)
+      const parsed = await parseXLSXFile(file)
       const rows = parsed.map(r => ({
         id: cell(r, 'ID'),
         tripId: cell(r, 'Destino ID'),
@@ -317,7 +315,7 @@ export default function GiftsDashboard() {
         setError(d.error || 'Error al importar el archivo.')
       }
     } catch {
-      setError('No se pudo leer el archivo CSV.')
+      setError('No se pudo leer el archivo Excel.')
     } finally {
       setImporting(false)
       if (importFileRef.current) importFileRef.current.value = ''
@@ -352,11 +350,11 @@ export default function GiftsDashboard() {
 
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem', gap: '0.75rem', flexWrap: 'wrap' }}>
         <button className="btn btn-ghost" onClick={exportGifts}>
-          Exportar CSV
+          Exportar Excel
         </button>
         <label className="btn btn-ghost" style={{ cursor: importing ? 'wait' : 'pointer' }}>
-          {importing ? 'Importando...' : 'Importar CSV'}
-          <input ref={importFileRef} type="file" accept=".csv,text/csv" style={{ display: 'none' }}
+          {importing ? 'Importando...' : 'Importar Excel'}
+          <input ref={importFileRef} type="file" accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" style={{ display: 'none' }}
             onChange={handleImportFile} disabled={importing} />
         </label>
         {/* New trip form */}

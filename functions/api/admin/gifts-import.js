@@ -1,7 +1,7 @@
 import { requireAdmin, json, err, handleAuthError } from '../_auth.js'
 
 /**
- * Bulk create/update trips and gifts from a parsed CSV — one row per gift,
+ * Bulk create/update trips and gifts from a parsed spreadsheet — one row per gift,
  * the trip it belongs to named (and auto-created if new) right on that row,
  * since most of the work in this list is adding gifts, not destinations.
  *

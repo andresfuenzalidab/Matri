@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useApp } from '../../context/AppContext'
-import { downloadCSV } from '../../utils/exportCsv.js'
+import { downloadXLSX } from '../../utils/spreadsheet.js'
 
 export default function RSVPDashboard() {
   const { token } = useApp()
@@ -51,7 +51,7 @@ export default function RSVPDashboard() {
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.75rem' }}>
         <button
           className="btn btn-ghost"
-          onClick={() => downloadCSV('rsvp.csv',
+          onClick={() => downloadXLSX('rsvp.xlsx',
             responses.map(r => [
               r.guest_name,
               r.attending ? 'Sí' : 'No',
@@ -64,7 +64,7 @@ export default function RSVPDashboard() {
             ['Nombre', 'Asistencia', 'N° invitados', 'Quiénes asisten', 'Restricción alimenticia', 'Mensaje', 'Enviado']
           )}
         >
-          Exportar CSV
+          Exportar Excel
         </button>
       </div>
 

@@ -1,12 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
 import { useApp } from '../../context/AppContext'
 import { downloadInvitationPDF, inviteLink } from '../../utils/invitationPdf.js'
-import { downloadCSV } from '../../utils/exportCsv.js'
-import { parseCSV, cell } from '../../utils/parseCsv.js'
+import { downloadXLSX, parseXLSXFile, cell } from '../../utils/spreadsheet.js'
 import { totalInvitedHeadcount } from '../../utils/inviteCount.js'
 import { guestDisplayName, isPairInvite, pick } from '../../utils/guestName.js'
 
-// The single source of truth for the invitations CSV shape — used for both
+// The single source of truth for the invitations spreadsheet shape — used for both
 // export and import, so a file downloaded here always re-imports cleanly.
 // The RSVP/Regalos columns are guest-driven data: exported for context, but
 // read-only — importing never writes them back.
@@ -66,7 +65,7 @@ export default function InvitationsManager() {
   const [selected, setSelected] = useState(() => new Set())
   const [bulkDeleting, setBulkDeleting] = useState(false)
 
-  // CSV import/export
+  // Excel import/export
   const importFileRef = useRef(null)
   const [importing, setImporting] = useState(false)
   const [importResult, setImportResult] = useState(null)
@@ -258,7 +257,7 @@ export default function InvitationsManager() {
   }
 
   function exportInvitations() {
-    downloadCSV('invitaciones.csv', invitations.map(inv => {
+    downloadXLSX('invitaciones.xlsx', invitations.map(inv => {
       const rsvp = inv.attending === null || inv.attending === undefined ? '' : inv.attending ? 'Sí' : 'No'
       const giftNames = inv.gifts?.map(g => g.quantity > 1 ? `${g.name} ×${g.quantity}` : g.name).join(' | ') || ''
       const giftTotal = inv.gifts?.reduce((s, g) => s + (g.price || 0) * (g.quantity || 1), 0) || 0
@@ -298,8 +297,7 @@ export default function InvitationsManager() {
     setImportResult(null)
     setError('')
     try {
-      const text = await file.text()
-      const parsed = parseCSV(text)
+      const parsed = await parseXLSXFile(file)
       const rows = parsed.map(r => ({
         token: cell(r, 'Token'),
         name: cell(r, 'Nombre'),
@@ -328,7 +326,7 @@ export default function InvitationsManager() {
         setError(d.error || 'Error al importar el archivo.')
       }
     } catch {
-      setError('No se pudo leer el archivo CSV.')
+      setError('No se pudo leer el archivo Excel.')
     } finally {
       setImporting(false)
       if (importFileRef.current) importFileRef.current.value = ''
@@ -448,11 +446,11 @@ export default function InvitationsManager() {
           </button>
         )}
         <button className="btn btn-ghost" onClick={exportInvitations}>
-          Exportar CSV
+          Exportar Excel
         </button>
         <label className="btn btn-ghost" style={{ cursor: importing ? 'wait' : 'pointer' }}>
-          {importing ? 'Importando...' : 'Importar CSV'}
-          <input ref={importFileRef} type="file" accept=".csv,text/csv" style={{ display: 'none' }}
+          {importing ? 'Importando...' : 'Importar Excel'}
+          <input ref={importFileRef} type="file" accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" style={{ display: 'none' }}
             onChange={handleImportFile} disabled={importing} />
         </label>
         <button className="btn btn-primary" onClick={() => setShowCreate(s => !s)}>
