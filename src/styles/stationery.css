@@ -663,17 +663,18 @@
 }
 /* The two photo carousels (El lugar, Nuestra historia) — locks the WHOLE
    box (and so the gold frame overlay, stretched to fill it via `inset:0`)
-   to the frame art's own proportions, given as 350×225px (width confirmed
-   good; height then trimmed another 10% per feedback, 225 → 202.5).
-   Without this, `.framed-media`'s height came from its CONTENT (the
-   photo, sized by `.photo-card--landscape`'s own aspect-ratio below)
-   instead of the other way around — any mismatch between the two left the
-   frame overlay stretched to a box narrower or shorter than its own art
-   actually is, showing as empty gaps on the sides. Now the frame's ratio
-   drives everything, and the photo (via `.photo-card--landscape`,
-   `height:100%`) just fills whatever space that leaves. */
+   to the frame art's own proportions, given as 350×225px (width
+   confirmed good; height trimmed another 10% twice per feedback,
+   225 → 202.5 → 182.25). Without this, `.framed-media`'s height came
+   from its CONTENT (the photo, sized by `.photo-card--landscape`'s own
+   aspect-ratio below) instead of the other way around — any mismatch
+   between the two left the frame overlay stretched to a box narrower or
+   shorter than its own art actually is, showing as empty gaps on the
+   sides. Now the frame's ratio drives everything, and the photo (via
+   `.photo-card--landscape`, `height:100%`) just fills whatever space
+   that leaves. */
 .framed-media--carousel {
-  aspect-ratio: 350 / 202.5;
+  aspect-ratio: 350 / 182.25;
 }
 .framed-media-overlay {
   position: absolute; inset: 0;
@@ -727,14 +728,13 @@
    `bottom` went 2% → 16% → 9% → 4% → 0 across rounds of feedback against
    the actual rendered screenshots, not the raw source file. 0 is as far
    down as this can go without clipping into `.framed-media`'s own
-   `overflow: hidden` — also shrunk (24% → 19%) so its own height leaves
-   more clearance from the text above at that same bottom edge, since
-   position alone had run out of room. */
+   `overflow: hidden`. Width went 24% → 19% (to clear the text above) →
+   23% (+20%, sized back up per feedback once position was settled). */
 .dresscode-cat-overlay {
   position: absolute;
   left: 50%; bottom: 0;
   transform: translateX(-50%);
-  width: 19%;
+  width: 23%;
   height: auto;
   pointer-events: none;
 }
