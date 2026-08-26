@@ -19,6 +19,16 @@ const INVITATION_HEADERS = [
   'Regalos', 'Total regalos (CLP)', 'Regalos mensajes',
 ]
 
+/** A named companion implies at least 1 additional guest — "0 acompañantes"
+ *  with a companion named is a contradiction (you named someone, but said
+ *  no one else is coming). `''` (no limit) is left alone; only an explicit
+ *  0 gets bumped up to 1. */
+function bumpMaxGuestsForCompanion(companion, maxGuests) {
+  if (!companion.trim()) return maxGuests
+  if (maxGuests !== '' && Number(maxGuests) === 0) return '1'
+  return maxGuests
+}
+
 export default function InvitationsManager() {
   const { token, content } = useApp()
   const [invitations, setInvitations] = useState([])
@@ -89,7 +99,10 @@ export default function InvitationsManager() {
           companionName: newCompanion.trim(),
           isAdmin: newIsAdmin,
           welcomeMessage: newWelcomeMsg.trim(),
-          maxAdditionalGuests: newMaxGuests !== '' ? Number(newMaxGuests) : null,
+          maxAdditionalGuests: (() => {
+            const g = bumpMaxGuestsForCompanion(newCompanion, newMaxGuests)
+            return g !== '' ? Number(g) : null
+          })(),
           invitationType: newInvType,
           notes: newNotes.trim(),
         }),
@@ -203,11 +216,18 @@ export default function InvitationsManager() {
     // Party-only guests are invited to the reception, not the whole day —
     // "la fiesta de nuestro matrimonio", not just "nuestro matrimonio".
     const occasion = inv.invitation_type === 'party_only' ? 'la fiesta de nuestro matrimonio' : 'nuestro matrimonio'
+    // Same field/format RSVP.jsx uses for its own on-site deadline label
+    // (`rsvp_deadline`, day + month, no year) — falls back to the actual
+    // date per feedback if that field isn't set, so the deadline always
+    // shows up here regardless of whether admin has configured it yet.
+    const deadline = content.rsvp_deadline
+      ? new Date(content.rsvp_deadline + 'T00:00:00').toLocaleDateString('es-CL', { day: 'numeric', month: 'long' })
+      : '1 de octubre'
 
     return `¡Hola ${name}!\n\n` +
       `Con mucha alegría ${p('te', 'les')} compartimos la invitación a ${occasion}. ` +
       `${p('Te', 'Les')} dejamos el PDF adjunto para que ${p('lo guardes', 'lo guarden')}, ` +
-      `${p('puedes', 'pueden')} acceder también a través de este link para ver más detalles y confirmar ${p('tu', 'su')} asistencia:\n\n` +
+      `${p('puedes', 'pueden')} acceder también a través de este link para ver más detalles y confirmar ${p('tu', 'su')} asistencia (plazo máximo ${deadline}):\n\n` +
       `${getLink(inv)}\n\n` +
       `¡Esperamos poder celebrar este día tan especial ${p('contigo', 'con ustedes')}!\n\n` +
       `Con cariño,\nCata & Andrés`
@@ -328,6 +348,9 @@ export default function InvitationsManager() {
 
   async function saveEdit(id) {
     setEditSaving(true)
+    // Safeguard at save time too, not just while typing — covers a
+    // companion pasted in, or a row whose 0 predates this fix.
+    const maxGuests = bumpMaxGuestsForCompanion(editCompanion, editMaxGuests)
     try {
       const res = await fetch('/api/admin/invitations', {
         method: 'PUT',
@@ -335,7 +358,7 @@ export default function InvitationsManager() {
         body: JSON.stringify({
           id,
           welcomeMessage: editWelcomeMsg.trim(),
-          maxAdditionalGuests: editMaxGuests !== '' ? Number(editMaxGuests) : null,
+          maxAdditionalGuests: maxGuests !== '' ? Number(maxGuests) : null,
           invitationType: editInvType,
           notes: editNotes.trim(),
           phone: editPhone.trim(),
@@ -347,7 +370,7 @@ export default function InvitationsManager() {
         setInvitations(prev => prev.map(i => i.id === id ? {
           ...i,
           welcome_message: editWelcomeMsg.trim() || null,
-          max_additional_guests: editMaxGuests !== '' ? Number(editMaxGuests) : null,
+          max_additional_guests: maxGuests !== '' ? Number(maxGuests) : null,
           invitation_type: editInvType,
           notes: editNotes.trim() || null,
           phone: editPhone.trim() || null,
@@ -458,7 +481,12 @@ export default function InvitationsManager() {
           <div className="create-form-title">Nueva invitación</div>
           <div className="create-form-fields">
             <input className="input" placeholder="Nombre formal *" value={newName} onChange={e => setNewName(e.target.value)} required />
-            <input className="input" placeholder="Nombre formal del acompañante (opcional)" value={newCompanion} onChange={e => setNewCompanion(e.target.value)} />
+            <input className="input" placeholder="Nombre formal del acompañante (opcional)" value={newCompanion}
+              onChange={e => {
+                const val = e.target.value
+                setNewCompanion(val)
+                setNewMaxGuests(g => bumpMaxGuestsForCompanion(val, g))
+              }} />
             <input className="input" placeholder="Apodo global (ej. Andrés y Cata)" value={newNickname} onChange={e => setNewNickname(e.target.value)} />
             <input className="input" placeholder="Email (opcional)" value={newEmail} onChange={e => setNewEmail(e.target.value)} type="email" />
             <input className="input" placeholder="Teléfono (opcional)" value={newPhone} onChange={e => setNewPhone(e.target.value)} type="tel" />
@@ -611,7 +639,12 @@ export default function InvitationsManager() {
                           value={editNickname} onChange={e => setEditNickname(e.target.value)} />
                         <input className="input" style={{ fontSize: '0.8rem' }}
                           placeholder="Nombre formal del acompañante"
-                          value={editCompanion} onChange={e => setEditCompanion(e.target.value)} />
+                          value={editCompanion}
+                          onChange={e => {
+                            const val = e.target.value
+                            setEditCompanion(val)
+                            setEditMaxGuests(g => bumpMaxGuestsForCompanion(val, g))
+                          }} />
                         <input className="input" style={{ fontSize: '0.8rem' }}
                           placeholder="Teléfono"
                           value={editPhone} onChange={e => setEditPhone(e.target.value)} />
