@@ -971,11 +971,12 @@ textarea.input { min-height: 90px; resize: vertical; }
    these render at — at the old widths the dog's own (taller) natural
    ratio rendered past that height and got clipped at the top by
    `overflow: hidden`. Smaller widths keep both comfortably inside it. */
+/* Another 20% down per feedback. */
 .wedding-timer-dog {
-  width: 42%; max-width: 300px;
+  width: 34%; max-width: 240px;
 }
 .wedding-timer-cat {
-  width: 28%; max-width: 190px;
+  width: 22%; max-width: 152px;
 }
 
 /* Dress code gif — stacked below the outfit reference image instead of
@@ -1866,7 +1867,7 @@ body {
   .gift-price { font-size: 0.82rem; }
 
   .wedding-timer-gifs { gap: 0.5rem; }
-  .wedding-timer-dog { max-width: 140px; }
-  .wedding-timer-cat { max-width: 86px; }
+  .wedding-timer-dog { max-width: 112px; }
+  .wedding-timer-cat { max-width: 69px; }
   .wedding-dresscode-gif { max-width: 170px; }
 }
