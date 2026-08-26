@@ -663,20 +663,21 @@
 }
 /* The two photo carousels (El lugar, Nuestra historia) — locks the WHOLE
    box (and so the gold frame overlay, stretched to fill it via `inset:0`)
-   to the frame art's own proportions, given as 350×225px (width
-   confirmed good; height trimmed 10% twice then brought back up 20% per
-   feedback, 225 → 202.5 → 182.25 → 218.7). Without this, `.framed-media`'s
-   height came from its CONTENT (the photo, sized by `.photo-card--landscape`'s
-   own aspect-ratio below) instead of the other way around — any mismatch
-   between the two left the frame overlay stretched to a box narrower or
-   shorter than its own art actually is, showing as empty gaps on the
-   sides. Now the frame's ratio drives everything, and the photo (via
-   `.photo-card--landscape`, `height:100%`, `object-fit:cover` in
-   index.css) just fills and crops to whatever space that leaves — any
+   to the frame art's own actual measured size, 461×304px (≈1.516) —
+   several rounds of guessing this from screenshots (350×225 → …→ 350×218.7,
+   ≈1.60) landed too wide, which is exactly why the frame read as
+   stretched; this is the real number, not an estimate.
+   Without this, `.framed-media`'s height came from its CONTENT (the
+   photo, sized by `.photo-card--landscape`'s own aspect-ratio below)
+   instead of the other way around — any mismatch between the two left
+   the frame overlay stretched to a box narrower or shorter than its own
+   art actually is. Now the frame's ratio drives everything, and the
+   photo (via `.photo-card--landscape`, `height:100%`, `object-fit:cover`
+   in index.css) just fills and crops to whatever space that leaves — any
    uploaded photo whose own ratio doesn't match this one gets cropped to
    fit, never stretched or gapped. */
 .framed-media--carousel {
-  aspect-ratio: 350 / 218.7;
+  aspect-ratio: 461 / 304;
 }
 .framed-media-overlay {
   position: absolute; inset: 0;
