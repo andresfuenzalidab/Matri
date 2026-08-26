@@ -454,7 +454,17 @@
 /* Same `cqw` reasoning as `.corner-floral` above, scaled a bit smaller
    still — this variant has even more to fit at once (Countdown uses all 4
    corners plus 2 urns, competing for the same card width). */
-.corner-floral--sm { width: clamp(143px, 30.94cqw, 190px); } /* doubled, then +19% per feedback (Countdown corners) */
+/* The old 190px max was tuned back when `.stationery-main` was frozen at
+   480px, so it was reached the instant the card left mobile width — on
+   every desktop screen (card up to 1600px, see `.stationery-main` above)
+   this plateaued at the same size the whole time, which read as "not
+   scaling on desktop" even though the `cqw` math underneath was fine.
+   Raised so it keeps growing with the card up to ~1050px container width
+   (matching where `.section-title` itself levels off, so the florals and
+   the title they flank stop growing together, not independently) before
+   capping — real growth across the actual desktop range instead of an
+   near-immediate ceiling. */
+.corner-floral--sm { width: clamp(143px, 30.94cqw, 325px); } /* doubled, then +19% per feedback (Countdown corners) */
 
 /* Clearance under the top corner florals for whatever text comes right
    after them (a kicker, a title) — enough that the florals' own art
@@ -465,8 +475,12 @@
 .corner-floral-clearance {
   /* `cqw`, matching `.corner-floral`'s own new sizing above, so this stays
      in step with however big the florals actually render at any card
-     width instead of drifting independently of them again. */
-  margin-top: clamp(1.5rem, 5.8cqw, 2.4rem) !important;
+     width instead of drifting independently of them again. Max raised in
+     lockstep with `.corner-floral--sm`'s own new max (same 1050px
+     container-width cap point) — otherwise the florals keep growing on
+     desktop while this clearance plateaus early, and a big enough floral
+     starts covering the title it's supposed to clear. */
+  margin-top: clamp(1.5rem, 5.8cqw, 3.8rem) !important;
 }
 
 /* Small stone urn — reused between "La celebración" and "El lugar", same
