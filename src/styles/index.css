@@ -1618,13 +1618,19 @@ body {
 }
 .photo-card--landscape {
   /* `height: 100%`, not its own `aspect-ratio` — the frame's exact ratio
-     (350×225) now lives on `.framed-media--carousel` (the actual box the
-     gold frame art stretches to fill), one level up in stationery.css;
-     this just fills whatever height that leaves after the 6% padding,
-     rather than asserting its own (previously slightly different) ratio
-     and leaving gaps between the photo and the frame around it. */
+     (461×304, its real measured size) now lives on `.framed-media--carousel`
+     (the actual box the gold frame art stretches to fill), one level up in
+     stationery.css; this just fills whatever height that leaves after the
+     padding, rather than asserting its own (previously slightly
+     different) ratio and leaving gaps between the photo and the frame
+     around it. `aspect-ratio: auto` explicitly cancels `.photo-card`'s own
+     1/1 above — width and height are both already definite here, so it
+     shouldn't apply per spec regardless, but leaving a second, unused
+     ratio declaration sitting on the same element was one guess too many
+     to trust blind. */
   width: 100%;
   height: 100%;
+  aspect-ratio: auto;
 }
 .photo-card-fading { opacity: 0; }
 .photo-card img {
