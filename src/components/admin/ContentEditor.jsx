@@ -297,7 +297,7 @@ function TimelineField({ fieldKey, label, value, onSave, token }) {
   }
 
   function add() {
-    setItems([...items, { icon: DEFAULT_ICON, time: '', title: '', note: '' }])
+    setItems([...items, { icon: DEFAULT_ICON, time: '', title: '', note: '', showForPartyOnly: false }])
   }
 
   function remove(idx) {
@@ -332,6 +332,11 @@ function TimelineField({ fieldKey, label, value, onSave, token }) {
               value={it.title} onChange={e => update(i, 'title', e.target.value)} />
             <input className="input" placeholder="Descripción corta (opcional)"
               value={it.note} onChange={e => update(i, 'note', e.target.value)} />
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.78rem', opacity: 0.75, marginTop: '0.2rem' }}>
+              <input type="checkbox" checked={Boolean(it.showForPartyOnly)}
+                onChange={e => update(i, 'showForPartyOnly', e.target.checked)} />
+              Mostrar a invitados solo de fiesta
+            </label>
           </div>
           <div className="timeline-editor-actions">
             <button type="button" className="btn btn-ghost" title="Subir"

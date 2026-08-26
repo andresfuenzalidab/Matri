@@ -265,33 +265,28 @@
   --stationery-pad: calc(var(--stationery-border-w) + 1rem);
   position: relative;
   width: 100%;
-  /* The fix for "desktop should look like the mobile card, with green
-     filling everything past it": cap the WHOLE stationery skin (border +
-     cream + every section inside it) at a phone-sized width and center it,
-     instead of growing the border to chase a wide desktop viewport.
-     `.section`'s own 820px max-width is now moot (this box never gets
-     that wide), left as-is rather than removed.
-     `--stationery-border-w`/`--stationery-pad` (insets, full-bleed) are
-     fine left on `vw` — they were already maxed out well before this cap
-     kicks in, and don't scale content, only position it. Almost EVERY
-     OTHER `vw` in this file wasn't fine, though: every font-size, gap and
-     decorative-art width sized off the viewport (not just positioned by
-     it) was tuned assuming "viewport ≈ this card's width" — true before
-     this cap existed, false on any desktop screen now that the card
-     freezes at 480px while the true viewport keeps growing past it. Their
-     `vw` terms kept resolving against the (irrelevant) true viewport, so
-     everything sized that way rendered at whatever it looked like on some
-     WIDE viewport — text overflowing/wrapping badly, florals overlapping
-     titles — instead of at how it already looked, correctly, on an actual
-     ~480px phone. `container-type` here turns this box into the reference
-     for `cqw` units; every `vw` below this point in the file (except the
-     two above, deliberately) has been converted to `cqw` for exactly this
-     reason — a plain unit swap is enough (not new numbers) because it
-     makes each value resolve exactly as it already did on a real phone,
-     which is exactly the frozen look this cap is supposed to reproduce at
-     every width. */
+  /* Was frozen flat at 480px (phone-sized, always, at any desktop width) —
+     changed per feedback: desktop should be responsive and actually use
+     the screen, not stay pinned to a phone-width card with green filling
+     the rest. `clamp(480px, 62.5vw, 1600px)`: below 768px viewport, 62.5vw
+     is already under 480px, so the clamp's floor wins and this is
+     PIXEL-IDENTICAL to the old flat 480px — mobile and tablet-portrait
+     are completely unaffected, per "don't modify the mobile version".
+     Above 768px, it grows continuously (62.5vw = 480px exactly AT 768px,
+     so there's no jump at that boundary) up to a 1600px ceiling — generous
+     on a typical 1920px monitor (~1200px there) without stretching to an
+     unreadable width on an ultra-wide display.
+     `.section`'s own max-width (index.css) uses the exact same formula —
+     it has to, since every `cqw` value in this file resolves against THIS
+     element's width, and `.section` is where the actual content sits;
+     letting the two drift apart would just reintroduce the same
+     card-vs-content mismatch the whole `cqw` conversion above exists to
+     avoid, one level up.
+     `--stationery-border-w`/`--stationery-pad` (insets, full-bleed) stay
+     on `vw` exactly as before — they already reach their own max well
+     before 768px, so they were never part of this problem. */
   container-type: inline-size;
-  max-width: 480px;
+  max-width: clamp(480px, 62.5vw, 1600px);
   margin: 0 auto;
   background-color: var(--color-bg);
   background-image: var(--stationery-paper, none);
@@ -459,7 +454,7 @@
 /* Same `cqw` reasoning as `.corner-floral` above, scaled a bit smaller
    still — this variant has even more to fit at once (Countdown uses all 4
    corners plus 2 urns, competing for the same card width). */
-.corner-floral--sm { width: clamp(60px, 13cqw, 80px); }
+.corner-floral--sm { width: clamp(120px, 26cqw, 160px); } /* doubled per feedback (Countdown corners) */
 
 /* Clearance under the top corner florals for whatever text comes right
    after them (a kicker, a title) — enough that the florals' own art
@@ -494,7 +489,7 @@
 }
 .countdown-scene .countdown-section { flex: 1; justify-content: center; }
 .countdown-kicker { margin-bottom: 0.35rem; }
-.urn-image--sm { width: clamp(69px, 15cqw, 126px); } /* +50% per feedback */
+.urn-image--sm { width: clamp(104px, 22.5cqw, 189px); } /* +50% again per feedback (Countdown center) */
 /* Absolute, same offset as the corner florals — "on the same line" as
    them, rather than a normal-flow block stacked below. Center digits
    still land in the true middle: `.countdown-section` is the only flex
@@ -575,9 +570,13 @@
    with the oval image itself ("always proportional to the image") rather
    than the viewport. Dialed back down from an earlier, too-large bump;
    still bigger than the original mobile-only sizing for legibility. */
-.paper-tag--bare .paper-tag-label { font-size: clamp(0.42rem, 2.2cqw, 0.52rem); margin-bottom: 0.15rem; }
-.paper-tag--bare .paper-tag-value { font-size: clamp(0.7rem, 3.6cqw, 0.92rem); line-height: 1.25; }
-.paper-tag--bare .paper-tag-hint { font-size: clamp(0.6rem, 3cqw, 0.78rem); margin-top: 0; }
+/* Black, not the base rule's grayed-out opacity — per feedback, this
+   text (the citation info inside "La Celebración") should read as solid
+   black, not the muted secondary-text gray the base `.paper-tag-*`
+   classes use elsewhere. */
+.paper-tag--bare .paper-tag-label { font-size: clamp(0.42rem, 2.2cqw, 0.52rem); margin-bottom: 0.15rem; color: #000; opacity: 1; }
+.paper-tag--bare .paper-tag-value { font-size: clamp(0.7rem, 3.6cqw, 0.92rem); line-height: 1.25; color: #000; }
+.paper-tag--bare .paper-tag-hint { font-size: clamp(0.6rem, 3cqw, 0.78rem); margin-top: 0; color: #000; opacity: 1; }
 .paper-tag--bare .cal-add {
   /* Right up against the recommendation text — no divider line. The parent
      (`.paper-tag-body`) puts a flex `gap` between every row including this

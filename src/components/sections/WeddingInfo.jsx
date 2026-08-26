@@ -49,7 +49,11 @@ export default function WeddingInfo() {
   const timelineFloralRight = get('timeline_floral_right')
 
   const savedTimeline = parseTimelineItems(get('timeline_items'))
-  const timelineItems = savedTimeline.length ? savedTimeline : DEFAULT_TIMELINE_ITEMS
+  const allTimelineItems = savedTimeline.length ? savedTimeline : DEFAULT_TIMELINE_ITEMS
+  // Party-only guests see only the items an admin opted in for them
+  // (`showForPartyOnly`) — full-day guests see the whole programme,
+  // regardless of that flag.
+  const timelineItems = isPartyOnly ? allTimelineItems.filter(it => it.showForPartyOnly) : allTimelineItems
 
   return (
     <section id="boda" className="section">
@@ -110,13 +114,17 @@ export default function WeddingInfo() {
         </div>
       </div>
 
-      {/* ── Programme of the day — full-day guests only ── */}
-      {!isPartyOnly && timelineItems.length > 0 && (
+      {/* ── Programme of the day — kept for party-only guests too now,
+          showing only whichever items an admin opted in for them (see
+          `timelineItems` above) instead of hiding the whole section. ── */}
+      {timelineItems.length > 0 && (
         <div className="wedding-detail-block timeline-block reveal-on-scroll">
           <DecorSlot url={timelineSeparatorTop} label="Separador horizontal (arriba)" aspectRatio="7"
             className="timeline-separator full-bleed" />
 
-          <h3 className="wedding-detail-title">{get('timeline_title', 'Programa del día')}</h3>
+          <h3 className="wedding-detail-title">
+            {get('timeline_title', isPartyOnly ? 'Programación de la fiesta' : 'Programa del día')}
+          </h3>
 
           {/* The florals are delimiters the list sits inside of, not
               decoration drawn over it — see .timeline-flanked in

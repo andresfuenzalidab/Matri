@@ -1378,7 +1378,14 @@ body {
      padding...) this outer padding was stacking on top of spacing the
      separators already provide, doubling up the gap between sections. */
   padding: 3rem 2rem;
-  max-width: 820px;
+  /* Matches `.stationery-main`'s own max-width formula exactly (see the
+     long comment there, stationery.css) — same clamp, same 768px
+     breakpoint, same 1600px ceiling. Every `cqw` value in stationery.css
+     resolves against `.stationery-main`'s width, and this is where the
+     actual content sits; letting the two caps differ would reintroduce a
+     card-vs-content mismatch one level up. Was a flat 820px, which is why
+     desktop used to stop growing well short of "full screen". */
+  max-width: clamp(480px, 62.5vw, 1600px);
   margin: 0 auto;
 }
 

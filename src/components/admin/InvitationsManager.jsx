@@ -200,9 +200,12 @@ export default function InvitationsManager() {
     const name = guestDisplayName(guest) // nickname if set, else the formal name(s)
     const pair = isPairInvite(guest)
     const p = (singular, plural) => pick(guest, singular, plural)
+    // Party-only guests are invited to the reception, not the whole day —
+    // "la fiesta de nuestro matrimonio", not just "nuestro matrimonio".
+    const occasion = inv.invitation_type === 'party_only' ? 'la fiesta de nuestro matrimonio' : 'nuestro matrimonio'
 
     return `¡Hola ${name}!\n\n` +
-      `Con mucha alegría ${p('te', 'les')} compartimos la invitación a nuestro matrimonio. ` +
+      `Con mucha alegría ${p('te', 'les')} compartimos la invitación a ${occasion}. ` +
       `${p('Te', 'Les')} dejamos el PDF adjunto para que ${p('lo guardes', 'lo guarden')}, ` +
       `${p('puedes', 'pueden')} acceder también a través de este link para ver más detalles y confirmar ${p('tu', 'su')} asistencia:\n\n` +
       `${getLink(inv)}\n\n` +
