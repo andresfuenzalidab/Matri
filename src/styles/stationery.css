@@ -256,7 +256,13 @@
      full-bleed and padding calculation in this file keys off this same
      `clamp()`, and it already stops growing past ~971px viewport width
      (mobile/tablet behaviour is identical to before). What changes on
-     desktop is `.stationery-main`'s own box (below), not this. */
+     desktop is `.stationery-main`'s own box (below), not this.
+     This exact value is also duplicated as a literal on `.page-body`
+     (index.css) — as a custom property it can't be read from there (that's
+     an ancestor of this element, and custom properties only inherit
+     downward) — so it's copied by hand to keep the border strips here and
+     `.page-body`'s own fill tiling the same asset at the same scale. If
+     this ever changes, update that copy too. */
   --stationery-border-w: clamp(24px, 7vw, 68px);
   /* The safe inset every section uses to clear the border — and, via
      `.full-bleed` below, the exact amount every "should touch the border"
@@ -1096,7 +1102,13 @@
   position: absolute;
   right: -6%; top: -8%;
   width: 38%;
-  max-width: 190px;
+  /* Same early-cap bug as the corner florals / pets gifs — 190px was
+     tuned for the old frozen-480px card (38%×480=182px, so the cap was
+     already binding right at the floor) and `.rsvp-letter` itself grows
+     with `.section`'s own responsive width (up to 1600px) with no cap of
+     its own, so this shrank to a tiny accent on a now much bigger card.
+     Raised in the same proportion as the other floral fixes above. */
+  max-width: 340px;
   mix-blend-mode: multiply;
   pointer-events: none;
   z-index: 2;

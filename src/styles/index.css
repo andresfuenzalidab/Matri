@@ -1193,8 +1193,23 @@ body {
    the same asset already used for the border strips right next to it, not
    a second, different-looking green. `--stationery-fill-color` only as
    the fallback for when no border image is set at all. */
+/* `background-size` explicitly matched to `.stationery-main::before`'s own
+   border-strip size (stationery.css: `--stationery-border-w: clamp(24px,
+   7vw, 68px)`) — without it this defaulted to the image's natural,
+   unscaled resolution, a completely different tile scale from the border
+   strip sitting right next to it. Same asset, two different sizes, right
+   at the card's own left and right edges: the pattern visibly jumped scale
+   at that seam, reading as a pair of vertical divider lines running the
+   full height of the page.
+   Repeated as a literal here rather than `var(--stationery-border-w)` —
+   that custom property is declared on `.stationery-main`, a DESCENDANT of
+   `.page-body`, and custom properties only inherit downward; reading it
+   here would silently resolve to nothing. It's pure `vw` (not `cqw`), so
+   it never actually depended on being inside `.stationery-main` in the
+   first place — safe to repeat verbatim. */
 .page-body {
   background: var(--stationery-border, var(--stationery-fill-color)) repeat;
+  background-size: clamp(24px, 7vw, 68px) auto;
 }
 
 /* Sections: transparent (they inherit from editorial-main's cream bg) */
