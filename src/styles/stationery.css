@@ -297,17 +297,26 @@
   background-color: var(--color-bg);
   background-image: var(--stationery-paper, none);
   background-repeat: repeat;
-  /* Fixed, not `vw`-scaled: a previous version scaled this with the true
-     viewport specifically to reduce seam frequency on wide desktop screens
-     — but at exactly `50vw` a tile boundary sits at exactly the viewport's
-     horizontal center on EVERY viewport width, which is exactly where this
-     card is centered, so it guaranteed a seam right down the middle
-     instead of reducing it. Now that the visible card is capped at 480px
-     (above), a single fixed tile wider than that is simply never repeated
-     within it — no seam possible, on mobile or desktop. `background-
-     position: center` is extra insurance for the narrow band of viewports
-     right at the 480px cap where the box isn't quite capped yet. */
-  background-size: 600px auto;
+  /* Was a fixed `600px` — correct back when the card itself was frozen at
+     480px (a tile wider than the box can never repeat within it, so no
+     seam was possible), but that guarantee broke the instant the card went
+     responsive: on desktop the card grows up to 1600px (above), well past
+     600px, so the texture DID need to repeat horizontally within the card
+     — and unlike a purpose-made seamless tile, this is an admin-uploaded
+     photo of paper, which doesn't loop cleanly at its own edges, so every
+     repeat boundary showed up as a visible vertical seam (reported as "2
+     white vertical lines" — `62.5vw` lands two repeat boundaries
+     symmetrically inside a wide card, reads as a pair of lines).
+     Same `clamp()` as this element's own `max-width` above, not a
+     coincidence — `max-width` is by definition always ≥ the box's actual
+     rendered width at every viewport, so using the identical formula here
+     guarantees the tile is always at least as wide as the card too. One
+     tile can then never need to repeat inside the box, at any viewport,
+     restoring the original "no seam possible" guarantee without pinning
+     the card back to a fixed size. `background-position: center` is extra
+     insurance for the narrow band of viewports right at the 480px floor
+     where a fractional/near-exact match could still show a sliver. */
+  background-size: clamp(480px, 62.5vw, 1600px) auto;
   background-position: center top;
 }
 .stationery-main::before {
