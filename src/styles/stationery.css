@@ -618,7 +618,13 @@
 /* Forced onto one line, smaller — there isn't room for these to wrap
    inside the oval's narrow window. */
 .paper-tag--bare .cal-add-actions { flex-wrap: nowrap; gap: 0.4rem; }
-.paper-tag--bare .cal-add-btn { font-size: clamp(0.52rem, 1.7cqw, 0.6rem); gap: 0.2rem; white-space: nowrap; }
+/* Same max-bound-was-never-raised bug as `.paper-tag-label/value/hint`
+   above (0.6rem cap reached at ~564px container — capped for nearly the
+   entire desktop range) — this rule just didn't get included in that pass.
+   Same `cqw` coefficient, new ceiling lands at the same ~700px
+   container-width cap point as its siblings above, for a consistent
+   growth curve across the whole card. */
+.paper-tag--bare .cal-add-btn { font-size: clamp(0.52rem, 1.7cqw, 0.75rem); gap: 0.2rem; white-space: nowrap; }
 .paper-tag--bare .cal-add-icon { width: 8px; height: 8px; }
 .paper-tag--bare .cal-add-sep { width: 3px; height: 3px; }
 
@@ -681,7 +687,14 @@
      ratio was corrected, shrinking padding on top of that overshot the
      other way — the photo reaching past the frame's own (genuinely thin)
      border. */
-  padding: 6%;
+  /* Split per feedback: photo width +8%, height unchanged. Padding-top/
+     -bottom resolve against the box's WIDTH regardless of axis (a CSS
+     quirk, not a bug), so keeping vertical at 6% holds the photo's height
+     exactly where it was; only the horizontal side needed to shrink to
+     free up the extra width. 6% each side → 0.88 of the box width; +8% on
+     that content width means each side only needs to give up 2.48%
+     (1 - 0.88×1.08 = 0.0496, split two ways) instead of 6%. */
+  padding: 6% 2.48%;
   /* Fills whatever height `.framed-media` itself resolves to — needed now
      that `.framed-media--carousel` below gives it an explicit one, so the
      padded photo area (and the `.photo-card` inside it) actually reaches

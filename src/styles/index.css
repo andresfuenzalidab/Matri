@@ -972,11 +972,22 @@ textarea.input { min-height: 90px; resize: vertical; }
    ratio rendered past that height and got clipped at the top by
    `overflow: hidden`. Smaller widths keep both comfortably inside it. */
 /* Another 20% down per feedback. */
+/* The 240px/152px caps were tuned back when the card was frozen at 480px
+   (34%/22% of 480px is well under those caps, so they never even bound at
+   the time) — now the card scales up to 1600px on desktop, and the SAME
+   `.framed-media-overlay` art behind these two (the urn/floral graphic) is
+   plain 100%-of-box, uncapped, so it keeps scaling right along with the
+   card while the dog/cat here hit their old cap almost immediately and
+   stop — ending up visually smaller than the flowers meant to sit beside
+   them, not on top of them. Caps raised to the exact value the percentage
+   itself reaches at the card's own 1600px ceiling (`.stationery-main`),
+   which is mathematically the same as no cap at all across the entire
+   responsive range — just a safety ceiling, not a real constraint. */
 .wedding-timer-dog {
-  width: 34%; max-width: 240px;
+  width: 34%; max-width: 544px;
 }
 .wedding-timer-cat {
-  width: 22%; max-width: 152px;
+  width: 22%; max-width: 352px;
 }
 
 /* Dress code gif — stacked below the outfit reference image instead of
