@@ -27,6 +27,11 @@ export default function GiftsDashboard() {
   const { token } = useApp()
   const [trips, setTrips] = useState([])
   const [summary, setSummary] = useState({})
+  // Who's given what — fetched alongside trips/gifts (invitations already
+  // carry their own `gifts` array with name/price/quantity/message per
+  // reservation) purely to build the per-person summary below; nothing
+  // here is ever written back.
+  const [invitations, setInvitations] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -55,14 +60,18 @@ export default function GiftsDashboard() {
   async function load() {
     setLoading(true)
     try {
-      const res = await fetch('/api/admin/gifts', { headers: { 'X-Invite-Token': token } })
-      if (res.ok) {
-        const d = await res.json()
+      const [giftsRes, invRes] = await Promise.all([
+        fetch('/api/admin/gifts', { headers: { 'X-Invite-Token': token } }),
+        fetch('/api/admin/invitations', { headers: { 'X-Invite-Token': token } }),
+      ])
+      if (giftsRes.ok) {
+        const d = await giftsRes.json()
         setTrips(d.trips || [])
         setSummary(d.summary || {})
       } else {
         setError('No se pudieron cargar los datos.')
       }
+      if (invRes.ok) setInvitations(await invRes.json())
     } catch {
       setError('Error de conexión.')
     } finally {
@@ -322,6 +331,23 @@ export default function GiftsDashboard() {
     }
   }
 
+  // Per-person "quién ha regalado qué" — grouped from each invitation's own
+  // `gifts` array (name/price/quantity/message per reservation, same data
+  // InvitationsManager shows per-row), not a separate query — one source of
+  // truth for "what someone gave" either place it's shown. Biggest
+  // contribution first, since that's usually what's actually worth
+  // skimming a list like this for.
+  const guestSummaries = invitations
+    .filter(inv => inv.gifts?.length > 0)
+    .map(inv => ({
+      id: inv.id,
+      name: inv.nickname || inv.name,
+      total: inv.gifts.reduce((s, g) => s + (g.price || 0) * (g.quantity || 1), 0),
+      items: inv.gifts.map(g => g.quantity > 1 ? `${g.name} ×${g.quantity}` : g.name).join(', '),
+      messages: inv.gifts.map(g => g.message).filter(Boolean),
+    }))
+    .sort((a, b) => b.total - a.total)
+
   if (loading) return <p className="text-muted">Cargando...</p>
 
   return (
@@ -347,6 +373,32 @@ export default function GiftsDashboard() {
           <span className="stat-label">Total recibido</span>
         </div>
       </div>
+
+      {/* Quién ha regalado — per-person summary, at the top per feedback,
+          so it's visible without hunting through the trip/gift list below. */}
+      {guestSummaries.length > 0 && (
+        <div className="create-form" style={{ marginBottom: '1.5rem' }}>
+          <div className="create-form-title">Quién ha regalado ({guestSummaries.length})</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', maxHeight: 340, overflowY: 'auto' }}>
+            {guestSummaries.map(g => (
+              <div key={g.id} style={{ display: 'flex', justifyContent: 'space-between', gap: '0.75rem', paddingBottom: '0.6rem', borderBottom: '1px solid var(--color-neutral-200)' }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <strong style={{ fontSize: '0.9rem' }}>{g.name}</strong>
+                  <div style={{ fontSize: '0.78rem', opacity: 0.7 }}>{g.items}</div>
+                  {g.messages.length > 0 && (
+                    <div style={{ fontSize: '0.75rem', opacity: 0.6, fontStyle: 'italic', marginTop: '0.15rem' }}>
+                      "{g.messages.join(' / ')}"
+                    </div>
+                  )}
+                </div>
+                <strong style={{ color: 'var(--color-accent)', whiteSpace: 'nowrap', fontSize: '0.9rem' }}>
+                  {formatCLP(g.total)}
+                </strong>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem', gap: '0.75rem', flexWrap: 'wrap' }}>
         <button className="btn btn-ghost" onClick={exportGifts}>

@@ -50,7 +50,20 @@ export async function onRequestPost({ request, env }) {
     // Same lookup/format `gifts/checkout.js` uses for its own back-link.
     const siteUrl = ((await env.DB.prepare("SELECT value FROM site_content WHERE key = 'site_url'").first())?.value || '').replace(/\/$/, '')
 
-    const recipients = await eligibleRecipients(env)
+    // The client shows the same `eligibleRecipients` list and lets the admin
+    // uncheck any of them before sending — `recipientIds` is which ones
+    // stayed checked. Re-filtered against `eligibleRecipients` computed
+    // HERE, not trusted as-is: the client only ever sends invitation ids,
+    // never emails, so there's nothing for a tampered request to inject —
+    // worst case an id that doesn't match anything just contributes no row.
+    // Omitting the field entirely (older client, or "select all" never
+    // touched) falls back to every eligible recipient, same as before this
+    // existed.
+    let recipients = await eligibleRecipients(env)
+    if (Array.isArray(body?.recipientIds)) {
+      const keep = new Set(body.recipientIds)
+      recipients = recipients.filter(r => keep.has(r.id))
+    }
     let sent = 0, failed = 0
     for (const r of recipients) {
       // Each guest's own invite link — takes them straight back into their

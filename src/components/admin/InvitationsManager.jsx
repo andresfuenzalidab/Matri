@@ -1,9 +1,11 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useApp } from '../../context/AppContext'
 import { downloadInvitationPDF, inviteLink } from '../../utils/invitationPdf.js'
 import { downloadXLSX, parseXLSXFile, cell } from '../../utils/spreadsheet.js'
 import { totalInvitedHeadcount } from '../../utils/inviteCount.js'
 import { guestDisplayName, isPairInvite, pick } from '../../utils/guestName.js'
+import { useInvitationFilters } from '../../hooks/useInvitationFilters.js'
+import InvitationFilterBar from './InvitationFilterBar.jsx'
 
 // The single source of truth for the invitations spreadsheet shape — used for both
 // export and import, so a file downloaded here always re-imports cleanly.
@@ -17,12 +19,6 @@ const INVITATION_HEADERS = [
   'RSVP Restricción alimenticia', 'RSVP Mensaje', 'RSVP Fecha respuesta',
   'Regalos', 'Total regalos (CLP)', 'Regalos mensajes',
 ]
-
-/** Accent/case-insensitive match for the free-text filter below — "jose"
- *  should still find "José", same spirit as `spreadsheet.js`'s `cell()`. */
-function normalizeSearch(s) {
-  return String(s ?? '').trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
-}
 
 /** A named companion implies at least 1 additional guest — "0 acompañantes"
  *  with a companion named is a contradiction (you named someone, but said
@@ -76,17 +72,9 @@ export default function InvitationsManager() {
   const [importing, setImporting] = useState(false)
   const [importResult, setImportResult] = useState(null)
 
-  // Filters / sort — free-text search covers "whatever" (name, nickname,
-  // companion, email, phone, internal note all at once) so it doesn't take
-  // a dedicated dropdown for every field someone might want to slice by;
-  // type/RSVP/enviado get their own since those are small fixed sets people
-  // actually filter to a single value.
-  const [search, setSearch] = useState('')
-  const [filterType, setFilterType] = useState('all')
-  const [filterRsvp, setFilterRsvp] = useState('all')
-  const [filterSent, setFilterSent] = useState('all')
-  const [sortBy, setSortBy] = useState('default')
-  const filtersActive = search.trim() || filterType !== 'all' || filterRsvp !== 'all' || filterSent !== 'all' || sortBy !== 'default'
+  // Filters / sort — shared with the RSVP tab, see useInvitationFilters.
+  const filters = useInvitationFilters(invitations)
+  const visibleInvitations = filters.visible
 
   async function load() {
     setLoading(true)
@@ -403,49 +391,15 @@ export default function InvitationsManager() {
   }
 
   // People invited, companions included — not just invitation rows. Kept
-  // against the FULL list, not the filtered one below — a dataset-wide
-  // summary shouldn't change just because someone typed into the search box.
+  // against the FULL list, not the filtered one — a dataset-wide summary
+  // shouldn't change just because someone typed into the search box.
   const total = totalInvitedHeadcount(invitations)
   const admins = invitations.filter(i => i.is_admin).length
-
-  const visibleInvitations = useMemo(() => {
-    const q = normalizeSearch(search)
-    let list = !q ? invitations : invitations.filter(inv => {
-      const haystack = [inv.name, inv.nickname, inv.companion_name, inv.email, inv.phone, inv.notes]
-        .filter(Boolean).map(normalizeSearch).join(' | ')
-      return haystack.includes(q)
-    })
-    if (filterType !== 'all') {
-      list = list.filter(inv => (inv.invitation_type === 'party_only' ? 'party_only' : 'all_in') === filterType)
-    }
-    if (filterRsvp !== 'all') {
-      list = list.filter(inv => {
-        const answered = inv.attending !== null && inv.attending !== undefined
-        if (filterRsvp === 'pending') return !answered
-        if (filterRsvp === 'yes') return answered && inv.attending
-        return answered && !inv.attending // 'no'
-      })
-    }
-    if (filterSent !== 'all') {
-      list = list.filter(inv => Boolean(inv.invitation_sent) === (filterSent === 'yes'))
-    }
-    if (sortBy !== 'default') {
-      list = [...list].sort((a, b) => {
-        switch (sortBy) {
-          case 'name_asc': return a.name.localeCompare(b.name, 'es')
-          case 'name_desc': return b.name.localeCompare(a.name, 'es')
-          case 'created_asc': return new Date(a.created_at || 0) - new Date(b.created_at || 0)
-          case 'created_desc': return new Date(b.created_at || 0) - new Date(a.created_at || 0)
-          default: return 0
-        }
-      })
-    }
-    return list
-  }, [invitations, search, filterType, filterRsvp, filterSent, sortBy])
-
-  function clearFilters() {
-    setSearch(''); setFilterType('all'); setFilterRsvp('all'); setFilterSent('all'); setSortBy('default')
-  }
+  // Same "resumen de cantidad de regalos" shown in the Regalos tab, echoed
+  // here so it's visible without switching tabs. Also against the full
+  // list, matching Invitados/Admins above.
+  const giftCount = invitations.reduce((sum, inv) => sum + (inv.gifts?.reduce((s, g) => s + (g.quantity || 1), 0) || 0), 0)
+  const giftTotal = invitations.reduce((sum, inv) => sum + (inv.gifts?.reduce((s, g) => s + (g.price || 0) * (g.quantity || 1), 0) || 0), 0)
 
   return (
     <div>
@@ -494,47 +448,21 @@ export default function InvitationsManager() {
           <span className="stat-number">{invitations.filter(i => i.attending !== null && i.attending !== undefined).length}</span>
           <span className="stat-label">Con RSVP</span>
         </div>
+        <div className="stat-card">
+          <span className="stat-number">{giftCount}</span>
+          <span className="stat-label">Regalos</span>
+        </div>
+        <div className="stat-card">
+          <span className="stat-number" style={{ fontSize: '0.95rem' }}>${Number(giftTotal).toLocaleString('es-CL')}</span>
+          <span className="stat-label">Recibido (CLP)</span>
+        </div>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
-        <input
-          className="input"
-          style={{ flex: '1 1 220px', minWidth: 180 }}
-          placeholder="Buscar por nombre, apodo, email, teléfono, nota..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-        />
-        <select className="input" style={{ width: 'auto' }} value={filterType} onChange={e => setFilterType(e.target.value)}>
-          <option value="all">Todos los tipos</option>
-          <option value="all_in">Completa</option>
-          <option value="party_only">Solo fiesta</option>
-        </select>
-        <select className="input" style={{ width: 'auto' }} value={filterRsvp} onChange={e => setFilterRsvp(e.target.value)}>
-          <option value="all">Todos (RSVP)</option>
-          <option value="pending">Sin respuesta</option>
-          <option value="yes">Asiste</option>
-          <option value="no">No asiste</option>
-        </select>
-        <select className="input" style={{ width: 'auto' }} value={filterSent} onChange={e => setFilterSent(e.target.value)}>
-          <option value="all">Todos (enviado)</option>
-          <option value="yes">Enviada</option>
-          <option value="no">Pendiente de enviar</option>
-        </select>
-        <select className="input" style={{ width: 'auto' }} value={sortBy} onChange={e => setSortBy(e.target.value)}>
-          <option value="default">Orden original</option>
-          <option value="name_asc">Nombre (A-Z)</option>
-          <option value="name_desc">Nombre (Z-A)</option>
-          <option value="created_desc">Más recientes primero</option>
-          <option value="created_asc">Más antiguas primero</option>
-        </select>
-        {filtersActive && (
-          <button className="btn btn-ghost" onClick={clearFilters}>Limpiar filtros</button>
-        )}
-      </div>
+      <InvitationFilterBar {...filters} />
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
         <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>
-          {filtersActive ? `${visibleInvitations.length} de ${invitations.length} invitaciones` : `${invitations.length} invitaciones`}
+          {filters.filtersActive ? `${visibleInvitations.length} de ${invitations.length} invitaciones` : `${invitations.length} invitaciones`}
         </span>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
         {selected.size > 0 && (
@@ -844,7 +772,7 @@ export default function InvitationsManager() {
           )}
           {invitations.length > 0 && visibleInvitations.length === 0 && (
             <p style={{ textAlign: 'center', padding: '2rem', opacity: 0.5 }}>
-              Ningún resultado coincide con los filtros. <button className="btn btn-ghost" style={{ fontSize: '0.8rem' }} onClick={clearFilters}>Limpiar filtros</button>
+              Ningún resultado coincide con los filtros. <button className="btn btn-ghost" style={{ fontSize: '0.8rem' }} onClick={filters.clearFilters}>Limpiar filtros</button>
             </p>
           )}
         </div>

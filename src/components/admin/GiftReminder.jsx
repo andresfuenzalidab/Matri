@@ -11,6 +11,11 @@ Cada aporte, grande o pequeño, significa muchísimo para nosotros. ¡Gracias po
 export default function GiftReminder() {
   const { token } = useApp()
   const [recipients, setRecipients] = useState([])
+  // Which of the suggested candidates actually get the email — starts as
+  // "all of them" (the old, only, behavior) but the admin can uncheck any
+  // before sending, per feedback: the suggested list is a starting point,
+  // not a forced send-to-everyone.
+  const [selectedIds, setSelectedIds] = useState(() => new Set())
   const [loading, setLoading] = useState(true)
   const [subject, setSubject] = useState(DEFAULT_SUBJECT)
   const [message, setMessage] = useState(DEFAULT_MESSAGE)
@@ -24,7 +29,9 @@ export default function GiftReminder() {
       const res = await fetch('/api/admin/gift-reminder', { headers: { 'X-Invite-Token': token } })
       if (res.ok) {
         const d = await res.json()
-        setRecipients(d.recipients || [])
+        const list = d.recipients || []
+        setRecipients(list)
+        setSelectedIds(new Set(list.map(r => r.id)))
       } else {
         setError('No se pudo cargar la lista de destinatarios.')
       }
@@ -34,9 +41,21 @@ export default function GiftReminder() {
 
   useEffect(() => { load() }, [])
 
+  function toggleRecipient(id) {
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id); else next.add(id)
+      return next
+    })
+  }
+
+  function toggleSelectAll() {
+    setSelectedIds(prev => prev.size === recipients.length ? new Set() : new Set(recipients.map(r => r.id)))
+  }
+
   async function send() {
-    if (!subject.trim() || !message.trim() || recipients.length === 0) return
-    if (!window.confirm(`¿Enviar este recordatorio a ${recipients.length} invitado(s)? Esta acción no se puede deshacer.`)) return
+    if (!subject.trim() || !message.trim() || selectedIds.size === 0) return
+    if (!window.confirm(`¿Enviar este recordatorio a ${selectedIds.size} invitado(s)? Esta acción no se puede deshacer.`)) return
     setSending(true)
     setResult(null)
     setError('')
@@ -44,7 +63,7 @@ export default function GiftReminder() {
       const res = await fetch('/api/admin/gift-reminder', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Invite-Token': token },
-        body: JSON.stringify({ subject, message }),
+        body: JSON.stringify({ subject, message, recipientIds: Array.from(selectedIds) }),
       })
       const d = await res.json().catch(() => ({}))
       if (res.ok) setResult(d)
@@ -58,9 +77,9 @@ export default function GiftReminder() {
   return (
     <div>
       <p style={{ fontSize: '0.85rem', opacity: 0.7, marginBottom: '1rem', lineHeight: 1.5 }}>
-        Envía un recordatorio a todos los invitados que dejaron su correo (al confirmar
-        asistencia o no) y que todavía no tienen un regalo confirmado. Usa <code>{'{NOMBRE}'}</code> en
-        el asunto o el mensaje para saludar a cada uno por su nombre.
+        Sugerimos a todos los invitados que dejaron su correo (al confirmar asistencia o no) y que
+        todavía no tienen un regalo confirmado — desmarca a quien no quieras incluir antes de enviar.
+        Usa <code>{'{NOMBRE}'}</code> en el asunto o el mensaje para saludar a cada uno por su nombre.
       </p>
 
       {error && <p className="form-error" onClick={() => setError('')} style={{ cursor: 'pointer' }}>{error} ✕</p>}
@@ -68,7 +87,11 @@ export default function GiftReminder() {
       <div className="stats-row">
         <div className="stat-card">
           <span className="stat-number">{recipients.length}</span>
-          <span className="stat-label">Destinatarios elegibles</span>
+          <span className="stat-label">Candidatos sugeridos</span>
+        </div>
+        <div className="stat-card">
+          <span className="stat-number">{selectedIds.size}</span>
+          <span className="stat-label">Seleccionados para enviar</span>
         </div>
       </div>
 
@@ -84,9 +107,9 @@ export default function GiftReminder() {
       <button
         className="btn btn-primary"
         onClick={send}
-        disabled={sending || loading || recipients.length === 0 || !subject.trim() || !message.trim()}
+        disabled={sending || loading || selectedIds.size === 0 || !subject.trim() || !message.trim()}
       >
-        {sending ? 'Enviando...' : `Enviar recordatorio a ${recipients.length} invitado(s)`}
+        {sending ? 'Enviando...' : `Enviar recordatorio a ${selectedIds.size} invitado(s)`}
       </button>
 
       {result && (
@@ -96,17 +119,47 @@ export default function GiftReminder() {
       )}
 
       {recipients.length > 0 && (
-        <details style={{ marginTop: '1.5rem' }}>
-          <summary style={{ cursor: 'pointer', fontSize: '0.85rem', opacity: 0.7 }}>Ver destinatarios</summary>
-          <ul style={{ fontSize: '0.8rem', marginTop: '0.5rem', paddingLeft: '1.2rem' }}>
-            {recipients.map(r => (
-              <li key={r.id}>
-                {r.name} — {r.email}
-                {r.attending === 1 ? ' (confirmó)' : r.attending === 0 ? ' (no asiste)' : ' (sin responder)'}
-              </li>
-            ))}
-          </ul>
-        </details>
+        <div style={{ marginTop: '1.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.5rem' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={recipients.length > 0 && selectedIds.size === recipients.length}
+                ref={el => { if (el) el.indeterminate = selectedIds.size > 0 && selectedIds.size < recipients.length }}
+                onChange={toggleSelectAll}
+                style={{ width: 16, height: 16, accentColor: 'var(--color-accent)', cursor: 'pointer' }}
+              />
+              Destinatarios ({recipients.length})
+            </label>
+          </div>
+          <div className="admin-table-wrap" style={{ maxHeight: 320, overflowY: 'auto' }}>
+            <table className="admin-table">
+              <tbody>
+                {recipients.map(r => (
+                  <tr key={r.id} style={!selectedIds.has(r.id) ? { opacity: 0.45 } : undefined}>
+                    <td style={{ width: 32 }}>
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(r.id)}
+                        onChange={() => toggleRecipient(r.id)}
+                        style={{ width: 16, height: 16, accentColor: 'var(--color-accent)', cursor: 'pointer' }}
+                      />
+                    </td>
+                    <td><strong>{r.name}</strong></td>
+                    <td style={{ opacity: 0.7, fontSize: '0.85rem' }}>{r.email}</td>
+                    <td>
+                      {r.attending === 1
+                        ? <span className="tag tag-accent" style={{ fontSize: '0.7rem' }}>Confirmó</span>
+                        : r.attending === 0
+                          ? <span className="tag tag-neutral" style={{ fontSize: '0.7rem' }}>No asiste</span>
+                          : <span style={{ opacity: 0.4, fontSize: '0.8rem' }}>Sin responder</span>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       )}
     </div>
   )
