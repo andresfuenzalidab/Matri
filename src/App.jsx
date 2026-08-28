@@ -43,6 +43,7 @@ function getDemoChoiceFromUrl() {
   if (v === null) return null
   if (v === 'completa' || v === 'all_in') return 'all_in'
   if (v === 'fiesta' || v === 'party_only') return 'party_only'
+  if (v === 'admin') return 'admin'
   return 'choose' // bare `?demo` or `?demo=1`
 }
 
@@ -59,6 +60,12 @@ function DemoChooser({ onChoose }) {
         <button className="btn btn-primary" onClick={() => onChoose('all_in')}>Invitación completa</button>
         <button className="btn btn-secondary" onClick={() => onChoose('party_only')}>Solo fiesta</button>
       </div>
+      {/* Straight to the admin tour, not just reachable from inside a
+          guest view — per feedback, the main demo menu should offer it
+          directly too. Same `DemoAdminPanel` either way. */}
+      <button className="btn btn-ghost" style={{ marginTop: '0.5rem', fontSize: '0.85rem' }} onClick={() => onChoose('admin')}>
+        O ver directamente el panel de administración →
+      </button>
     </div>
   )
 }
@@ -72,14 +79,14 @@ function DemoChooser({ onChoose }) {
 function DemoBanner() {
   return (
     <div style={{
-      // `bottom: 0` sat right on top of the site's own floating pill nav
-      // (`.bottom-nav`, index.css) — same "clear the bottom nav" variable
-      // that positions the gift-cart bar above it, not a guessed offset.
-      position: 'fixed', bottom: 'var(--above-bottom-nav)', left: 0, right: 0, zIndex: 890,
+      // Top instead of bottom, per feedback — the site's own nav is a
+      // floating pill fixed at the BOTTOM (`.bottom-nav`, index.css), and
+      // nothing lives up top, so there's nothing left to clash with here.
+      position: 'fixed', top: 0, left: 0, right: 0, zIndex: 890,
       background: 'var(--color-accent)', color: 'var(--color-on-accent)',
-      textAlign: 'center', padding: '0.5rem 1rem', fontSize: '0.8rem',
-      boxShadow: '0 -2px 10px rgba(0,0,0,0.15)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', flexWrap: 'wrap',
+      textAlign: 'center', padding: '0.3rem 0.75rem', fontSize: '0.68rem',
+      boxShadow: '0 2px 10px rgba(0,0,0,0.15)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem', flexWrap: 'wrap',
     }}>
       <span>Estás viendo una demostración — nada de lo que hagas aquí se guarda.</span>
       <a href={`${window.location.pathname}?demo=1`} style={{ color: 'inherit', textDecoration: 'underline', whiteSpace: 'nowrap' }}>
@@ -340,10 +347,10 @@ export default function App() {
   const [guest, setGuest] = useState(null)
   const [rsvp, setRsvp] = useState(null)
   const [demoChoice, setDemoChoice] = useState(getDemoChoiceFromUrl)
-  const token = demoChoice && demoChoice !== 'choose' ? DEMO_TOKENS[demoChoice] : getToken()
+  const token = (demoChoice === 'all_in' || demoChoice === 'party_only') ? DEMO_TOKENS[demoChoice] : getToken()
 
   useEffect(() => {
-    if (demoChoice === 'choose') return // waiting on the chooser below
+    if (demoChoice === 'choose' || demoChoice === 'admin') return // handled by the branches below instead
     if (!token) { setStatus('invalid'); return }
     fetch('/api/validate', { headers: { 'X-Invite-Token': token } })
       .then(r => r.json())
@@ -361,6 +368,13 @@ export default function App() {
 
   if (demoChoice === 'choose') {
     return <DemoChooser onChoose={setDemoChoice} />
+  }
+
+  // Straight from the chooser, no guest view underneath it at all — its own
+  // `AppProvider` (see DemoAdminPanel.jsx) is entirely self-sufficient, so
+  // this never touches `/api/validate` or the token logic above.
+  if (demoChoice === 'admin') {
+    return <DemoAdminPanel onClose={() => setDemoChoice('choose')} />
   }
 
   if (status === 'loading') {
