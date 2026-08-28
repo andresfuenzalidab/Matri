@@ -10,6 +10,13 @@ export async function onRequestPost({ request, env }) {
       return err('Datos inválidos.')
     }
 
+    // Demo token (see `_auth.js`) — the tour's bank-transfer "confirm" path
+    // ends here; let it look reserved without writing a row or emailing
+    // anyone. (The card/MercadoPago path is simulated entirely client-side
+    // instead — see GiftModal.jsx — so it never reaches this endpoint or
+    // `gifts/checkout.js` at all.)
+    if (inv.isDemo) return json({ success: true })
+
     const { gifts, guestName, confirmedPayment = 0, congratulationsMessage = '' } = body
 
     const reservedNames = []

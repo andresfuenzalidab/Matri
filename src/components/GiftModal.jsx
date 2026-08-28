@@ -74,7 +74,10 @@ function CopyButton({ value }) {
 
 export default function GiftModal({ cartItems, onClose, onReserved }) {
   const { token, guest, get } = useApp()
-  const mpEnabled = get('mp_enabled') === 'si'
+  // Demo tour always offers the card step too, regardless of whether the
+  // real site has MercadoPago configured — the whole point is to show that
+  // path too (see handleCardPay below, which never actually calls it).
+  const mpEnabled = get('mp_enabled') === 'si' || guest?.isDemo
   const [step, setStep] = useState(mpEnabled ? 'choose' : 'transfer')
   const [confirmed, setConfirmed] = useState(false)
   const [congratsMsg, setCongratsMsg] = useState('')
@@ -124,6 +127,16 @@ export default function GiftModal({ cartItems, onClose, onReserved }) {
     if (loading) return
     setLoading(true)
     setError('')
+    // Demo tour: never hits the real backend at all — no `checkout`, no
+    // MercadoPago, nothing to skip server-side because there's no request
+    // to skip. Just a believable pause so the "payment" step doesn't feel
+    // instant, then the same success path the real flow ends on.
+    if (guest?.isDemo) {
+      await new Promise(r => setTimeout(r, 1600))
+      setLoading(false)
+      onReserved(cartItems)
+      return
+    }
     try {
       const res = await fetch('/api/gifts/checkout', {
         method: 'POST',
@@ -269,12 +282,16 @@ export default function GiftModal({ cartItems, onClose, onReserved }) {
                   value={congratsMsg} onChange={e => setCongratsMsg(e.target.value)} />
               </div>
               <p style={{ fontSize: '0.8rem', opacity: 0.6, margin: '0.5rem 0 0' }}>
-                Serás redirigido a MercadoPago para pagar {formatCLP(total)} con tarjeta de crédito.
+                {guest?.isDemo
+                  ? `Esto es una demostración — no se hará ningún cobro real ni redirección a MercadoPago.`
+                  : `Serás redirigido a MercadoPago para pagar ${formatCLP(total)} con tarjeta de crédito.`}
               </p>
               {error && <p className="form-error">{error}</p>}
               <button className="btn btn-primary btn-block" style={{ marginTop: '0.75rem' }}
                 onClick={handleCardPay} disabled={loading}>
-                {loading ? 'Iniciando pago...' : `Pagar ${formatCLP(total)} con MercadoPago →`}
+                {loading
+                  ? (guest?.isDemo ? 'Simulando pago con MercadoPago...' : 'Iniciando pago...')
+                  : `Pagar ${formatCLP(total)} con MercadoPago →`}
               </button>
             </>
           )}

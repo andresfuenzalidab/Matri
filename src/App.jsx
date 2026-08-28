@@ -19,6 +19,7 @@ import Gifts from './components/sections/Gifts'
 import Contact from './components/sections/Contact'
 import FAQ from './components/sections/FAQ'
 import AdminPanel from './components/admin/AdminPanel'
+import DemoAdminPanel from './components/admin/DemoAdminPanel'
 
 function getToken() {
   const fromUrl = new URLSearchParams(window.location.search).get('token')
@@ -27,6 +28,54 @@ function getToken() {
     return fromUrl
   }
   return sessionStorage.getItem('inviteToken') || ''
+}
+
+// ── Guest-side demo (`?demo=1`, `?demo=completa`, `?demo=fiesta`) ──
+// Reserved tokens the backend (`_auth.js`) recognizes and hands back a
+// synthetic guest for, without ever touching the real DB — see there for
+// the full read/write split. Deliberately its own tiny flow, not folded
+// into `getToken()`/sessionStorage: a demo run shouldn't persist across
+// visits or get confused with a real invite token.
+const DEMO_TOKENS = { all_in: 'demo-completa', party_only: 'demo-fiesta' }
+
+function getDemoChoiceFromUrl() {
+  const v = new URLSearchParams(window.location.search).get('demo')
+  if (v === null) return null
+  if (v === 'completa' || v === 'all_in') return 'all_in'
+  if (v === 'fiesta' || v === 'party_only') return 'party_only'
+  return 'choose' // bare `?demo` or `?demo=1`
+}
+
+function DemoChooser({ onChoose }) {
+  return (
+    <div className="access-denied">
+      <div className="access-denied-monogram">A & C</div>
+      <h1>Demostración del sitio</h1>
+      <p>
+        Esta es una demostración para mostrar cómo funciona el sitio — nada de lo que hagas aquí se
+        guarda de verdad. ¿Qué tipo de invitación quieres ver?
+      </p>
+      <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', marginTop: '1.5rem', flexWrap: 'wrap' }}>
+        <button className="btn btn-primary" onClick={() => onChoose('all_in')}>Invitación completa</button>
+        <button className="btn btn-secondary" onClick={() => onChoose('party_only')}>Solo fiesta</button>
+      </div>
+    </div>
+  )
+}
+
+/** Persistent reminder while touring the guest-side demo — easy to miss
+ *  otherwise that submitting the RSVP / "buying" a gift isn't real. */
+function DemoBanner() {
+  return (
+    <div style={{
+      position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 9999,
+      background: 'var(--color-accent)', color: 'var(--color-on-accent)',
+      textAlign: 'center', padding: '0.5rem 1rem', fontSize: '0.8rem',
+      boxShadow: '0 -2px 10px rgba(0,0,0,0.15)',
+    }}>
+      Estás viendo una demostración — nada de lo que hagas aquí se guarda.
+    </div>
+  )
 }
 
 // Rendered inside AppProvider so it can access useApp()
@@ -258,17 +307,27 @@ function MainApp({ token, guest, rsvp }) {
         )}
         <MusicPlayer welcomed={welcomed} playerRef={musicPlayerRef} />
       </div>
+      {guest?.isDemo && <DemoBanner />}
     </AppProvider>
   )
 }
 
 export default function App() {
+  // `?demo_admin=1` — the read-only admin tour, entirely separate from
+  // everything below: no token, no `/api/validate`, no real auth at all,
+  // so it can't be gated behind or confused with a real login. A plain
+  // const, not a conditional early return before the hooks below — those
+  // still need to run unconditionally on every render of this component.
+  const isDemoAdmin = new URLSearchParams(window.location.search).has('demo_admin')
+
   const [status, setStatus] = useState('loading')
   const [guest, setGuest] = useState(null)
   const [rsvp, setRsvp] = useState(null)
-  const token = getToken()
+  const [demoChoice, setDemoChoice] = useState(getDemoChoiceFromUrl)
+  const token = demoChoice && demoChoice !== 'choose' ? DEMO_TOKENS[demoChoice] : getToken()
 
   useEffect(() => {
+    if (isDemoAdmin || demoChoice === 'choose') return // handled by the branches below instead
     if (!token) { setStatus('invalid'); return }
     fetch('/api/validate', { headers: { 'X-Invite-Token': token } })
       .then(r => r.json())
@@ -282,7 +341,15 @@ export default function App() {
         }
       })
       .catch(() => setStatus('invalid'))
-  }, [token])
+  }, [token, isDemoAdmin, demoChoice])
+
+  if (isDemoAdmin) {
+    return <DemoAdminPanel />
+  }
+
+  if (demoChoice === 'choose') {
+    return <DemoChooser onChoose={setDemoChoice} />
+  }
 
   if (status === 'loading') {
     return <Loader />

@@ -1,6 +1,34 @@
+/**
+ * Two reserved, hardcoded tokens (never a real `crypto.randomUUID()` shape,
+ * so they can never collide with an actual invitation) that let anyone with
+ * the demo link tour the whole guest experience — RSVP, gift shopping, the
+ * works — without ever touching a real row. `getInvitation` below hands
+ * back a synthetic invitation for these, exactly like a real DB row, so
+ * every read endpoint that already calls `requireInvitation`/`getInvitation`
+ * (content, gifts, venue photos...) works completely unmodified. Endpoints
+ * that WRITE (`rsvp.js`, `gifts/reserve.js`) still need their own explicit
+ * `if (inv.isDemo)` guard before touching the DB or sending an email — this
+ * only covers the read side for free.
+ */
+const DEMO_INVITATIONS = {
+  'demo-completa': {
+    id: 'demo', token: 'demo-completa', name: 'Nombre de Ejemplo', email: null, phone: null,
+    nickname: 'Invitado/a', companion_name: 'Acompañante de Ejemplo', is_admin: 0,
+    welcome_message: null, max_additional_guests: 1, invitation_type: 'all_in',
+    notes: null, invitation_sent: 0, created_at: null, isDemo: true,
+  },
+  'demo-fiesta': {
+    id: 'demo', token: 'demo-fiesta', name: 'Nombre de Ejemplo', email: null, phone: null,
+    nickname: 'Invitado/a', companion_name: 'Acompañante de Ejemplo', is_admin: 0,
+    welcome_message: null, max_additional_guests: 1, invitation_type: 'party_only',
+    notes: null, invitation_sent: 0, created_at: null, isDemo: true,
+  },
+}
+
 export async function getInvitation(request, env) {
   const token = request.headers.get('X-Invite-Token')
   if (!token) return null
+  if (DEMO_INVITATIONS[token]) return DEMO_INVITATIONS[token]
   return env.DB.prepare('SELECT * FROM invitations WHERE token = ?').bind(token).first()
 }
 

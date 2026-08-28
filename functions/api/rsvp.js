@@ -5,6 +5,12 @@ export async function onRequestPost({ request, env }) {
   try {
     const inv = await requireInvitation(request, env)
 
+    // Demo token (see `_auth.js`) — let the tour "submit" an RSVP without
+    // writing a row or emailing anyone. Skipped before the `existing` check
+    // below too: there's no real `invitation_id` to look up, and a demo
+    // session should always be free to "submit" again.
+    if (inv.isDemo) return json({ success: true })
+
     const existing = await env.DB.prepare(
       'SELECT id FROM rsvp_responses WHERE invitation_id = ?'
     ).bind(inv.id).first()

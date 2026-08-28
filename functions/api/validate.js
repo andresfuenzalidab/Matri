@@ -29,6 +29,10 @@ export async function onRequestGet({ request, env }) {
       welcomeMessage: inv.welcome_message || null,
       maxAdditionalGuests: inv.max_additional_guests ?? null,
       invitationType: inv.invitation_type || 'all_in',
+      // Reserved demo token (see `_auth.js`) — lets the frontend show a
+      // small "this is a demo" indicator and skip the real MercadoPago
+      // redirect for the card-payment step (GiftModal.jsx).
+      isDemo: Boolean(inv.isDemo),
     },
     rsvp: rsvpRow
       ? {
