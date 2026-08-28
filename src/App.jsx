@@ -323,18 +323,10 @@ function MainApp({ token, guest, rsvp }) {
             {adminOpen && <AdminPanel onClose={() => setAdminOpen(false)} />}
           </>
         )}
-        {/* Demo tour's own admin button — same spot/style as the real one
-            above, so the demo mirrors what an actual admin guest sees.
-            Interactive, not read-only (see DemoAdminPanel) — runs the real
-            admin components against fake data that resets on refresh. */}
-        {guest?.isDemo && (
-          <>
-            <div className="admin-fab">
-              <button className="btn btn-primary" onClick={() => setAdminOpen(true)}>⚙ Admin (demo)</button>
-            </div>
-            {adminOpen && <DemoAdminPanel onClose={() => setAdminOpen(false)} />}
-          </>
-        )}
+        {/* No admin button inside the guest-side demo itself anymore — it
+            covered other floating controls (cart bar, music player) down
+            there. The demo admin tour is reached from the chooser instead
+            (`?demo=admin`, or its own option on the chooser screen). */}
         <MusicPlayer welcomed={welcomed} playerRef={musicPlayerRef} />
       </div>
       {guest?.isDemo && <DemoBanner />}

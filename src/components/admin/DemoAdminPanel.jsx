@@ -21,10 +21,11 @@ const TABS = [
  * page refresh is what resets it (deliberately, per feedback — no "reset"
  * button needed).
  *
- * Reached from inside the guest-side demo (`?demo=...`) via MainApp's own
- * "⚙ Admin (demo)" button, same spot a real admin's own FAB shows —
- * deliberately not a separate URL, so there's one demo link to share, not
- * two.
+ * Reached from the demo chooser's own "Ver panel de administración" option
+ * (`?demo=admin` too) — not from inside the guest view itself anymore
+ * (that FAB button covered other on-page controls and is gone now); this
+ * only ever renders standalone, with its own self-sufficient `AppProvider`
+ * below, no guest view underneath it.
  *
  * PDF download / "Copiar enlace" / WhatsApp buttons in InvitationsManager
  * need no special handling at all here — they're pure client-side actions
@@ -34,9 +35,18 @@ const TABS = [
  */
 export default function DemoAdminPanel({ onClose }) {
   const [tab, setTab] = useState('invitations')
+  // Gates the tabs below, not just a loading flag: React fires a CHILD's
+  // effects before its parent's, so if InvitationsManager mounted straight
+  // away, its own `load()` effect would fire (against the real, unpatched
+  // `fetch`, erroring out — the exact bug this fixes) before the install
+  // effect below ever got a chance to run. Not rendering the tabs at all
+  // until `ready` is true means they don't mount — and so don't fire their
+  // own effects — until the interceptor is already active.
+  const [ready, setReady] = useState(false)
 
   useEffect(() => {
     const uninstall = installDemoAdminApi()
+    setReady(true)
     return uninstall
   }, [])
 
@@ -80,9 +90,13 @@ export default function DemoAdminPanel({ onClose }) {
           </div>
 
           <div className="admin-body">
-            {tab === 'invitations' && <InvitationsManager />}
-            {tab === 'rsvp' && <RSVPDashboard />}
-            {tab === 'gifts' && <GiftsDashboard />}
+            {!ready ? <p className="text-muted">Cargando...</p> : (
+              <>
+                {tab === 'invitations' && <InvitationsManager />}
+                {tab === 'rsvp' && <RSVPDashboard />}
+                {tab === 'gifts' && <GiftsDashboard />}
+              </>
+            )}
           </div>
         </div>
       </div>
