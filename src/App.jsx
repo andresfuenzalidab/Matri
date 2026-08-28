@@ -64,16 +64,27 @@ function DemoChooser({ onChoose }) {
 }
 
 /** Persistent reminder while touring the guest-side demo — easy to miss
- *  otherwise that submitting the RSVP / "buying" a gift isn't real. */
+ *  otherwise that submitting the RSVP / "buying" a gift isn't real. Also
+ *  the only way back to the chooser (completa/fiesta) once you're past
+ *  it — nothing else on the page links there. A plain navigation (not a
+ *  state reset) so it lands on a genuinely fresh run, sessionStorage
+ *  quirks (`welcomed`, etc.) included. */
 function DemoBanner() {
   return (
     <div style={{
-      position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 9999,
+      // `bottom: 0` sat right on top of the site's own floating pill nav
+      // (`.bottom-nav`, index.css) — same "clear the bottom nav" variable
+      // that positions the gift-cart bar above it, not a guessed offset.
+      position: 'fixed', bottom: 'var(--above-bottom-nav)', left: 0, right: 0, zIndex: 890,
       background: 'var(--color-accent)', color: 'var(--color-on-accent)',
       textAlign: 'center', padding: '0.5rem 1rem', fontSize: '0.8rem',
       boxShadow: '0 -2px 10px rgba(0,0,0,0.15)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', flexWrap: 'wrap',
     }}>
-      Estás viendo una demostración — nada de lo que hagas aquí se guarda.
+      <span>Estás viendo una demostración — nada de lo que hagas aquí se guarda.</span>
+      <a href={`${window.location.pathname}?demo=1`} style={{ color: 'inherit', textDecoration: 'underline', whiteSpace: 'nowrap' }}>
+        ← Elegir otra vista
+      </a>
     </div>
   )
 }
@@ -305,6 +316,18 @@ function MainApp({ token, guest, rsvp }) {
             {adminOpen && <AdminPanel onClose={() => setAdminOpen(false)} />}
           </>
         )}
+        {/* Demo tour's own admin button — same spot/style as the real one
+            above, so the demo mirrors what an actual admin guest sees.
+            Interactive, not read-only (see DemoAdminPanel) — runs the real
+            admin components against fake data that resets on refresh. */}
+        {guest?.isDemo && (
+          <>
+            <div className="admin-fab">
+              <button className="btn btn-primary" onClick={() => setAdminOpen(true)}>⚙ Admin (demo)</button>
+            </div>
+            {adminOpen && <DemoAdminPanel onClose={() => setAdminOpen(false)} />}
+          </>
+        )}
         <MusicPlayer welcomed={welcomed} playerRef={musicPlayerRef} />
       </div>
       {guest?.isDemo && <DemoBanner />}
@@ -313,13 +336,6 @@ function MainApp({ token, guest, rsvp }) {
 }
 
 export default function App() {
-  // `?demo_admin=1` — the read-only admin tour, entirely separate from
-  // everything below: no token, no `/api/validate`, no real auth at all,
-  // so it can't be gated behind or confused with a real login. A plain
-  // const, not a conditional early return before the hooks below — those
-  // still need to run unconditionally on every render of this component.
-  const isDemoAdmin = new URLSearchParams(window.location.search).has('demo_admin')
-
   const [status, setStatus] = useState('loading')
   const [guest, setGuest] = useState(null)
   const [rsvp, setRsvp] = useState(null)
@@ -327,7 +343,7 @@ export default function App() {
   const token = demoChoice && demoChoice !== 'choose' ? DEMO_TOKENS[demoChoice] : getToken()
 
   useEffect(() => {
-    if (isDemoAdmin || demoChoice === 'choose') return // handled by the branches below instead
+    if (demoChoice === 'choose') return // waiting on the chooser below
     if (!token) { setStatus('invalid'); return }
     fetch('/api/validate', { headers: { 'X-Invite-Token': token } })
       .then(r => r.json())
@@ -341,11 +357,7 @@ export default function App() {
         }
       })
       .catch(() => setStatus('invalid'))
-  }, [token, isDemoAdmin, demoChoice])
-
-  if (isDemoAdmin) {
-    return <DemoAdminPanel />
-  }
+  }, [token, demoChoice])
 
   if (demoChoice === 'choose') {
     return <DemoChooser onChoose={setDemoChoice} />
