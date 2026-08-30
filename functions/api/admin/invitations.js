@@ -17,11 +17,17 @@ export async function onRequestGet({ request, env }) {
         LEFT JOIN rsvp_responses r ON i.id = r.invitation_id
         ORDER BY i.created_at DESC
       `).all(),
+      // Confirmed only — an unconfirmed (pending bank-transfer, or a card
+      // payment never completed) reservation isn't actually a gift yet,
+      // and showing it here as if it were was exactly the confusion this
+      // filters out: it appeared in a guest's own gift list/total AND fed
+      // the "regalos"/"recibido" stats and the "quién ha regalado" summary
+      // (both derived from this same list) before anyone had actually paid.
       env.DB.prepare(`
         SELECT gr.invitation_id, g.name, g.price, gr.quantity, gr.congratulations_message
         FROM gift_reservations gr
         JOIN gifts g ON g.id = gr.gift_id
-        WHERE g.active = 1
+        WHERE g.active = 1 AND gr.confirmed_payment = 1
         ORDER BY gr.reserved_at ASC
       `).all(),
     ])

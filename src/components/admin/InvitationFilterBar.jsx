@@ -33,11 +33,11 @@ export default function InvitationFilterBar({
         <option value="no">Pendiente de enviar</option>
       </select>
       <select className="input" style={{ width: 'auto' }} value={sortBy} onChange={e => setSortBy(e.target.value)}>
-        <option value="default">Orden original</option>
+        <option value="default">Orden por defecto</option>
         <option value="name_asc">Nombre (A-Z)</option>
         <option value="name_desc">Nombre (Z-A)</option>
-        <option value="created_desc">Más recientes primero</option>
-        <option value="created_asc">Más antiguas primero</option>
+        <option value="responded_desc">Respuesta más reciente</option>
+        <option value="responded_asc">Respuesta más antigua</option>
       </select>
       {filtersActive && (
         <button className="btn btn-ghost" onClick={clearFilters}>Limpiar filtros</button>

@@ -1,9 +1,44 @@
 import { useState, useEffect } from 'react'
 import { useApp } from '../../context/AppContext'
 import { downloadXLSX } from '../../utils/spreadsheet.js'
-import { totalInvitedHeadcount } from '../../utils/inviteCount.js'
-import { useInvitationFilters } from '../../hooks/useInvitationFilters.js'
+import { totalInvitedHeadcount, invitedHeadcount } from '../../utils/inviteCount.js'
+import { useInvitationFilters, compareByResponseRecency } from '../../hooks/useInvitationFilters.js'
 import InvitationFilterBar from './InvitationFilterBar.jsx'
+
+const answered = i => i.attending !== null && i.attending !== undefined
+
+/**
+ * Splits a list of invitations into headcounts, not row counts — per
+ * feedback, "confirman/no asisten/sin respuesta" must count PEOPLE
+ * (companions included), and an invitation row can't just be assigned to
+ * one bucket wholesale: a couple where only one half confirmed needs to
+ * split across "confirman" (the one who is) and "no asisten" (the one who
+ * isn't), not disappear or get double-counted. Every invited person lands
+ * in exactly one bucket, so `confirming + notComing + noResponse` always
+ * equals `totalInvitedHeadcount(list)`.
+ */
+function headcountBuckets(list) {
+  let confirming = 0, notComing = 0, noResponse = 0
+  for (const inv of list) {
+    const capacity = invitedHeadcount(inv)
+    if (!answered(inv)) {
+      noResponse += capacity
+    } else if (inv.attending) {
+      // `num_guests` is the actually-confirmed count (partial-couple
+      // RSVPs set this correctly, see RSVP.jsx) — whatever capacity is
+      // left over is a companion who was never confirmed, which belongs
+      // in "no asisten", not silently dropped from every count.
+      const coming = inv.num_guests || 1
+      confirming += coming
+      notComing += Math.max(0, capacity - coming)
+    } else {
+      // A decline is for the whole party — RSVP.jsx doesn't have a
+      // partial-decline path, so the full invited capacity isn't coming.
+      notComing += capacity
+    }
+  }
+  return { confirming, notComing, noResponse }
+}
 
 export default function RSVPDashboard() {
   const { token } = useApp()
@@ -23,34 +58,33 @@ export default function RSVPDashboard() {
       .catch(() => { setError('Error al cargar.'); setLoading(false) })
   }, [token])
 
-  const filters = useInvitationFilters(invitations)
+  // Default order here is response recency (most recent first, no-response
+  // last) — not the shared "preserve server order" InvitationsManager uses
+  // — per feedback that this tab specifically should default to that, not
+  // just offer it as one dropdown option among others.
+  const filters = useInvitationFilters(invitations, { defaultSort: compareByResponseRecency })
   const visible = filters.visible
 
   if (loading) return <p className="text-muted">Cargando...</p>
   if (error) return <p className="form-error">{error}</p>
 
-  const answered = i => i.attending !== null && i.attending !== undefined
   // Every stat below is computed from `visible` — the filtered set — so
   // each one moves as the filters change, per feedback ("el contador de
-  // cada cosa cambie"). "Invitados" is a HEADCOUNT (companions included via
-  // `totalInvitedHeadcount`), not a row count — a couple sharing one
-  // invitation is 2 people, not 1.
+  // cada cosa cambie"), and every one is a HEADCOUNT (companions included),
+  // not an invitation-row count — per feedback, "hablar de invitación tipo
+  // fila" isn't useful here. "Invitados" itself is the one exception in
+  // spirit only: it's already been a headcount since it was introduced.
   const totalPeople = totalInvitedHeadcount(visible)
   const admins = visible.filter(i => i.is_admin).length
-  const withRsvp = visible.filter(answered).length
-  const attending = visible.filter(i => answered(i) && i.attending).length
-  const declined = visible.filter(i => answered(i) && !i.attending).length
-  const noResponse = visible.length - withRsvp
-  // Headcount of people actually coming, not invitation rows — same
-  // "considerando los +1" distinction as Invitados above, but against
-  // confirmed attendance (`num_guests`, filled in when they RSVP) instead
-  // of the invitation's own cap.
-  const totalGuests = visible.filter(i => answered(i) && i.attending).reduce((sum, i) => sum + (i.num_guests || 1), 0)
+  const { confirming: attending, notComing: declined, noResponse } = headcountBuckets(visible)
+  const withRsvp = attending + declined
 
-  // The table itself stays scoped to people who've actually responded —
-  // this tab is a log of RSVP answers, not a second copy of the
-  // invitations list — filtered the same way everything else above is.
-  const responses = visible.filter(answered)
+  // The table shows every filtered invitation now, answered or not — it
+  // used to only show responses, which meant applying, say, the "nota
+  // interna" search here would silently hide anyone who hadn't RSVPed yet
+  // instead of showing them as pending. `filters.visible` already carries
+  // the response-recency-first, no-response-last order by default.
+  const totalCount = invitations.length
 
   return (
     <div>
@@ -72,10 +106,6 @@ export default function RSVPDashboard() {
           <span className="stat-label">Confirman</span>
         </div>
         <div className="stat-card">
-          <span className="stat-number">{totalGuests}</span>
-          <span className="stat-label">Total personas</span>
-        </div>
-        <div className="stat-card">
           <span className="stat-number">{declined}</span>
           <span className="stat-label">No asisten</span>
         </div>
@@ -89,13 +119,15 @@ export default function RSVPDashboard() {
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.75rem' }}>
         <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>
-          {filters.filtersActive ? `${responses.length} de ${invitations.filter(answered).length} respuestas` : `${responses.length} respuestas`}
+          {filters.filtersActive ? `${visible.length} de ${totalCount} invitaciones` : `${totalCount} invitaciones`}
         </span>
         <button
           className="btn btn-ghost"
           onClick={() => downloadXLSX('rsvp.xlsx',
-            // Full (unfiltered) set of responses, deliberately — same "no
-            // accidental partial export" choice as the other admin tabs.
+            // Full (unfiltered) set, deliberately — same "no accidental
+            // partial export" choice as the other admin tabs. Still only
+            // actual responses, not every invitation — this export is a
+            // log of answers, same as it always was.
             invitations.filter(answered).map(i => [
               i.name,
               i.attending ? 'Sí' : 'No',
@@ -122,17 +154,19 @@ export default function RSVPDashboard() {
               <th>Quiénes asisten</th>
               <th>Mensaje</th>
               <th>Restricción dieta</th>
-              <th>Enviado</th>
+              <th>Respondido</th>
             </tr>
           </thead>
           <tbody>
-            {responses.map(i => (
+            {visible.map(i => (
               <tr key={i.id}>
                 <td><strong>{i.name}</strong></td>
                 <td>
-                  {i.attending
-                    ? <span className="tag tag-accent">Sí</span>
-                    : <span className="tag tag-neutral">No</span>}
+                  {!answered(i)
+                    ? <span style={{ opacity: 0.4 }}>Sin respuesta</span>
+                    : i.attending
+                      ? <span className="tag tag-accent">Sí</span>
+                      : <span className="tag tag-neutral">No</span>}
                 </td>
                 <td>{i.attending ? i.num_guests : '—'}</td>
                 <td style={{ opacity: 0.75 }}>{i.rsvp_companion_name || '—'}</td>
@@ -145,12 +179,12 @@ export default function RSVPDashboard() {
             ))}
           </tbody>
         </table>
-        {invitations.filter(answered).length === 0 && (
+        {totalCount === 0 && (
           <p style={{ textAlign: 'center', padding: '2rem', opacity: 0.5 }}>
-            Todavía no hay respuestas de RSVP.
+            Todavía no hay invitaciones.
           </p>
         )}
-        {invitations.filter(answered).length > 0 && responses.length === 0 && (
+        {totalCount > 0 && visible.length === 0 && (
           <p style={{ textAlign: 'center', padding: '2rem', opacity: 0.5 }}>
             Ningún resultado coincide con los filtros. <button className="btn btn-ghost" style={{ fontSize: '0.8rem' }} onClick={filters.clearFilters}>Limpiar filtros</button>
           </p>

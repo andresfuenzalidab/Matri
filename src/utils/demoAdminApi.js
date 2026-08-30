@@ -69,8 +69,10 @@ let store = seed()
 // ── Read views — same shape the real endpoints return ──────────────
 
 function invitationGifts(invitationId) {
+  // Confirmed only — mirrors the same fix in the real
+  // `admin/invitations.js` query (see there for why).
   return store.reservations
-    .filter(r => r.invitation_id === invitationId)
+    .filter(r => r.invitation_id === invitationId && r.confirmed_payment)
     .map(r => {
       const gift = store.gifts.find(g => g.id === r.gift_id)
       return { name: gift?.name || '', price: gift?.price ?? null, quantity: r.quantity, message: r.congratulations_message || '' }
