@@ -27,6 +27,10 @@ CREATE TABLE IF NOT EXISTS invitations (
   companion_name TEXT,
   is_admin INTEGER DEFAULT 0,
   invitation_sent INTEGER DEFAULT 0,
+  welcome_message TEXT,
+  max_additional_guests INTEGER,
+  invitation_type TEXT DEFAULT 'all_in',
+  notes TEXT,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -38,6 +42,7 @@ CREATE TABLE IF NOT EXISTS rsvp_responses (
   message TEXT,
   dietary_restriction TEXT,
   companion_name TEXT,
+  email TEXT DEFAULT '',
   submitted_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 

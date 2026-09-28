@@ -49,6 +49,7 @@ export async function onRequestPost({ request, env }) {
     if (!emailFrom) return err('Configura primero el correo remitente (email_from) en la pestaña Contenido.')
     // Same lookup/format `gifts/checkout.js` uses for its own back-link.
     const siteUrl = ((await env.DB.prepare("SELECT value FROM site_content WHERE key = 'site_url'").first())?.value || '').replace(/\/$/, '')
+    const coupleNames = (await env.DB.prepare("SELECT value FROM site_content WHERE key = 'hero_title'").first())?.value || 'Cata & Andrés'
 
     // The client shows the same `eligibleRecipients` list and lets the admin
     // uncheck any of them before sending — `recipientIds` is which ones
@@ -75,7 +76,7 @@ export async function onRequestPost({ request, env }) {
         ${paragraphs}
         <p style="margin-top:1.5rem"><a href="${link}" style="color:#8B7355">Ver la lista de regalos →</a></p>
         <p style="margin-top:1.5rem;font-size:0.9rem;opacity:0.7">Con cariño,</p>
-        <p style="font-size:0.9rem;opacity:0.7">Cata & Andrés</p>
+        <p style="font-size:0.9rem;opacity:0.7">${coupleNames}</p>
       </div>`
       const ok = await sendEmail(env, {
         from: emailFrom,

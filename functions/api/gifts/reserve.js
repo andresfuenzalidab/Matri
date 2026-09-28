@@ -59,19 +59,20 @@ export async function onRequestPost({ request, env }) {
       const guestEmail = (await env.DB.prepare("SELECT email FROM rsvp_responses WHERE invitation_id = ?").bind(inv.id).first())?.email
       const giftList = reservedNames.join(', ')
       const totalFmt = `$${Number(totalAmount).toLocaleString('es-CL')} CLP`
+      const coupleNames = (await env.DB.prepare("SELECT value FROM site_content WHERE key = 'hero_title'").first())?.value || 'Cata & Andrés'
 
       if (guestEmail) {
         await sendEmail(env, {
           from: emailFrom,
           to: guestEmail,
-          subject: 'Gracias por tu regalo — Matrimonio Cata & Andrés',
+          subject: `Gracias por tu regalo — Matrimonio ${coupleNames}`,
           html: `<div style="font-family:sans-serif;max-width:500px;margin:0 auto">
             <h2 style="color:#8B7355">¡Muchas gracias, ${guestName || inv.name}! ♡</h2>
             <p>Hemos registrado tu regalo:</p>
             <p style="font-weight:600">${giftList}</p>
             ${totalAmount > 0 ? `<p>Total: ${totalFmt}</p>` : ''}
             <p style="margin-top:1.5rem;font-size:0.9rem;opacity:0.7">Con mucho amor,</p>
-            <p style="font-size:0.9rem;opacity:0.7">Cata & Andrés</p>
+            <p style="font-size:0.9rem;opacity:0.7">${coupleNames}</p>
           </div>`,
         })
       }

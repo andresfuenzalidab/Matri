@@ -1,0 +1,14 @@
+# Local secrets for `npm run pages:dev` / `wrangler dev`.
+# Copy this file to `.dev.vars` (gitignored) and fill in real values.
+# In production, set these as encrypted secrets instead:
+#   wrangler secret put resend_api_key
+#   wrangler secret put mp_access_token
+
+# Resend (https://resend.com) API key used to send RSVP/gift-reservation
+# emails. Optional — if unset, email sending is silently skipped.
+resend_api_key=
+
+# Mercado Pago access token used for card checkout on gift reservations.
+# Optional — if unset (and not set via Admin > Regalos > MercadoPago either),
+# card payment is disabled and only bank transfer is offered.
+mp_access_token=

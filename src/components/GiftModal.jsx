@@ -93,7 +93,7 @@ export default function GiftModal({ cartItems, onClose, onReserved }) {
   const total = cartItems.reduce((sum, { gift, quantity }) => sum + (gift.price || 0) * quantity, 0)
   // Formal names here — this ends up on a bank transfer and in our records.
   const formalName = guestFormalName(guest)
-  const defaultBankMsg = `Regalo Matrimonio Cata y Andrés — ${formalName}`
+  const defaultBankMsg = `Regalo Matrimonio ${get('hero_title', 'Cata y Andrés')} — ${formalName}`
 
   async function handleTransferConfirm() {
     if (!confirmed || loading) return

@@ -49,21 +49,23 @@ export async function onRequestPost({ request, env }) {
     const emailTo = (await env.DB.prepare("SELECT value FROM site_content WHERE key = 'email_to'").first())?.value
     const venueName = (await env.DB.prepare("SELECT value FROM site_content WHERE key = 'venue_name'").first())?.value || 'el lugar'
     const ceremonyTime = (await env.DB.prepare("SELECT value FROM site_content WHERE key = 'ceremony_time'").first())?.value || '17:00'
+    const coupleNames = (await env.DB.prepare("SELECT value FROM site_content WHERE key = 'hero_title'").first())?.value || 'Cata & Andrés'
+    const weddingDateText = (await env.DB.prepare("SELECT value FROM site_content WHERE key = 'hero_date'").first())?.value || 'Viernes 6 de noviembre de 2026'
 
     if (emailFrom) {
       if (email && attending) {
         await sendEmail(env, {
           from: emailFrom,
           to: email,
-          subject: 'Confirmación de asistencia — Matrimonio Cata & Andrés',
+          subject: `Confirmación de asistencia — Matrimonio ${coupleNames}`,
           html: `<div style="font-family:sans-serif;max-width:500px;margin:0 auto">
             <h2 style="color:#8B7355">¡Hola ${greetName}!</h2>
             <p>Hemos recibido tu confirmación de asistencia a nuestro matrimonio. ♡</p>
-            <p><strong>Fecha:</strong> Viernes 6 de noviembre de 2026</p>
+            <p><strong>Fecha:</strong> ${weddingDateText}</p>
             <p><strong>Hora de citación:</strong> ${ceremonyTime} hrs</p>
             <p><strong>Lugar:</strong> ${venueName}</p>
             <p style="margin-top:1.5rem;font-size:0.9rem;opacity:0.7">¡Nos vemos pronto!</p>
-            <p style="font-size:0.9rem;opacity:0.7">Cata & Andrés</p>
+            <p style="font-size:0.9rem;opacity:0.7">${coupleNames}</p>
           </div>`,
         })
       }

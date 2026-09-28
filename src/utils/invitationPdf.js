@@ -55,7 +55,7 @@ export function downloadInvitationPDF(inv, content = {}) {
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Invitación ${guestName} - Matrimonio Catalina y Andrés</title>
+<title>Invitación ${guestName} - Matrimonio ${content.envelope_names || content.hero_title || 'Catalina y Andrés'}</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400;1,600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -81,7 +81,7 @@ body{font-family:'Lora',Georgia,serif;color:#4a4038}
 }
 
 /* Slightly above the middle per feedback — 2/5 down the page. The updated
-   artwork (re-synced from the repo root — see public/pdf-invitation-bg.png)
+   artwork (source in references/PDF invitation.png, exported to public/pdf-invitation-bg.png)
    opened up a much bigger open band right around here (baked text now
    ends near 40%, sky/roofline doesn't start until ~72%), so 40% now lands
    right at the START of open space instead of on top of baked text —

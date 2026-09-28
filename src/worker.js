@@ -5,7 +5,6 @@ import * as giftsReserve from '../functions/api/gifts/reserve.js'
 import * as giftsCheckout from '../functions/api/gifts/checkout.js'
 import * as giftsConfirmPayment from '../functions/api/gifts/confirm-payment.js'
 import * as contentModule from '../functions/api/content.js'
-import * as storyModule from '../functions/api/story.js'
 import * as venuePhotosModule from '../functions/api/venue-photos.js'
 import * as adminInvitations from '../functions/api/admin/invitations.js'
 import * as adminInvitationsImport from '../functions/api/admin/invitations-import.js'
@@ -15,7 +14,6 @@ import * as adminGifts from '../functions/api/admin/gifts.js'
 import * as adminGiftReminder from '../functions/api/admin/gift-reminder.js'
 import * as adminGiftsImport from '../functions/api/admin/gifts-import.js'
 import * as adminContent from '../functions/api/admin/content.js'
-import * as adminStory from '../functions/api/admin/story.js'
 import * as adminVenuePhotos from '../functions/api/admin/venue-photos.js'
 import * as adminTrips from '../functions/api/admin/trips.js'
 import * as storyPhotosModule from '../functions/api/story-photos.js'
@@ -96,12 +94,8 @@ export default {
         response = await dispatch(adminUpload, method, request, env)
       } else if (path === '/api/admin/content') {
         response = await dispatch(adminContent, method, request, env)
-      } else if (path === '/api/story') {
-        response = await dispatch(storyModule, method, request, env)
       } else if (path === '/api/venue-photos') {
         response = await dispatch(venuePhotosModule, method, request, env)
-      } else if (path === '/api/admin/story') {
-        response = await dispatch(adminStory, method, request, env)
       } else if (path === '/api/admin/venue-photos') {
         response = await dispatch(adminVenuePhotos, method, request, env)
       } else if (path === '/api/admin/trips') {

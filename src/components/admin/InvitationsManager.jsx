@@ -238,7 +238,7 @@ export default function InvitationsManager() {
       `${p('puedes', 'pueden')} acceder también a través de este link para ver más detalles y confirmar ${p('tu', 'su')} asistencia (plazo máximo ${deadline}):\n\n` +
       `${getLink(inv)}\n\n` +
       `¡Esperamos poder celebrar este día tan especial ${p('contigo', 'con ustedes')}!\n\n` +
-      `Con cariño,\nCata & Andrés`
+      `Con cariño,\n${content.hero_title || 'Cata & Andrés'}`
   }
 
   // Pre-fills the message (name + their own link) so there's nothing left
