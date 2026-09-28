@@ -167,6 +167,8 @@ export default function SeatingPlan({ onClose }) {
   const [ghost, setGhost] = useState(null)
   const [hover, setHover] = useState(null)
   const [flashId, setFlashId] = useState(null)
+  // The seated guest whose "Sacar de la mesa" button is showing (set by clicking their seat).
+  const [seatMenu, setSeatMenu] = useState(null)
   const [toast, setToast] = useState(null)
   const toastTimer = useRef(null)
 
@@ -485,6 +487,13 @@ export default function SeatingPlan({ onClose }) {
     update(l => ({ ...l, assign: Object.fromEntries(Object.entries(l.assign).filter(([, a]) => a.t !== id)) }))
   }, [update])
 
+  const removeFromSeat = useCallback((personId, tableName) => {
+    const person = peopleById.get(personId)
+    update(l => ({ ...l, assign: unassign(l.assign, [personId]) }))
+    setSeatMenu(null)
+    showToast(`${person?.name || 'El invitado'} salió de ${tableName || 'la mesa'}.`, { undo: true })
+  }, [peopleById, update, showToast])
+
   const setInitials = useCallback((id, raw) => {
     const person = peopleById.get(id)
     if (!person) return
@@ -656,6 +665,9 @@ export default function SeatingPlan({ onClose }) {
   function onCanvasPointerDown(e) {
     if (e.button && e.button !== 0) return
     const t = e.target
+    // The "Sacar de la mesa" button handles its own click; anything else closes it.
+    if (t.closest('[data-seat-menu]')) return
+    setSeatMenu(null)
     const handle = t.closest('[data-handle]')
     if (handle) {
       startHandleDrag(e, handle.dataset.handle, handle.closest('[data-el]').dataset.el)
@@ -671,11 +683,10 @@ export default function SeatingPlan({ onClose }) {
         startPayloadDrag(e, {
           kind: 'people', ids: [person.id], label: person.name, color: person.color, count: 1,
           onClick: () => {
-            const tableName = tablesById.get(id)?.name || 'la mesa'
-            update(l => ({ ...l, assign: unassign(l.assign, [person.id]) }))
+            const seat = Number(seatNode.dataset.seat)
+            setSeatMenu(m => (m && m.tableId === id && m.seat === seat ? null : { tableId: id, seat }))
             setSelected(id)
             setConfirmDelete(false)
-            showToast(`${person.name} salió de ${tableName}.`, { undo: true })
           },
         })
         return
@@ -727,7 +738,7 @@ export default function SeatingPlan({ onClose }) {
       if (typing) return
       if (mod && e.key.toLowerCase() === 'd' && selected) { e.preventDefault(); duplicateElement(selected); return }
       if ((e.key === 'Delete' || e.key === 'Backspace') && selected) { e.preventDefault(); deleteElement(selected); return }
-      if (e.key === 'Escape') setSelected(null)
+      if (e.key === 'Escape') { setSelected(null); setSeatMenu(null) }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -954,7 +965,7 @@ export default function SeatingPlan({ onClose }) {
                             className={`sp-seat ${person ? 'is-filled' : ''} ${dropTarget && hover.seat === i ? (person && ghost.ids.length === 1 && !ghost.ids.includes(person.id) ? 'is-drop is-swap' : 'is-drop') : ''} ${person && tagMatchIds && !tagMatchIds.has(person.id) ? 'is-dim' : ''}`}
                             data-seat={i} data-table={el.id} data-pid={person ? person.id : undefined}
                             style={{ left: cx - SEAT_D / 2, top: cy - SEAT_D / 2, width: SEAT_D, height: SEAT_D, ...(person ? { '--pc': person.color } : null) }}
-                            title={person ? `${person.name} — clic para quitar de la mesa` : `Silla ${i + 1}`}
+                            title={person ? person.name : `Silla ${i + 1}`}
                           >
                             <span style={person && person.initials.length > 2 ? { ...counter, fontSize: 9 } : counter}>{person ? person.initials : i + 1}</span>
                           </div>
@@ -962,6 +973,18 @@ export default function SeatingPlan({ onClose }) {
                             <span className="sp-seat-name" style={{ left: cx + s.ox * 30, top: cy + s.oy * 24, ...counter }}>
                               {person.name.split(/\s+/)[0]}
                             </span>
+                          )}
+                          {person && seatMenu && seatMenu.tableId === el.id && seatMenu.seat === i && (
+                            <button
+                              type="button"
+                              className="sp-seat-menu"
+                              data-seat-menu
+                              style={{ left: cx + s.ox * 52, top: cy + s.oy * 44, ...counter }}
+                              title={`Sacar a ${person.name} de ${el.name}`}
+                              onClick={() => removeFromSeat(person.id, el.name)}
+                            >
+                              <Icon name="close" size={12} /> Sacar de la mesa
+                            </button>
                           )}
                         </div>
                       )
@@ -1034,7 +1057,7 @@ export default function SeatingPlan({ onClose }) {
             <button type="button" onClick={() => zoomAt(1.25)} aria-label="Acercar">+</button>
             <button type="button" onClick={() => fitView()} aria-label="Ajustar a la pantalla" title="Ajustar a la pantalla"><Icon name="fit" size={16} /></button>
           </div>
-          <p className="sp-hint">Rueda: zoom · Arrastra el fondo: mover · Clic en un invitado sentado: quitarlo · Supr: borrar mesa</p>
+          <p className="sp-hint">Rueda: zoom · Arrastra el fondo: mover · Clic en un invitado sentado: opciones · Supr: borrar mesa</p>
 
           {/* Inspector */}
           <aside className="sp-inspector">
