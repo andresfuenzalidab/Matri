@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { collectTags, matchesTags, normalizeTags } from '../utils/tags.js'
 
 /** Accent/case-insensitive match for the free-text filter below — "jose"
  *  should still find "José", same spirit as `spreadsheet.js`'s `cell()`. */
@@ -56,11 +57,14 @@ export function useInvitationFilters(invitations, { defaultSort } = {}) {
   const [filterRsvp, setFilterRsvp] = useState('all')
   const [filterSent, setFilterSent] = useState('all')
   const [sortBy, setSortBy] = useState('default')
+  const [filterTags, setFilterTags] = useState([])
+  const [tagMode, setTagMode] = useState('all')
+  const availableTags = useMemo(() => collectTags(invitations), [invitations])
 
   const visible = useMemo(() => {
     const q = normalizeSearch(search)
     let list = !q ? invitations : invitations.filter(inv => {
-      const haystack = [inv.name, inv.nickname, inv.companion_name, inv.email, inv.phone, inv.notes]
+      const haystack = [inv.name, inv.nickname, inv.companion_name, inv.email, inv.phone, inv.notes, ...normalizeTags(inv.tags)]
         .filter(Boolean).map(normalizeSearch).join(' | ')
       return haystack.includes(q)
     })
@@ -77,6 +81,9 @@ export function useInvitationFilters(invitations, { defaultSort } = {}) {
     }
     if (filterSent !== 'all') {
       list = list.filter(inv => Boolean(inv.invitation_sent) === (filterSent === 'yes'))
+    }
+    if (filterTags.length) {
+      list = list.filter(inv => matchesTags(inv.tags, filterTags, tagMode))
     }
     if (sortBy !== 'default') {
       list = [...list].sort((a, b) => {
@@ -96,16 +103,17 @@ export function useInvitationFilters(invitations, { defaultSort } = {}) {
       list = [...list].sort(defaultSort)
     }
     return list
-  }, [invitations, search, filterType, filterRsvp, filterSent, sortBy, defaultSort])
+  }, [invitations, search, filterType, filterRsvp, filterSent, sortBy, defaultSort, filterTags, tagMode])
 
-  const filtersActive = Boolean(search.trim()) || filterType !== 'all' || filterRsvp !== 'all' || filterSent !== 'all' || sortBy !== 'default'
+  const filtersActive = Boolean(search.trim()) || filterType !== 'all' || filterRsvp !== 'all' || filterSent !== 'all' || sortBy !== 'default' || filterTags.length > 0
 
   function clearFilters() {
-    setSearch(''); setFilterType('all'); setFilterRsvp('all'); setFilterSent('all'); setSortBy('default')
+    setSearch(''); setFilterType('all'); setFilterRsvp('all'); setFilterSent('all'); setSortBy('default'); setFilterTags([])
   }
 
   return {
     search, setSearch, filterType, setFilterType, filterRsvp, setFilterRsvp,
     filterSent, setFilterSent, sortBy, setSortBy, filtersActive, clearFilters, visible,
+    availableTags, filterTags, setFilterTags, tagMode, setTagMode,
   }
 }

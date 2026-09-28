@@ -1,3 +1,6 @@
+import { invitedHeadcount } from './inviteCount.js'
+import { normalizeTags } from './tags.js'
+
 /**
  * Pure helpers behind the admin "Seating plan" (components/admin/SeatingPlan.jsx):
  * turning confirmed RSVPs into seatable people, table geometry, the seat
@@ -13,7 +16,9 @@
  *       { id, type: 'shape', preset: 'dance'|'stage'|'bar'|'buffet', x, y, w, h, rot, label, round },
  *     ],
  *     assign: { [personId]: { t: tableId, s: seatIndex } },
+ *     initials: { [personId]: 'AB' },   // only the ones edited by hand
  *   }
+ * Shapes with preset 'custom' also carry `color` (hex).
  * x/y are the element's CENTER on the floor; rot is degrees.
  */
 
@@ -32,6 +37,9 @@ export const SHAPE_PRESETS = {
   stage: { label: 'Escenario', w: 360, h: 130 },
   bar: { label: 'Barra', w: 240, h: 70 },
   buffet: { label: 'Buffet', w: 300, h: 80 },
+  // Free-form rectangle / circle (decoration table, dessert bar, photo booth…):
+  // its label, size and color are all editable.
+  custom: { label: 'Figura', w: 200, h: 120 },
 }
 
 export const snap = (v, g = GRID) => Math.round(v / g) * g
@@ -44,7 +52,7 @@ export function uid() {
 }
 
 export function emptyLayout() {
-  return { v: 1, elements: [], assign: {} }
+  return { v: 1, elements: [], assign: {}, initials: {} }
 }
 
 export function normalizeLayout(raw) {
@@ -53,7 +61,8 @@ export function normalizeLayout(raw) {
     ? raw.elements.filter(e => e && e.id && (e.type === 'table' || e.type === 'shape'))
     : []
   const assign = raw.assign && typeof raw.assign === 'object' && !Array.isArray(raw.assign) ? raw.assign : {}
-  return { v: 1, elements, assign }
+  const initials = raw.initials && typeof raw.initials === 'object' && !Array.isArray(raw.initials) ? raw.initials : {}
+  return { v: 1, elements, assign, initials }
 }
 
 // ── Guests ───────────────────────────────────────────────────────────────
@@ -69,8 +78,12 @@ function initialsOf(name) {
 }
 
 /**
- * One "party" per confirmed invitation, holding one seatable person per
- * confirmed head. `num_guests` is authoritative for how many; the names come
+ * One "party" per seatable invitation, holding one seatable person per head.
+ * "Solo fiesta" invitations are never included (they don't sit at the tables)
+ * and neither are declines. Confirmed invitations (`pending: false`) get
+ * `num_guests` heads; ones that haven't answered yet (`pending: true`) get
+ * the number they were invited with, so they can be seated provisionally.
+ * `num_guests` is authoritative for how many; the names come
  * from what the RSVP form recorded (`rsvp_companion_name` is the joined list
  * of who is actually coming — "A y B", or just one of them on a partial
  * couple), falling back to the invitation's own names, then a generic
@@ -79,11 +92,14 @@ function initialsOf(name) {
 export function buildParties(invitations) {
   const parties = []
   for (const inv of invitations || []) {
-    if (!inv.attending) continue
-    const n = Math.max(1, Number(inv.num_guests) || 1)
+    if (inv.invitation_type === 'party_only') continue
+    const answered = inv.attending !== null && inv.attending !== undefined
+    if (answered && !inv.attending) continue
+    const pending = !answered
+    const n = pending ? invitedHeadcount(inv) : Math.max(1, Number(inv.num_guests) || 1)
     const main = (inv.name || '').trim() || 'Invitado'
     const first = main.split(/\s+/)[0]
-    const known = splitNames(inv.rsvp_companion_name)
+    const known = pending ? [] : splitNames(inv.rsvp_companion_name)
 
     const same = (a, b) => a.toLowerCase() === b.toLowerCase()
     const names = known.slice(0, n)
@@ -115,7 +131,8 @@ export function buildParties(invitations) {
     parties.push({
       id: inv.id,
       label: (inv.nickname || '').trim() || (people.length > 1 && !unnamed ? firstNames.join(' y ') : people[0].name),
-      partyOnly: inv.invitation_type === 'party_only',
+      pending,
+      tags: normalizeTags(inv.tags),
       dietary: (inv.dietary_restriction || '').trim(),
       color,
       people,
@@ -184,9 +201,14 @@ export function makeTable({ shape, seats, x, y, number }) {
   return { id: uid(), type: 'table', shape, x, y, rot: 0, seats, name: `Mesa ${number}`, oneSide: false }
 }
 
-export function makeShape({ preset, x, y }) {
+export function makeShape({ preset, x, y, round = false }) {
   const p = SHAPE_PRESETS[preset]
-  return { id: uid(), type: 'shape', preset, x, y, w: p.w, h: p.h, rot: 0, label: p.label, round: false }
+  const custom = preset === 'custom'
+  const size = custom && round ? { w: 160, h: 160 } : { w: p.w, h: p.h }
+  return {
+    id: uid(), type: 'shape', preset, x, y, ...size, rot: 0, label: p.label, round: custom && round,
+    ...(custom ? { color: PARTY_COLORS[0] } : null),
+  }
 }
 
 // ── Assignment rules ─────────────────────────────────────────────────────
@@ -298,7 +320,9 @@ export function buildPlanSvg(layout, peopleById) {
 
   const parts = []
   for (const el of els.filter(e => e.type === 'shape')) {
-    const c = SHAPE_FILL[el.preset] || SHAPE_FILL.dance
+    const c = el.preset === 'custom'
+      ? { fill: el.color || PARTY_COLORS[0], stroke: 'rgba(0,0,0,0.35)', text: '#fdf9f0' }
+      : SHAPE_FILL[el.preset] || SHAPE_FILL.dance
     const body = el.round
       ? `<ellipse rx="${el.w / 2}" ry="${el.h / 2}" fill="${c.fill}" stroke="${c.stroke}" stroke-width="3"/>`
       : `<rect x="${-el.w / 2}" y="${-el.h / 2}" width="${el.w}" height="${el.h}" rx="8" fill="${c.fill}" stroke="${c.stroke}" stroke-width="3"/>`
@@ -360,7 +384,7 @@ export function downloadPlanPng(layout, peopleById, filename = 'seating-plan.png
 }
 
 /** Opens a print-ready page: the plan first, then one card per table. */
-export function printPlan(layout, parties, peopleById) {
+export function printPlan(layout, parties, peopleById, { includePending = true } = {}) {
   const { svg } = buildPlanSvg(layout, peopleById)
   const tables = layout.elements.filter(e => e.type === 'table')
   const cards = tables.map(t => {
@@ -374,7 +398,10 @@ export function printPlan(layout, parties, peopleById) {
   }).join('')
 
   const seated = new Set(Object.keys(layout.assign))
-  const pending = parties.flatMap(p => p.people).filter(p => !seated.has(p.id))
+  const pending = parties
+    .filter(p => includePending || !p.pending)
+    .flatMap(p => p.people)
+    .filter(p => !seated.has(p.id))
   const pendingHtml = pending.length
     ? `<section class="card wide"><h3>Sin mesa<small>${pending.length}</small></h3><p>${pending.map(p => esc(p.name)).join(' · ')}</p></section>`
     : ''

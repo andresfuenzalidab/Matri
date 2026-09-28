@@ -1,3 +1,5 @@
+import { TagFilter } from './TagControls.jsx'
+
 /**
  * The search/tipo/RSVP/enviado/orden controls shared by the Invitaciones
  * and RSVP admin tabs — pass the object `useInvitationFilters` returns
@@ -6,8 +8,10 @@
 export default function InvitationFilterBar({
   search, setSearch, filterType, setFilterType, filterRsvp, setFilterRsvp,
   filterSent, setFilterSent, sortBy, setSortBy, filtersActive, clearFilters,
+  availableTags = [], filterTags = [], setFilterTags, tagMode, setTagMode,
 }) {
   return (
+    <>
     <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
       <input
         className="input"
@@ -43,5 +47,9 @@ export default function InvitationFilterBar({
         <button className="btn btn-ghost" onClick={clearFilters}>Limpiar filtros</button>
       )}
     </div>
+    {setFilterTags && (
+      <TagFilter tags={availableTags} selected={filterTags} onChange={setFilterTags} mode={tagMode} onMode={setTagMode} />
+    )}
+    </>
   )
 }

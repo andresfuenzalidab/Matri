@@ -6,6 +6,8 @@ import { totalInvitedHeadcount } from '../../utils/inviteCount.js'
 import { guestDisplayName, isPairInvite, pick } from '../../utils/guestName.js'
 import { useInvitationFilters } from '../../hooks/useInvitationFilters.js'
 import InvitationFilterBar from './InvitationFilterBar.jsx'
+import { TagInput, TagList, BulkTagger } from './TagControls.jsx'
+import { collectTags, normalizeTags, tagKey } from '../../utils/tags.js'
 
 // The single source of truth for the invitations spreadsheet shape — used for both
 // export and import, so a file downloaded here always re-imports cleanly.
@@ -13,7 +15,7 @@ import InvitationFilterBar from './InvitationFilterBar.jsx'
 // read-only — importing never writes them back.
 const INVITATION_HEADERS = [
   'Token', 'Nombre', 'Apodo', 'Acompañante', 'Email', 'Teléfono', 'Tipo',
-  'Máx acompañantes', 'Admin', 'Mensaje de bienvenida', 'Nota interna', 'Enviado',
+  'Máx acompañantes', 'Admin', 'Mensaje de bienvenida', 'Nota interna', 'Tags', 'Enviado',
   'Creada',
   'RSVP Asistencia', 'RSVP N° personas', 'RSVP Asistentes', 'RSVP Email',
   'RSVP Restricción alimenticia', 'RSVP Mensaje', 'RSVP Fecha respuesta',
@@ -48,6 +50,7 @@ export default function InvitationsManager() {
   const [newMaxGuests, setNewMaxGuests] = useState('0')
   const [newInvType, setNewInvType] = useState('all_in')
   const [newNotes, setNewNotes] = useState('')
+  const [newTags, setNewTags] = useState([])
   const [creating, setCreating] = useState(false)
 
   const [createdInv, setCreatedInv] = useState(null)
@@ -61,11 +64,13 @@ export default function InvitationsManager() {
   const [editPhone, setEditPhone] = useState('')
   const [editNickname, setEditNickname] = useState('')
   const [editCompanion, setEditCompanion] = useState('')
+  const [editTags, setEditTags] = useState([])
   const [editSaving, setEditSaving] = useState(false)
 
   const [copiedId, setCopiedId] = useState(null)
   const [selected, setSelected] = useState(() => new Set())
   const [bulkDeleting, setBulkDeleting] = useState(false)
+  const [bulkTagging, setBulkTagging] = useState(false)
 
   // Excel import/export
   const importFileRef = useRef(null)
@@ -110,6 +115,7 @@ export default function InvitationsManager() {
           })(),
           invitationType: newInvType,
           notes: newNotes.trim(),
+          tags: newTags,
         }),
       })
       if (res.ok) {
@@ -118,7 +124,7 @@ export default function InvitationsManager() {
         setCreatedInv({ ...inv, welcome_message: newWelcomeMsg.trim() || null })
         setNewName(''); setNewEmail(''); setNewPhone(''); setNewNickname('')
         setNewCompanion(''); setNewIsAdmin(false); setNewWelcomeMsg('')
-        setNewMaxGuests(''); setNewInvType('all_in'); setNewNotes('')
+        setNewMaxGuests(''); setNewInvType('all_in'); setNewNotes(''); setNewTags([])
         setShowCreate(false)
       } else {
         const d = await res.json().catch(() => ({}))
@@ -195,6 +201,38 @@ export default function InvitationsManager() {
       })
       if (res.ok) setInvitations(prev => prev.map(i => i.id === id ? { ...i, gifts: [] } : i))
     } catch { setError('Error al resetear regalos.') }
+  }
+
+  /** Add (or remove) one tag on every ticked invitation. */
+  async function applyBulkTag(tag, mode) {
+    const key = tagKey(tag)
+    const updates = invitations
+      .filter(i => selected.has(i.id))
+      .map(i => {
+        const current = normalizeTags(i.tags)
+        const has = current.some(t => tagKey(t) === key)
+        if (mode === 'add') return has ? null : { id: i.id, tags: [...current, tag] }
+        return has ? { id: i.id, tags: current.filter(t => tagKey(t) !== key) } : null
+      })
+      .filter(Boolean)
+    if (!updates.length) return
+    setBulkTagging(true)
+    setError('')
+    try {
+      const res = await fetch('/api/admin/invitations-tags', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'X-Invite-Token': token },
+        body: JSON.stringify({ updates }),
+      })
+      if (res.ok) {
+        const byId = new Map(updates.map(u => [u.id, u.tags]))
+        setInvitations(prev => prev.map(i => byId.has(i.id) ? { ...i, tags: normalizeTags(byId.get(i.id)) } : i))
+      } else {
+        const d = await res.json().catch(() => ({}))
+        setError(d.error || 'No se pudieron actualizar los tags.')
+      }
+    } catch { setError('Error de conexión.') }
+    finally { setBulkTagging(false) }
   }
 
   function getLink(inv) {
@@ -283,6 +321,7 @@ export default function InvitationsManager() {
         inv.is_admin ? 'Sí' : 'No',
         inv.welcome_message || '',
         inv.notes || '',
+        normalizeTags(inv.tags).join(', '),
         inv.invitation_sent ? 'Sí' : 'No',
         inv.created_at || '',
         rsvp,
@@ -307,6 +346,9 @@ export default function InvitationsManager() {
     setError('')
     try {
       const parsed = await parseXLSXFile(file)
+      // An older export has no Tags column — leave `tags` undefined then, so
+      // importing it can't wipe the tags already on those invitations.
+      const hasTags = parsed.some(r => Object.keys(r).some(k => tagKey(k) === 'tags'))
       const rows = parsed.map(r => ({
         token: cell(r, 'Token'),
         name: cell(r, 'Nombre'),
@@ -320,6 +362,7 @@ export default function InvitationsManager() {
         welcomeMessage: cell(r, 'Mensaje de bienvenida'),
         notes: cell(r, 'Nota interna'),
         invitationSent: cell(r, 'Enviado'),
+        tags: hasTags ? cell(r, 'Tags') : undefined,
       }))
       const res = await fetch('/api/admin/invitations-import', {
         method: 'POST',
@@ -351,6 +394,7 @@ export default function InvitationsManager() {
     setEditPhone(inv.phone || '')
     setEditNickname(inv.nickname || '')
     setEditCompanion(inv.companion_name || '')
+    setEditTags(normalizeTags(inv.tags))
   }
 
   async function saveEdit(id) {
@@ -371,6 +415,7 @@ export default function InvitationsManager() {
           phone: editPhone.trim(),
           nickname: editNickname.trim(),
           companionName: editCompanion.trim(),
+          tags: editTags,
         }),
       })
       if (res.ok) {
@@ -383,6 +428,7 @@ export default function InvitationsManager() {
           phone: editPhone.trim() || null,
           nickname: editNickname.trim() || null,
           companion_name: editCompanion.trim() || null,
+          tags: editTags,
         } : i))
         setEditId(null)
       } else { setError('Error al guardar.') }
@@ -465,6 +511,9 @@ export default function InvitationsManager() {
           {filters.filtersActive ? `${visibleInvitations.length} de ${invitations.length} invitaciones` : `${invitations.length} invitaciones`}
         </span>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+        {selected.size > 0 && (
+          <BulkTagger suggestions={collectTags(invitations)} count={selected.size} onApply={applyBulkTag} busy={bulkTagging} />
+        )}
         {selected.size > 0 && (
           <button
             className="btn btn-ghost"
@@ -562,6 +611,10 @@ export default function InvitationsManager() {
             <input className="input" placeholder="ej. Amigos del novio - lado Fuenzalida"
               value={newNotes} onChange={e => setNewNotes(e.target.value)} />
           </div>
+          <div style={{ marginTop: '0.5rem' }}>
+            <label className="form-label">Tags (para filtrar; ej. colegio, cata)</label>
+            <TagInput value={newTags} onChange={setNewTags} suggestions={collectTags(invitations)} />
+          </div>
           <div style={{ marginTop: '0.75rem' }}>
             <button className="btn btn-primary" type="submit" disabled={creating || !newName.trim()}>
               {creating ? 'Creando...' : 'Crear y ver enlace'}
@@ -619,7 +672,8 @@ export default function InvitationsManager() {
                     {inv.companion_name && (
                       <div style={{ fontSize: '0.72rem', opacity: 0.6 }}>+ {inv.companion_name}</div>
                     )}
-                    {inv.is_admin && <span className="tag tag-accent" style={{ fontSize: '0.65rem', marginTop: 2 }}>Admin</span>}
+                    {Boolean(inv.is_admin) && <span className="tag tag-accent" style={{ fontSize: '0.65rem', marginTop: 2 }}>Admin</span>}
+                    <TagList tags={inv.tags} />
                   </td>
                   <td style={{ opacity: 0.7, fontSize: '0.8rem' }}>
                     <div>{inv.email || '—'}</div>
@@ -687,6 +741,7 @@ export default function InvitationsManager() {
                         <input className="input" placeholder="Nota interna"
                           style={{ fontSize: '0.8rem' }}
                           value={editNotes} onChange={e => setEditNotes(e.target.value)} />
+                        <TagInput value={editTags} onChange={setEditTags} suggestions={collectTags(invitations)} placeholder="Tags…" />
                         <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.25rem' }}>
                           <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.78rem', cursor: 'pointer' }}>
                             <input type="radio" name={`invType_${inv.id}`} value="all_in" checked={editInvType === 'all_in'} onChange={() => setEditInvType('all_in')} />

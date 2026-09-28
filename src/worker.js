@@ -10,6 +10,7 @@ import * as venuePhotosModule from '../functions/api/venue-photos.js'
 import * as adminInvitations from '../functions/api/admin/invitations.js'
 import * as adminInvitationsImport from '../functions/api/admin/invitations-import.js'
 import * as adminInvitationsSent from '../functions/api/admin/invitations-sent.js'
+import * as adminInvitationsTags from '../functions/api/admin/invitations-tags.js'
 import * as adminRsvp from '../functions/api/admin/rsvp.js'
 import * as adminSeating from '../functions/api/admin/seating.js'
 import * as adminGifts from '../functions/api/admin/gifts.js'
@@ -81,6 +82,8 @@ export default {
         response = await dispatch(adminInvitationsImport, method, request, env)
       } else if (path === '/api/admin/invitations-sent') {
         response = await dispatch(adminInvitationsSent, method, request, env)
+      } else if (path === '/api/admin/invitations-tags') {
+        response = await dispatch(adminInvitationsTags, method, request, env)
       } else if (path === '/api/admin/rsvp') {
         response = await dispatch(adminRsvp, method, request, env)
       } else if (path === '/api/admin/seating') {

@@ -17,6 +17,8 @@
  * as that route is mounted.
  */
 
+import { normalizeTags } from './tags.js'
+
 function uid() {
   return (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : `id-${Math.random().toString(36).slice(2)}`
 }
@@ -27,12 +29,12 @@ function daysAgo(n) {
 
 function seed() {
   const invitations = [
-    { id: 1, token: uid(), name: 'María González', email: 'maria@example.com', phone: '+56 9 1234 5678', nickname: null, companion_name: null, is_admin: 0, welcome_message: null, notes: null, invitation_sent: 1, invitation_type: 'all_in', max_additional_guests: 0, created_at: daysAgo(12) },
-    { id: 2, token: uid(), name: 'Juan Pérez', email: 'juan@example.com', phone: '+56 9 2345 6789', nickname: 'Juan y Sofía', companion_name: 'Sofía Pérez', is_admin: 0, welcome_message: '¡Los esperamos con mucho cariño!', notes: null, invitation_sent: 1, invitation_type: 'all_in', max_additional_guests: 1, created_at: daysAgo(11) },
+    { id: 1, token: uid(), name: 'María González', email: 'maria@example.com', phone: '+56 9 1234 5678', nickname: null, companion_name: null, is_admin: 0, welcome_message: null, notes: null, invitation_sent: 1, invitation_type: 'all_in', max_additional_guests: 0, tags: ['Colegio'], created_at: daysAgo(12) },
+    { id: 2, token: uid(), name: 'Juan Pérez', email: 'juan@example.com', phone: '+56 9 2345 6789', nickname: 'Juan y Sofía', companion_name: 'Sofía Pérez', is_admin: 0, welcome_message: '¡Los esperamos con mucho cariño!', notes: null, invitation_sent: 1, invitation_type: 'all_in', max_additional_guests: 1, tags: ['Cata', 'Familia'], created_at: daysAgo(11) },
     { id: 3, token: uid(), name: 'Pedro Martínez', email: 'pedro@example.com', phone: '+56 9 3456 7890', nickname: null, companion_name: null, is_admin: 0, welcome_message: null, notes: 'Amigo del colegio', invitation_sent: 0, invitation_type: 'party_only', max_additional_guests: 0, created_at: daysAgo(9) },
-    { id: 4, token: uid(), name: 'Andrés Fuenzalida', email: 'andres@example.com', phone: '+56 9 4567 8901', nickname: null, companion_name: null, is_admin: 1, welcome_message: null, notes: null, invitation_sent: 1, invitation_type: 'all_in', max_additional_guests: 1, created_at: daysAgo(20) },
-    { id: 5, token: uid(), name: 'Camila Rojas', email: 'camila@example.com', phone: '+56 9 5678 9012', nickname: null, companion_name: null, is_admin: 0, welcome_message: null, notes: null, invitation_sent: 1, invitation_type: 'all_in', max_additional_guests: 0, created_at: daysAgo(7) },
-    { id: 6, token: uid(), name: 'Diego Soto', email: 'diego@example.com', phone: '+56 9 6789 0123', nickname: 'Diego y Valentina', companion_name: 'Valentina Soto', is_admin: 0, welcome_message: null, notes: null, invitation_sent: 1, invitation_type: 'party_only', max_additional_guests: 1, created_at: daysAgo(5) },
+    { id: 4, token: uid(), name: 'Andrés Fuenzalida', email: 'andres@example.com', phone: '+56 9 4567 8901', nickname: null, companion_name: null, is_admin: 1, welcome_message: null, notes: null, invitation_sent: 1, invitation_type: 'all_in', max_additional_guests: 1, tags: ['Familia'], created_at: daysAgo(20) },
+    { id: 5, token: uid(), name: 'Camila Rojas', email: 'camila@example.com', phone: '+56 9 5678 9012', nickname: null, companion_name: null, is_admin: 0, welcome_message: null, notes: null, invitation_sent: 1, invitation_type: 'all_in', max_additional_guests: 0, tags: ['Colegio'], created_at: daysAgo(7) },
+    { id: 6, token: uid(), name: 'Diego Soto', email: 'diego@example.com', phone: '+56 9 6789 0123', nickname: 'Diego y Valentina', companion_name: 'Valentina Soto', is_admin: 0, welcome_message: null, notes: null, invitation_sent: 1, invitation_type: 'party_only', max_additional_guests: 1, tags: ['Cata'], created_at: daysAgo(5) },
   ]
 
   const rsvps = new Map([
@@ -137,6 +139,7 @@ function createInvitation(body) {
     max_additional_guests: body.maxAdditionalGuests ?? null,
     invitation_type: body.invitationType || 'all_in',
     notes: body.notes?.trim() || null,
+    tags: normalizeTags(body.tags),
     invitation_sent: 0,
     created_at: new Date().toISOString(),
   }
@@ -154,6 +157,7 @@ function updateInvitation(body) {
   inv.phone = body.phone?.trim() || null
   inv.nickname = body.nickname?.trim() || null
   inv.companion_name = body.companionName?.trim() || null
+  if (Array.isArray(body.tags)) inv.tags = normalizeTags(body.tags)
   return true
 }
 
@@ -190,8 +194,9 @@ function importInvitations(rows) {
       max_additional_guests: r.maxAdditionalGuests !== '' && r.maxAdditionalGuests != null && !Number.isNaN(Number(r.maxAdditionalGuests))
         ? Number(r.maxAdditionalGuests) : null,
     }
+    if (r.tags !== undefined) fields.tags = normalizeTags(r.tags)
     if (!token) {
-      store.invitations.unshift({ id: store.nextInvitationId++, token: uid(), created_at: new Date().toISOString(), ...fields })
+      store.invitations.unshift({ id: store.nextInvitationId++, token: uid(), created_at: new Date().toISOString(), tags: [], ...fields })
       created++
       continue
     }
@@ -311,6 +316,13 @@ async function route(method, pathname, params, body) {
   if (pathname === '/api/admin/seating') {
     if (method === 'GET') return [200, { layout: store.seating, updatedAt: null }]
     if (method === 'PUT') { store.seating = body?.layout || null; return [200, { ok: true }] }
+  }
+  if (pathname === '/api/admin/invitations-tags' && method === 'PUT') {
+    for (const u of body?.updates || []) {
+      const inv = store.invitations.find(i => i.id === u.id)
+      if (inv && Array.isArray(u.tags)) inv.tags = normalizeTags(u.tags)
+    }
+    return [200, { success: true }]
   }
   if (pathname === '/api/admin/invitations-sent' && method === 'PUT') {
     const inv = store.invitations.find(i => i.id === body?.id)

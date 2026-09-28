@@ -1,4 +1,5 @@
 import { requireAdmin, json, err, handleAuthError } from '../_auth.js'
+import { serializeTags } from '../../../src/utils/tags.js'
 
 const YES = new Set(['si', 'sí', 'yes', 'true', '1', 'x'])
 const isYes = v => YES.has(String(v ?? '').trim().toLowerCase())
@@ -54,16 +55,23 @@ export async function onRequestPost({ request, env }) {
       const token = (r.token || '').trim()
 
       if (!token) {
+        const newToken = crypto.randomUUID()
         await env.DB.prepare(
           `INSERT INTO invitations
             (token, name, email, phone, nickname, companion_name, is_admin, invitation_sent, welcome_message, notes, invitation_type, max_additional_guests)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
         ).bind(
-          crypto.randomUUID(), fields.name, fields.email, fields.phone, fields.nickname,
+          newToken, fields.name, fields.email, fields.phone, fields.nickname,
           fields.companion_name, fields.is_admin, fields.invitation_sent, fields.welcome_message,
           fields.notes, fields.invitation_type, fields.max_additional_guests
         ).run()
         created++
+        // Only rows that came with a Tags column touch tags (an old export
+        // without one must not wipe them) — and as separate statements, so
+        // the rest of the import still works before migration 11.
+        if (r.tags !== undefined && serializeTags(r.tags)) {
+          await env.DB.prepare('UPDATE invitations SET tags = ? WHERE token = ?').bind(serializeTags(r.tags), newToken).run()
+        }
         continue
       }
 
@@ -81,6 +89,9 @@ export async function onRequestPost({ request, env }) {
         fields.is_admin, fields.invitation_sent, fields.welcome_message, fields.notes,
         fields.invitation_type, fields.max_additional_guests, id
       ).run()
+      if (r.tags !== undefined) {
+        await env.DB.prepare('UPDATE invitations SET tags = ? WHERE id = ?').bind(serializeTags(r.tags), id).run()
+      }
       updated++
     }
 

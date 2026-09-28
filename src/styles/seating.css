@@ -14,6 +14,7 @@
   background: var(--paper); color: var(--paper-ink);
   font-family: var(--font-body);
   user-select: none; -webkit-user-select: none;
+  overflow: hidden; overscroll-behavior: contain;
 }
 .sp-root input, .sp-root textarea { user-select: text; -webkit-user-select: text; }
 .sp-root *:focus-visible { outline: 2px solid var(--sp-gold); outline-offset: 2px; }
@@ -94,7 +95,7 @@
 .sp-seg button:hover { background: color-mix(in srgb, var(--color-accent) 8%, transparent); }
 .sp-seg button.active { background: var(--sp-gold); color: var(--color-on-accent); }
 
-.sp-list { flex: 1; overflow-y: auto; padding: 0.75rem; display: flex; flex-direction: column; gap: 0.6rem; }
+.sp-list { flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 0.75rem; display: flex; flex-direction: column; gap: 0.6rem; }
 .sp-empty-note { font-size: 0.78rem; opacity: 0.7; line-height: 1.5; margin: 0; }
 
 .sp-party {
@@ -246,6 +247,11 @@
   border-color: #2f3826; color: #f7f3ea;
   background: repeating-linear-gradient(90deg, #5c6746 0 26px, #525c3f 26px 52px);
 }
+.sp-shape-custom {
+  color: #fdf9f0;
+  border-color: color-mix(in srgb, var(--fill) 65%, black);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--fill) 82%, white), var(--fill));
+}
 .sp-shape-bar { border-color: #3a270d; color: #f7f3ea; background: linear-gradient(135deg, #7d5411, #4a3110); }
 .sp-shape-buffet { border-color: #565c42; color: #fdf9f0; background: linear-gradient(135deg, #8f9a63, #6d7355); }
 
@@ -317,7 +323,7 @@
 .sp-inspector {
   position: absolute; right: 14px; top: 100px; width: 292px; z-index: 6;
   max-height: calc(100% - 100px - 64px);
-  overflow-y: auto; padding: 1rem;
+  overflow-y: auto; overscroll-behavior: contain; padding: 1rem;
   background: color-mix(in srgb, var(--paper) 96%, transparent); backdrop-filter: blur(6px);
   border: 1px solid var(--sp-line); border-radius: 14px; box-shadow: var(--shadow-lg);
   display: flex; flex-direction: column; gap: 0.85rem;
@@ -416,3 +422,23 @@
   .sp-inspector { top: auto; bottom: 64px; left: 12px; right: 12px; width: auto; max-height: 45%; }
   .sp-hint { display: none; }
 }
+
+/* Editable initials badge */
+.sp-avatar-btn, .sp-avatar-input { border: none; padding: 0; font-family: inherit; cursor: text; }
+.sp-avatar-btn:hover { box-shadow: 0 0 0 2px var(--sp-gold-soft); }
+.sp-avatar-input { text-align: center; color: #fdf9f0; outline: 2px solid var(--sp-gold); width: 34px; border-radius: 12px; }
+
+/* Color swatches (custom shapes) */
+.sp-swatches { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; }
+.sp-swatches button { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--paper); box-shadow: 0 0 0 1px var(--sp-line); cursor: pointer; padding: 0; }
+.sp-swatches button.active { box-shadow: 0 0 0 2px var(--sp-gold); }
+.sp-swatches input[type='color'] { width: 28px; height: 28px; padding: 0; border: 1px solid var(--sp-line); border-radius: 50%; background: none; cursor: pointer; overflow: hidden; }
+
+/* Seats of people outside the active tag filter fade back */
+.sp-seat.is-dim { opacity: 0.22; }
+.sp-seat.is-swap { background: color-mix(in srgb, var(--seal) 35%, #fbf7ee); box-shadow: 0 0 0 4px color-mix(in srgb, var(--seal) 45%, transparent); }
+.sp-seat.is-filled.is-swap { border-color: var(--seal); }
+
+/* Tag chips inside the guest sidebar */
+.sp-tags { margin: 0; }
+.sp-tags .tag-chip { font-size: 0.68rem; padding: 0.25rem 0.55rem; }

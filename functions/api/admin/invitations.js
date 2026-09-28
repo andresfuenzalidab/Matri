@@ -1,22 +1,33 @@
 import { requireAdmin, json, err, handleAuthError } from '../_auth.js'
+import { normalizeTags, serializeTags } from '../../../src/utils/tags.js'
+
+const missingTagsColumn = e => /no such column|no column named/i.test(String(e?.message || '')) && /tags/i.test(String(e?.message || ''))
 
 export async function onRequestGet({ request, env }) {
   try {
     await requireAdmin(request, env)
 
-    const [rows, giftRows] = await Promise.all([
-      env.DB.prepare(`
+    // `tags` came with migration 11 — until it's been run, read the list
+    // without it rather than breaking the whole admin panel.
+    const listQuery = withTags => env.DB.prepare(`
         SELECT
           i.id, i.token, i.name, i.email, i.phone, i.nickname, i.companion_name,
           i.is_admin, i.invitation_sent, i.created_at,
-          i.welcome_message, i.max_additional_guests, i.invitation_type, i.notes,
+          i.welcome_message, i.max_additional_guests, i.invitation_type, i.notes,${withTags ? ' i.tags,' : ''}
           r.attending, r.num_guests,
           r.companion_name AS rsvp_companion_name, r.email AS rsvp_email,
           r.dietary_restriction, r.message AS rsvp_message, r.submitted_at
         FROM invitations i
         LEFT JOIN rsvp_responses r ON i.id = r.invitation_id
         ORDER BY i.created_at DESC
-      `).all(),
+      `).all()
+    const invitationRows = listQuery(true).catch(e => {
+      if (missingTagsColumn(e)) return listQuery(false)
+      throw e
+    })
+
+    const [rows, giftRows] = await Promise.all([
+      invitationRows,
       // Confirmed only — an unconfirmed (pending bank-transfer, or a card
       // payment never completed) reservation isn't actually a gift yet,
       // and showing it here as if it were was exactly the confusion this
@@ -38,7 +49,7 @@ export async function onRequestGet({ request, env }) {
       giftsByInv[gr.invitation_id].push({ name: gr.name, price: gr.price, quantity: gr.quantity, message: gr.congratulations_message || '' })
     }
 
-    return json(rows.results.map(r => ({ ...r, gifts: giftsByInv[r.id] || [] })))
+    return json(rows.results.map(r => ({ ...r, tags: normalizeTags(r.tags), gifts: giftsByInv[r.id] || [] })))
   } catch (e) {
     return handleAuthError(e) || err('Error interno.', 500)
   }
@@ -54,7 +65,7 @@ export async function onRequestPost({ request, env }) {
     const {
       name, email = '', phone = '', nickname = '', companionName = '',
       isAdmin = false, welcomeMessage = '',
-      maxAdditionalGuests = null, invitationType = 'all_in', notes = ''
+      maxAdditionalGuests = null, invitationType = 'all_in', notes = '', tags = []
     } = body
 
     const result = await env.DB.prepare(
@@ -66,7 +77,15 @@ export async function onRequestPost({ request, env }) {
       maxAdditionalGuests ?? null, invitationType, notes.trim() || null
     ).first()
 
-    return json(result, 201)
+    // Separate statement so creating an invitation keeps working before
+    // migration 11 (only an actual tag needs the column).
+    const tagsJson = serializeTags(tags)
+    if (tagsJson) {
+      await env.DB.prepare('UPDATE invitations SET tags = ? WHERE id = ?').bind(tagsJson, result.id).run()
+      result.tags = tagsJson
+    }
+
+    return json({ ...result, tags: normalizeTags(result.tags) }, 201)
   } catch (e) {
     return handleAuthError(e) || err('Error interno.', 500)
   }
@@ -90,6 +109,10 @@ export async function onRequestPut({ request, env }) {
       body.companionName?.trim() || null,
       body.id
     ).run()
+
+    if (Array.isArray(body.tags)) {
+      await env.DB.prepare('UPDATE invitations SET tags = ? WHERE id = ?').bind(serializeTags(body.tags), body.id).run()
+    }
 
     return json({ success: true })
   } catch (e) {

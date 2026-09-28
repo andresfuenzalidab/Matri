@@ -1,11 +1,14 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { useApp } from '../../context/AppContext'
 import {
-  FLOOR, GRID, SEAT_D, SHAPE_PRESETS, snap, clamp,
+  FLOOR, GRID, SEAT_D, SHAPE_PRESETS, PARTY_COLORS, snap, clamp,
   emptyLayout, normalizeLayout, buildParties, tableGeometry, elementBox, layoutBounds,
   makeTable, makeShape, seatOccupants, countAtTable, unassign, assignToSeat,
   assignGroupToTable, reflowTable, pruneAssign, downloadPlanPng, printPlan, uid,
 } from '../../utils/seating.js'
+import { collectTags, matchesTags } from '../../utils/tags.js'
+import { TagFilter } from './TagControls.jsx'
 import '../../styles/seating.css'
 
 const MIN_K = 0.25
@@ -30,6 +33,16 @@ function Icon({ name, size = 20 }) {
       return <svg {...p}><path d="M5 4h14l-7 8z" /><path d="M12 12v7M8 20h8" /><path d="M8.5 6.5h7" /></svg>
     case 'buffet':
       return <svg {...p}><path d="M4 17h16" /><path d="M5.5 17a6.5 6.5 0 0 1 13 0" /><path d="M12 8V6.5M10.8 6.5h2.4" /><path d="M3 20h18" /></svg>
+    case 'rectangle':
+      return <svg {...p}><rect x="3.5" y="6.5" width="17" height="11" rx="1.5" /></svg>
+    case 'circle':
+      return <svg {...p}><circle cx="12" cy="12" r="8" /></svg>
+    case 'pencil':
+      return <svg {...p}><path d="M4 20l1-4 11-11 3 3L8 19z" /></svg>
+    case 'rectangle':
+      return <svg {...p}><rect x="3.5" y="6.5" width="17" height="11" rx="1.5" /></svg>
+    case 'circle':
+      return <svg {...p}><circle cx="12" cy="12" r="8" /></svg>
     case 'undo':
       return <svg {...p}><path d="M9 14 4 9l5-5" /><path d="M4 9h10a6 6 0 0 1 0 12h-3" /></svg>
     case 'redo':
@@ -66,6 +79,51 @@ function Stepper({ value, min, max, onChange, label }) {
       <span>{value}</span>
       <button type="button" onClick={() => onChange(clamp(value + 1, min, max))} disabled={value >= max} aria-label="Más">+</button>
     </div>
+  )
+}
+
+/** Round initials badge; click it to edit (up to 3 letters, empty = back to the default). */
+function InitialsAvatar({ person, onCommit }) {
+  const [editing, setEditing] = useState(false)
+  const [val, setVal] = useState('')
+  const cancelled = useRef(false)
+  const stop = e => e.stopPropagation() // don't start a drag from the badge
+
+  if (editing) {
+    return (
+      <input
+        autoFocus
+        className="sp-avatar sp-avatar-input"
+        style={{ background: person.color }}
+        value={val}
+        maxLength={3}
+        aria-label={`Iniciales de ${person.name}`}
+        onChange={e => setVal(e.target.value.toUpperCase())}
+        onFocus={e => e.target.select()}
+        onPointerDown={stop}
+        onKeyDown={e => {
+          if (e.key === 'Enter') e.currentTarget.blur()
+          if (e.key === 'Escape') { cancelled.current = true; e.currentTarget.blur() }
+        }}
+        onBlur={() => {
+          setEditing(false)
+          if (!cancelled.current) onCommit(person.id, val)
+          cancelled.current = false
+        }}
+      />
+    )
+  }
+  return (
+    <button
+      type="button"
+      className="sp-avatar sp-avatar-btn"
+      style={{ background: person.color }}
+      title="Editar iniciales"
+      onPointerDown={stop}
+      onClick={() => { setVal(person.initials); setEditing(true) }}
+    >
+      {person.initials}
+    </button>
   )
 }
 
@@ -115,7 +173,9 @@ export default function SeatingPlan({ onClose }) {
   const [sideOpen, setSideOpen] = useState(() => typeof window === 'undefined' || window.innerWidth > 820)
   const [query, setQuery] = useState('')
   const [mode, setMode] = useState('all') // all | pending | seated
-  const [includePartyOnly, setIncludePartyOnly] = useState(true)
+  const [includePending, setIncludePending] = useState(false)
+  const [tagFilter, setTagFilter] = useState([])
+  const [tagMode, setTagMode] = useState('all')
   const [showNames, setShowNames] = useState(true)
   const [newSeats, setNewSeats] = useState(8)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -124,22 +184,41 @@ export default function SeatingPlan({ onClose }) {
   const coalesce = useRef({ key: null, at: 0 })
 
   // ── Derived data ──
-  const parties = useMemo(() => buildParties(invitations), [invitations])
+  const baseParties = useMemo(() => buildParties(invitations), [invitations])
+  // Default initials, overridden by whatever was edited by hand (stored in the layout).
+  const parties = useMemo(() => {
+    const ov = layout.initials || {}
+    return baseParties.map(party => ({
+      ...party,
+      people: party.people.map(p => (ov[p.id] ? { ...p, defaultInitials: p.initials, initials: ov[p.id] } : { ...p, defaultInitials: p.initials })),
+    }))
+  }, [baseParties, layout.initials])
   const peopleById = useMemo(() => {
     const m = new Map()
     for (const party of parties) for (const p of party.people) m.set(p.id, p)
     return m
   }, [parties])
+  // Guests who haven't answered yet are out of the list (and the totals) unless toggled on.
+  const scopeParties = useMemo(() => (includePending ? parties : parties.filter(p => !p.pending)), [parties, includePending])
+  const allTags = useMemo(() => collectTags(scopeParties), [scopeParties])
+  // With a tag filter on, seats of people who don't match are dimmed on the plan.
+  const tagMatchIds = useMemo(() => {
+    if (!tagFilter.length) return null
+    const ids = new Set()
+    for (const party of parties) if (matchesTags(party.tags, tagFilter, tagMode)) for (const p of party.people) ids.add(p.id)
+    return ids
+  }, [parties, tagFilter, tagMode])
   const partyById = useMemo(() => new Map(parties.map(p => [p.id, p])), [parties])
   const tables = useMemo(() => layout.elements.filter(e => e.type === 'table'), [layout.elements])
   const tablesById = useMemo(() => new Map(tables.map(t => [t.id, t])), [tables])
   const selectedEl = useMemo(() => layout.elements.find(e => e.id === selected) || null, [layout.elements, selected])
 
+  const scopeIds = useMemo(() => new Set(scopeParties.flatMap(p => p.people.map(x => x.id))), [scopeParties])
   const seatedCount = useMemo(
-    () => Object.keys(layout.assign).filter(id => peopleById.has(id)).length,
-    [layout.assign, peopleById],
+    () => Object.keys(layout.assign).filter(id => scopeIds.has(id)).length,
+    [layout.assign, scopeIds],
   )
-  const totalPeople = peopleById.size
+  const totalPeople = scopeIds.size
   const totalSeats = useMemo(() => tables.reduce((s, t) => s + t.seats, 0), [tables])
 
   // ── View helpers ──
@@ -272,6 +351,9 @@ export default function SeatingPlan({ onClose }) {
       plan = { ...plan, assign }
 
       setInvitations(invData)
+      // Someone unconfirmed who is already seated must not be invisible in the list.
+      const pendingIds = new Set(buildParties(invData).filter(p => p.pending).flatMap(p => p.people.map(x => x.id)))
+      if (Object.keys(plan.assign).some(id => pendingIds.has(id))) setIncludePending(true)
       layoutRef.current = plan
       setLayoutState(plan)
       past.current = []
@@ -343,7 +425,7 @@ export default function SeatingPlan({ onClose }) {
     const y = clamp(snap(pos.y), 0, FLOOR.h)
     const el = spec.type === 'table'
       ? makeTable({ shape: spec.shape, seats: clamp(newSeats, 2, MAX_SEATS[spec.shape]), x, y, number: nextTableNumber() })
-      : makeShape({ preset: spec.preset, x, y })
+      : makeShape({ preset: spec.preset, round: spec.round, x, y })
     update(l => ({ ...l, elements: [...l.elements, el] }))
     setSelected(el.id)
     setConfirmDelete(false)
@@ -402,6 +484,21 @@ export default function SeatingPlan({ onClose }) {
   const emptyTable = useCallback(id => {
     update(l => ({ ...l, assign: Object.fromEntries(Object.entries(l.assign).filter(([, a]) => a.t !== id)) }))
   }, [update])
+
+  const setInitials = useCallback((id, raw) => {
+    const person = peopleById.get(id)
+    if (!person) return
+    const v = String(raw).trim().toUpperCase().slice(0, 3)
+    const next = !v || v === person.defaultInitials ? null : v
+    update(l => {
+      const cur = l.initials || {}
+      if ((cur[id] || null) === next) return l
+      const initials = { ...cur }
+      if (next) initials[id] = next
+      else delete initials[id]
+      return { ...l, initials }
+    })
+  }, [peopleById, update])
 
   const focusTable = useCallback((id, flash = true) => {
     const el = layoutRef.current.elements.find(e => e.id === id)
@@ -517,7 +614,13 @@ export default function SeatingPlan({ onClose }) {
     const table = tablesById.get(hit.tableId)
     if (!table) return
     if (hit.zone === 'seat' && ids.length === 1) {
+      // Dropping on an occupied chair swaps the two; if the dragged person
+      // wasn't seated there's no chair to hand over, so the occupant goes back to the list.
+      const cur = layoutRef.current.assign
+      const occupantId = Object.keys(cur).find(pid => cur[pid].t === table.id && cur[pid].s === hit.seat && pid !== ids[0])
+      const displaced = occupantId && !cur[ids[0]] ? peopleById.get(occupantId) : null
       update(l => ({ ...l, assign: assignToSeat(l.assign, ids[0], table.id, hit.seat) }))
+      if (displaced) showToast(`${displaced.name} volvió a la lista.`)
       return
     }
     let result
@@ -567,7 +670,13 @@ export default function SeatingPlan({ onClose }) {
       if (person) {
         startPayloadDrag(e, {
           kind: 'people', ids: [person.id], label: person.name, color: person.color, count: 1,
-          onClick: () => { setSelected(id); setConfirmDelete(false) },
+          onClick: () => {
+            const tableName = tablesById.get(id)?.name || 'la mesa'
+            update(l => ({ ...l, assign: unassign(l.assign, [person.id]) }))
+            setSelected(id)
+            setConfirmDelete(false)
+            showToast(`${person.name} salió de ${tableName}.`, { undo: true })
+          },
         })
         return
       }
@@ -576,6 +685,17 @@ export default function SeatingPlan({ onClose }) {
     setConfirmDelete(false)
     startElementDrag(e, id)
   }
+
+  // The plan owns the whole screen: freeze the page behind it so the only
+  // scrolling left is inside the guest list and the inspector.
+  useEffect(() => {
+    const html = document.documentElement
+    const body = document.body
+    const prev = { html: html.style.overflow, body: body.style.overflow }
+    html.style.overflow = 'hidden'
+    body.style.overflow = 'hidden'
+    return () => { html.style.overflow = prev.html; body.style.overflow = prev.body }
+  }, [])
 
   // Wheel zoom needs a non-passive listener to be able to preventDefault.
   useEffect(() => {
@@ -618,8 +738,8 @@ export default function SeatingPlan({ onClose }) {
   const visibleParties = useMemo(() => {
     const q = query.trim().toLowerCase()
     const out = []
-    for (const party of parties) {
-      if (!includePartyOnly && party.partyOnly) continue
+    for (const party of scopeParties) {
+      if (!matchesTags(party.tags, tagFilter, tagMode)) continue
       const partyMatches = q && party.label.toLowerCase().includes(q)
       const people = party.people.filter(p => {
         const seated = !!assign[p.id]
@@ -630,7 +750,7 @@ export default function SeatingPlan({ onClose }) {
       if (people.length) out.push({ party, people })
     }
     return out
-  }, [parties, assign, query, mode, includePartyOnly])
+  }, [scopeParties, assign, query, mode, tagFilter, tagMode])
 
   // ── Export ──
   async function exportPng() {
@@ -644,7 +764,7 @@ export default function SeatingPlan({ onClose }) {
     }
   }
   function exportPrint() {
-    if (!printPlan(layoutRef.current, parties, peopleById)) showToast('El navegador bloqueó la ventana de impresión. Permite las ventanas emergentes.')
+    if (!printPlan(layoutRef.current, parties, peopleById, { includePending })) showToast('El navegador bloqueó la ventana de impresión. Permite las ventanas emergentes.')
   }
 
   // ── Render ──
@@ -657,7 +777,9 @@ export default function SeatingPlan({ onClose }) {
 
   const saveLabel = { saved: 'Guardado', dirty: 'Cambios sin guardar…', saving: 'Guardando…', error: 'Error al guardar' }[saveState]
 
-  return (
+  // Portaled to <body>: inside the admin overlay (a blurred, scrollable layer)
+  // `position: fixed` is anchored to that layer and scrolls away with it.
+  return createPortal(
     <div className="sp-root" role="dialog" aria-modal="true" aria-label="Seating plan">
       {/* ── Top bar ── */}
       <header className="sp-top">
@@ -691,16 +813,17 @@ export default function SeatingPlan({ onClose }) {
         <aside className={`sp-side ${sideOpen ? '' : 'is-closed'} ${hover?.zone === 'sidebar' && dragFromSeat ? 'is-drop' : ''}`} data-sidebar>
           <div className="sp-side-inner">
             <div className="sp-side-head">
-              <h3>Invitados confirmados</h3>
+              <h3>{includePending ? 'Invitados' : 'Invitados confirmados'}</h3>
               <div className="sp-progress" aria-label={`${pct}% sentados`}>
                 <div style={{ width: `${pct}%` }} />
               </div>
               <p className="sp-progress-label"><b>{seatedCount}</b> de {totalPeople} con mesa {totalPeople - seatedCount > 0 && <>· faltan <b>{totalPeople - seatedCount}</b></>}</p>
               <input className="input sp-search" type="search" placeholder="Buscar invitado…" value={query} onChange={e => setQuery(e.target.value)} />
               <Segmented value={mode} onChange={setMode} options={[{ value: 'all', label: 'Todos' }, { value: 'pending', label: 'Sin mesa' }, { value: 'seated', label: 'Sentados' }]} />
-              {parties.some(p => p.partyOnly) && (
-                <label className="sp-check"><input type="checkbox" checked={includePartyOnly} onChange={e => setIncludePartyOnly(e.target.checked)} /> Incluir “solo fiesta”</label>
+              {parties.some(p => p.pending) && (
+                <label className="sp-check"><input type="checkbox" checked={includePending} onChange={e => setIncludePending(e.target.checked)} /> Mostrar invitados no confirmados</label>
               )}
+              <TagFilter className="sp-tags" tags={allTags} selected={tagFilter} onChange={setTagFilter} mode={tagMode} onMode={setTagMode} />
             </div>
 
             <div className="sp-list">
@@ -719,7 +842,7 @@ export default function SeatingPlan({ onClose }) {
                   >
                     <span className="sp-grip" data-grip><Icon name="grip" size={16} /></span>
                     <span className="sp-party-name">{party.label}</span>
-                    {party.partyOnly && <span className="sp-mini-tag">Fiesta</span>}
+                    {party.pending && <span className="sp-mini-tag">Sin confirmar</span>}
                     {party.dietary && <span className="sp-diet" title={party.dietary}><Icon name="leaf" size={13} /></span>}
                     {party.people.length > 1 && <span className="sp-party-count">{party.people.length}</span>}
                   </div>
@@ -736,7 +859,7 @@ export default function SeatingPlan({ onClose }) {
                         })}
                       >
                         <span className="sp-grip" data-grip><Icon name="grip" size={14} /></span>
-                        <span className="sp-avatar" style={{ background: p.color }}>{p.initials}</span>
+                        <InitialsAvatar person={p} onCommit={setInitials} />
                         <span className="sp-person-name">{p.name}</span>
                         <span className={`sp-where ${tbl ? '' : 'is-none'}`}>{tbl ? `${tbl.name} · ${a.s + 1}` : 'sin mesa'}</span>
                       </div>
@@ -784,10 +907,10 @@ export default function SeatingPlan({ onClose }) {
                       key={el.id}
                       className={`sp-el sp-shape sp-shape-${el.preset} ${el.round ? 'is-round' : ''} ${isSel ? 'is-selected' : ''}`}
                       data-el={el.id} data-type="shape"
-                      style={boxStyle}
+                      style={el.preset === 'custom' ? { ...boxStyle, '--fill': el.color || PARTY_COLORS[0] } : boxStyle}
                     >
                       <div className="sp-shape-label" style={counter}>
-                        <Icon name={el.preset} size={Math.round(clamp(Math.min(w, h) * 0.22, 18, 34))} />
+                        {el.preset !== 'custom' && <Icon name={el.preset} size={Math.round(clamp(Math.min(w, h) * 0.22, 18, 34))} />}
                         <span>{el.label}</span>
                       </div>
                       {isSel && (
@@ -828,12 +951,12 @@ export default function SeatingPlan({ onClose }) {
                       return (
                         <div key={i}>
                           <div
-                            className={`sp-seat ${person ? 'is-filled' : ''} ${dropTarget && hover.seat === i ? 'is-drop' : ''}`}
+                            className={`sp-seat ${person ? 'is-filled' : ''} ${dropTarget && hover.seat === i ? (person && ghost.ids.length === 1 && !ghost.ids.includes(person.id) ? 'is-drop is-swap' : 'is-drop') : ''} ${person && tagMatchIds && !tagMatchIds.has(person.id) ? 'is-dim' : ''}`}
                             data-seat={i} data-table={el.id} data-pid={person ? person.id : undefined}
                             style={{ left: cx - SEAT_D / 2, top: cy - SEAT_D / 2, width: SEAT_D, height: SEAT_D, ...(person ? { '--pc': person.color } : null) }}
-                            title={person ? person.name : `Silla ${i + 1}`}
+                            title={person ? `${person.name} — clic para quitar de la mesa` : `Silla ${i + 1}`}
                           >
-                            <span style={counter}>{person ? person.initials : i + 1}</span>
+                            <span style={person && person.initials.length > 2 ? { ...counter, fontSize: 9 } : counter}>{person ? person.initials : i + 1}</span>
                           </div>
                           {person && (
                             <span className="sp-seat-name" style={{ left: cx + s.ox * 30, top: cy + s.oy * 24, ...counter }}>
@@ -887,11 +1010,18 @@ export default function SeatingPlan({ onClose }) {
             <span className="sp-sep sp-sep-v" />
             <div className="sp-palette-group">
               <span className="sp-palette-label">Figuras</span>
-              {Object.entries(SHAPE_PRESETS).map(([key, p]) => (
+              {Object.entries(SHAPE_PRESETS).filter(([key]) => key !== 'custom').map(([key, p]) => (
                 <button key={key} type="button" className="sp-add" onPointerDown={e => startPayloadDrag(e, { kind: 'new', spec: { type: 'shape', preset: key }, label: p.label, color: 'var(--color-accent)', count: 0, onClick: () => addElement({ type: 'shape', preset: key }) })}>
                   <Icon name={key} /> <span>{p.label}</span>
                 </button>
               ))}
+              <span className="sp-sep sp-sep-v" />
+              <button type="button" className="sp-add" title="Rectángulo personalizable (mesa de decoración, mesón de postres…)" onPointerDown={e => startPayloadDrag(e, { kind: 'new', spec: { type: 'shape', preset: 'custom', round: false }, label: 'Rectángulo', color: 'var(--color-accent)', count: 0, onClick: () => addElement({ type: 'shape', preset: 'custom', round: false }) })}>
+                <Icon name="rectangle" /> <span>Rectángulo</span>
+              </button>
+              <button type="button" className="sp-add" title="Círculo personalizable (cabina de fotos, mesa de regalos…)" onPointerDown={e => startPayloadDrag(e, { kind: 'new', spec: { type: 'shape', preset: 'custom', round: true }, label: 'Círculo', color: 'var(--color-accent)', count: 0, onClick: () => addElement({ type: 'shape', preset: 'custom', round: true }) })}>
+                <Icon name="circle" /> <span>Círculo</span>
+              </button>
             </div>
           </div>
 
@@ -904,7 +1034,7 @@ export default function SeatingPlan({ onClose }) {
             <button type="button" onClick={() => zoomAt(1.25)} aria-label="Acercar">+</button>
             <button type="button" onClick={() => fitView()} aria-label="Ajustar a la pantalla" title="Ajustar a la pantalla"><Icon name="fit" size={16} /></button>
           </div>
-          <p className="sp-hint">Rueda: zoom · Arrastra el fondo: mover · Supr: borrar · Ctrl+D: duplicar</p>
+          <p className="sp-hint">Rueda: zoom · Arrastra el fondo: mover · Clic en un invitado sentado: quitarlo · Supr: borrar mesa</p>
 
           {/* Inspector */}
           <aside className="sp-inspector">
@@ -945,6 +1075,7 @@ export default function SeatingPlan({ onClose }) {
                 onOneSide={v => update(l => patchEl(l, selectedEl.id, { oneSide: v }))}
                 onRotate={rot => updateCoalesced(`rot-${selectedEl.id}`, l => patchEl(l, selectedEl.id, { rot }))}
                 onUnseat={id => update(l => ({ ...l, assign: unassign(l.assign, [id]) }))}
+                onInitials={setInitials}
                 onEmpty={() => emptyTable(selectedEl.id)}
                 onDuplicate={() => duplicateElement(selectedEl.id)}
                 onDelete={() => deleteElement(selectedEl.id)}
@@ -958,6 +1089,7 @@ export default function SeatingPlan({ onClose }) {
                 onLabel={label => updateCoalesced(`label-${selectedEl.id}`, l => patchEl(l, selectedEl.id, { label }))}
                 onSize={(w, h) => updateCoalesced(`size-${selectedEl.id}`, l => patchEl(l, selectedEl.id, { w, h }))}
                 onRound={round => update(l => patchEl(l, selectedEl.id, { round }))}
+                onColor={color => updateCoalesced(`color-${selectedEl.id}`, l => patchEl(l, selectedEl.id, { color }))}
                 onRotate={rot => updateCoalesced(`rot-${selectedEl.id}`, l => patchEl(l, selectedEl.id, { rot }))}
                 onDuplicate={() => duplicateElement(selectedEl.id)}
                 onDelete={() => deleteElement(selectedEl.id)}
@@ -998,7 +1130,8 @@ export default function SeatingPlan({ onClose }) {
           )}
         </div>
       )}
-    </div>
+    </div>,
+    document.body,
   )
 }
 
@@ -1040,7 +1173,7 @@ function RotateField({ value, onChange }) {
 
 function TableInspector({
   table, assign, peopleById, partyById, nameInputRef, confirmDelete, setConfirmDelete,
-  onRename, onSeats, onShape, onOneSide, onRotate, onUnseat, onEmpty, onDuplicate, onDelete, onClose,
+  onRename, onSeats, onShape, onOneSide, onRotate, onUnseat, onInitials, onEmpty, onDuplicate, onDelete, onClose,
 }) {
   const occ = seatOccupants(assign, table.id)
   const seatedRows = Object.keys(occ).map(Number).sort((a, b) => a - b)
@@ -1077,7 +1210,7 @@ function TableInspector({
               return (
                 <li key={s}>
                   <span className="sp-seat-num">{s + 1}</span>
-                  <span className="sp-avatar" style={{ background: p.color }}>{p.initials}</span>
+                  <InitialsAvatar person={p} onCommit={onInitials} />
                   <span className="sp-person-name">{p.name}{party?.dietary && <span className="sp-diet" title={party.dietary}><Icon name="leaf" size={12} /></span>}</span>
                   <button type="button" className="sp-x" onClick={() => onUnseat(p.id)} aria-label={`Quitar a ${p.name}`}><Icon name="close" size={12} /></button>
                 </li>
@@ -1101,7 +1234,7 @@ function TableInspector({
   )
 }
 
-function ShapeInspector({ shape, confirmDelete, setConfirmDelete, onLabel, onSize, onRound, onRotate, onDuplicate, onDelete, onClose }) {
+function ShapeInspector({ shape, confirmDelete, setConfirmDelete, onLabel, onSize, onRound, onColor, onRotate, onDuplicate, onDelete, onClose }) {
   const num = (v, fallback) => (Number.isFinite(v) ? clamp(Math.round(v), 40, 1200) : fallback)
   return (
     <>
@@ -1124,6 +1257,17 @@ function ShapeInspector({ shape, confirmDelete, setConfirmDelete, onLabel, onSiz
         <label>Forma</label>
         <Segmented value={shape.round ? 'round' : 'rect'} onChange={v => onRound(v === 'round')} options={[{ value: 'rect', label: 'Rectángulo' }, { value: 'round', label: 'Óvalo' }]} />
       </div>
+      {shape.preset === 'custom' && (
+        <div className="sp-field">
+          <label>Color</label>
+          <div className="sp-swatches">
+            {PARTY_COLORS.map(c => (
+              <button key={c} type="button" className={(shape.color || PARTY_COLORS[0]) === c ? 'active' : ''} style={{ background: c }} onClick={() => onColor(c)} aria-label={`Color ${c}`} />
+            ))}
+            <input type="color" value={/^#[0-9a-f]{6}$/i.test(shape.color || '') ? shape.color : PARTY_COLORS[0]} onChange={e => onColor(e.target.value)} aria-label="Color personalizado" title="Otro color" />
+          </div>
+        </div>
+      )}
       <RotateField value={shape.rot} onChange={onRotate} />
       <p className="sp-empty-note">Arrastra la esquina para cambiar el tamaño y el punto de arriba para rotar.</p>
       <div className="sp-insp-actions">
