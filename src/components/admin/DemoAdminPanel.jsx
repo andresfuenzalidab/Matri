@@ -4,6 +4,7 @@ import { installDemoAdminApi } from '../../utils/demoAdminApi.js'
 import InvitationsManager from './InvitationsManager'
 import RSVPDashboard from './RSVPDashboard'
 import GiftsDashboard from './GiftsDashboard'
+import SeatingPlan from './SeatingPlan'
 
 const TABS = [
   { id: 'invitations', label: 'Invitaciones' },
@@ -43,6 +44,7 @@ export default function DemoAdminPanel({ onClose }) {
   // until `ready` is true means they don't mount — and so don't fire their
   // own effects — until the interceptor is already active.
   const [ready, setReady] = useState(false)
+  const [seatingOpen, setSeatingOpen] = useState(false)
 
   useEffect(() => {
     const uninstall = installDemoAdminApi()
@@ -51,10 +53,11 @@ export default function DemoAdminPanel({ onClose }) {
   }, [])
 
   useEffect(() => {
+    if (seatingOpen) return
     function onKey(e) { if (e.key === 'Escape') onClose() }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
+  }, [onClose, seatingOpen])
 
   return (
     // Same reserved guest-demo token as the tour itself (see `_auth.js`) —
@@ -67,7 +70,10 @@ export default function DemoAdminPanel({ onClose }) {
         <div className="admin-panel" role="dialog" aria-modal="true" aria-label="Demostración del panel de administración">
           <div className="admin-header">
             <h2>Panel de administración (demo)</h2>
-            <button className="btn btn-ghost btn-icon" onClick={onClose} aria-label="Cerrar">✕</button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <button className="btn btn-primary" onClick={() => setSeatingOpen(true)} disabled={!ready}>Seating plan</button>
+              <button className="btn btn-ghost btn-icon" onClick={onClose} aria-label="Cerrar">✕</button>
+            </div>
           </div>
 
           <p style={{ fontSize: '0.8rem', opacity: 0.65, padding: '0 1.25rem', margin: '0.5rem 0' }}>
@@ -99,6 +105,7 @@ export default function DemoAdminPanel({ onClose }) {
             )}
           </div>
         </div>
+        {seatingOpen && <SeatingPlan onClose={() => setSeatingOpen(false)} />}
       </div>
     </AppProvider>
   )

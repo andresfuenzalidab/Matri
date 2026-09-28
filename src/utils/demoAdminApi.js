@@ -61,7 +61,7 @@ function seed() {
     { id: uid(), gift_id: gifts[1].id, invitation_id: 1, guest_name: 'María González', quantity: 1, confirmed_payment: 1, congratulations_message: 'Con mucho cariño ♡' },
   ]
 
-  return { nextInvitationId: 7, invitations, rsvps, trips, gifts, reservations }
+  return { nextInvitationId: 7, invitations, rsvps, trips, gifts, reservations, seating: null }
 }
 
 let store = seed()
@@ -307,6 +307,10 @@ async function route(method, pathname, params, body) {
       const ids = params.get('ids') ? params.get('ids').split(',') : params.get('id') ? [params.get('id')] : []
       return [200, { success: true, deleted: deleteInvitations(ids) }]
     }
+  }
+  if (pathname === '/api/admin/seating') {
+    if (method === 'GET') return [200, { layout: store.seating, updatedAt: null }]
+    if (method === 'PUT') { store.seating = body?.layout || null; return [200, { ok: true }] }
   }
   if (pathname === '/api/admin/invitations-sent' && method === 'PUT') {
     const inv = store.invitations.find(i => i.id === body?.id)
