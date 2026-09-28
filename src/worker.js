@@ -11,6 +11,7 @@ import * as adminInvitations from '../functions/api/admin/invitations.js'
 import * as adminInvitationsImport from '../functions/api/admin/invitations-import.js'
 import * as adminInvitationsSent from '../functions/api/admin/invitations-sent.js'
 import * as adminRsvp from '../functions/api/admin/rsvp.js'
+import * as adminSeating from '../functions/api/admin/seating.js'
 import * as adminGifts from '../functions/api/admin/gifts.js'
 import * as adminGiftReminder from '../functions/api/admin/gift-reminder.js'
 import * as adminGiftsImport from '../functions/api/admin/gifts-import.js'
@@ -82,6 +83,8 @@ export default {
         response = await dispatch(adminInvitationsSent, method, request, env)
       } else if (path === '/api/admin/rsvp') {
         response = await dispatch(adminRsvp, method, request, env)
+      } else if (path === '/api/admin/seating') {
+        response = await dispatch(adminSeating, method, request, env)
       } else if (path === '/api/admin/reset-rsvp') {
         response = await dispatch(adminResetRsvp, method, request, env)
       } else if (path === '/api/admin/gifts') {

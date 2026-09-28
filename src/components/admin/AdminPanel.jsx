@@ -7,6 +7,7 @@ import ContentEditor from './ContentEditor'
 import AppearanceEditor from './AppearanceEditor'
 import StoryPhotosManager from './StoryPhotosManager'
 import VenuePhotosManager from './VenuePhotosManager'
+import SeatingPlan from './SeatingPlan'
 
 const TABS = [
   { id: 'invitations', label: 'Invitaciones' },
@@ -21,12 +22,16 @@ const TABS = [
 
 export default function AdminPanel({ onClose }) {
   const [tab, setTab] = useState('invitations')
+  const [seatingOpen, setSeatingOpen] = useState(false)
 
   useEffect(() => {
+    // The seating plan is a full-screen layer on top of this panel and owns
+    // its own keys (Escape deselects there) — don't also close the panel.
+    if (seatingOpen) return
     function onKey(e) { if (e.key === 'Escape') onClose() }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
+  }, [onClose, seatingOpen])
 
   return (
     // No click-outside-to-close: several tabs hold unsaved input (create
@@ -36,7 +41,10 @@ export default function AdminPanel({ onClose }) {
       <div className="admin-panel" role="dialog" aria-modal="true" aria-label="Panel de administración">
         <div className="admin-header">
           <h2>Panel de administración</h2>
-          <button className="btn btn-ghost btn-icon" onClick={onClose} aria-label="Cerrar">✕</button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <button className="btn btn-primary" onClick={() => setSeatingOpen(true)}>Seating plan</button>
+            <button className="btn btn-ghost btn-icon" onClick={onClose} aria-label="Cerrar">✕</button>
+          </div>
         </div>
 
         <div className="admin-tabs" role="tablist">
@@ -64,6 +72,7 @@ export default function AdminPanel({ onClose }) {
           {tab === 'appearance' && <AppearanceEditor />}
         </div>
       </div>
+      {seatingOpen && <SeatingPlan onClose={() => setSeatingOpen(false)} />}
     </div>
   )
 }
