@@ -8,6 +8,8 @@ import AppearanceEditor from './AppearanceEditor'
 import StoryPhotosManager from './StoryPhotosManager'
 import VenuePhotosManager from './VenuePhotosManager'
 import SeatingPlan from './SeatingPlan'
+import WeddingPlanner from './WeddingPlanner'
+import MediaQR from './MediaQR'
 
 const TABS = [
   { id: 'invitations', label: 'Invitaciones' },
@@ -18,20 +20,22 @@ const TABS = [
   { id: 'venue', label: 'Lugar' },
   { id: 'content', label: 'Contenido' },
   { id: 'appearance', label: 'Apariencia' },
+  { id: 'album', label: 'Álbum QR' },
 ]
 
 export default function AdminPanel({ onClose }) {
   const [tab, setTab] = useState('invitations')
   const [seatingOpen, setSeatingOpen] = useState(false)
+  const [plannerOpen, setPlannerOpen] = useState(false)
 
   useEffect(() => {
-    // The seating plan is a full-screen layer on top of this panel and owns
-    // its own keys (Escape deselects there) — don't also close the panel.
-    if (seatingOpen) return
+    // The seating plan and the planner are full-screen layers on top of this
+    // panel and own their keys (Escape) — don't also close the panel.
+    if (seatingOpen || plannerOpen) return
     function onKey(e) { if (e.key === 'Escape') onClose() }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [onClose, seatingOpen])
+  }, [onClose, seatingOpen, plannerOpen])
 
   return (
     // No click-outside-to-close: several tabs hold unsaved input (create
@@ -42,6 +46,7 @@ export default function AdminPanel({ onClose }) {
         <div className="admin-header">
           <h2>Panel de administración</h2>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <button className="btn btn-primary" onClick={() => setPlannerOpen(true)}>Planificación</button>
             <button className="btn btn-primary" onClick={() => setSeatingOpen(true)}>Seating plan</button>
             <button className="btn btn-ghost btn-icon" onClick={onClose} aria-label="Cerrar">✕</button>
           </div>
@@ -70,9 +75,11 @@ export default function AdminPanel({ onClose }) {
           {tab === 'venue' && <VenuePhotosManager />}
           {tab === 'content' && <ContentEditor />}
           {tab === 'appearance' && <AppearanceEditor />}
+          {tab === 'album' && <MediaQR />}
         </div>
       </div>
       {seatingOpen && <SeatingPlan onClose={() => setSeatingOpen(false)} />}
+      {plannerOpen && <WeddingPlanner onClose={() => setPlannerOpen(false)} />}
     </div>
   )
 }

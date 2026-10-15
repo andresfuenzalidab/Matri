@@ -25,11 +25,16 @@ import * as adminStoryPhotos from '../functions/api/admin/story-photos.js'
 import * as adminResetRsvp from '../functions/api/admin/reset-rsvp.js'
 import * as adminResetGifts from '../functions/api/admin/reset-gifts.js'
 import * as adminUpload from '../functions/api/admin/upload.js'
+import * as adminPlanner from '../functions/api/admin/planner.js'
+import * as mediaModule from '../functions/api/media.js'
+import * as mediaThumb from '../functions/api/media/thumb.js'
+import * as mediaFile from '../functions/api/media/file.js'
+import * as mediaUpload from '../functions/api/media/upload-session.js'
 import * as imagesHandler from '../functions/api/images/[[path]].js'
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'X-Invite-Token, Content-Type',
+  'Access-Control-Allow-Headers': 'X-Invite-Token, X-Media-Key, Content-Type',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
 }
 
@@ -88,6 +93,16 @@ export default {
         response = await dispatch(adminRsvp, method, request, env)
       } else if (path === '/api/admin/seating') {
         response = await dispatch(adminSeating, method, request, env)
+      } else if (path === '/api/admin/planner') {
+        response = await dispatch(adminPlanner, method, request, env)
+      } else if (path === '/api/media') {
+        response = await dispatch(mediaModule, method, request, env)
+      } else if (path === '/api/media/thumb') {
+        response = await dispatch(mediaThumb, method, request, env)
+      } else if (path === '/api/media/file') {
+        response = await dispatch(mediaFile, method, request, env)
+      } else if (path === '/api/media/upload-session') {
+        response = await dispatch(mediaUpload, method, request, env)
       } else if (path === '/api/admin/reset-rsvp') {
         response = await dispatch(adminResetRsvp, method, request, env)
       } else if (path === '/api/admin/gifts') {
