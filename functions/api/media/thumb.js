@@ -10,11 +10,11 @@ export async function onRequestGet({ request, env }) {
   const url = new URL(request.url)
   const width = Math.min(1600, Math.max(100, parseInt(url.searchParams.get('w'), 10) || 480))
   const f = await albumFile(env, url.searchParams.get('id'))
-  if (!f?.thumbnailLink) return new Response('Not found', { status: 404 })
+  if (!f?.thumbnailLink) return new Response('Not found', { status: 404, headers: { 'Cache-Control': 'no-store' } })
 
   const link = f.thumbnailLink.replace(/=s\d+$/, `=s${width}`)
   const res = await driveFetch(env, link)
-  if (!res.ok) return new Response('Not found', { status: 404 })
+  if (!res.ok) return new Response('Not found', { status: 404, headers: { 'Cache-Control': 'no-store' } })
   return new Response(res.body, {
     headers: {
       'Content-Type': res.headers.get('Content-Type') || 'image/jpeg',

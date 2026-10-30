@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { ALBUM_DEFAULTS } from '../../utils/albumConfig.js'
 import Ceremony from './Ceremony.jsx'
+import Thumb from './Thumb.jsx'
 import '../../styles/media.css'
 
 // Guest-facing album, opened from the QR code (`/fotos?k=...`). No invitation
@@ -243,7 +244,7 @@ function Ranking({ votes, cat, setCat, onOpen, mine, onPrize, countdown, onCerem
             <li key={it.id} className={`mp-rank-item ${i === 0 ? 'first' : ''}`}>
               <button type="button" className="mp-rank-open" onClick={() => onOpen(list, i)} aria-label={`Abrir puesto ${i + 1}`}>
                 <span className="mp-rank-pos">{i + 1}</span>
-                <span className="mp-rank-thumb"><img src={it.thumb} alt="" loading="lazy" />{it.type === 'video' && <em><Icon d={ICONS.play} size={12} /></em>}</span>
+                <span className="mp-rank-thumb"><Thumb item={it} compact />{it.type === 'video' && <em><Icon d={ICONS.play} size={12} /></em>}</span>
                 <span className="mp-rank-info">
                   <b>{it.votes} {it.votes === 1 ? 'voto' : 'votos'}{mine[it.type].includes(it.id) && <span className="mp-yours"> · tu voto</span>}</b>
                   <span className="mp-rank-bar"><i style={{ width: `${Math.max(6, (it.votes / top) * 100)}%` }} /></span>
@@ -710,7 +711,7 @@ export default function MediaPage() {
                 {col.map(({ it, i }) => (
                   <div key={it.id} className="mp-tile-wrap">
                     <button className="mp-tile" style={{ aspectRatio: ratio(it) }} onClick={() => setViewer({ list: shown, index: i })} aria-label={`Abrir ${it.type === 'video' ? 'video' : 'foto'} ${i + 1}`}>
-                      <img src={it.thumb} alt="" loading="lazy" decoding="async" />
+                      <Thumb item={it} />
                       {it.type === 'video' && <span className="mp-badge"><Icon d={ICONS.play} size={14} />{fmtDuration(it.duration)}</span>}
                     </button>
                     <VoteButton item={it} mine={mine} open={votingOpen} onVote={vote} />

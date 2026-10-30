@@ -271,3 +271,10 @@
 @media (max-width: 420px) {
   .mp-countdown span { min-width: 50px; }
 }
+
+/* ── Placeholder while a video's preview is being generated (Thumb.jsx) ── */
+.mp-ph { width: 100%; height: 100%; min-height: 100%; display: grid; place-content: center; justify-items: center; gap: 6px; color: var(--mp-ink-soft, rgb(43 42 40 / .6)); background: linear-gradient(135deg, rgb(43 42 40 / .06), rgb(43 42 40 / .12)); }
+.mp-ph small { font-size: 12px; letter-spacing: .04em; }
+.mp-ph.is-busy svg { animation: mp-ph-pulse 1.3s ease-in-out infinite; }
+@keyframes mp-ph-pulse { 50% { opacity: .35; transform: scale(.88); } }
+.mp-rank-thumb .mp-ph, .aa-pick .mp-ph, .aa-award-thumb .mp-ph, .cer-pod .mp-ph { min-height: 0; }

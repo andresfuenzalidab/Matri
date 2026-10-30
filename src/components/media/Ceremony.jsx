@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { createPortal } from 'react-dom'
+import Thumb from './Thumb.jsx'
 import '../../styles/ceremony.css'
 
 // Interactive awards ceremony: each category is revealed from third place up to
@@ -181,7 +182,7 @@ export default function Ceremony({ ranking, cfg, names, onClose }) {
                     {list.map((it, idx) => (
                       <li key={it.id}>
                         <span className="cer-pod-n">{idx + 1}</span>
-                        <img src={it.thumb} alt="" />
+                        <Thumb item={it} compact />
                         <span>{it.votes} {it.votes === 1 ? 'voto' : 'votos'}</span>
                       </li>
                     ))}

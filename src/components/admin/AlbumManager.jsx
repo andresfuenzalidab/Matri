@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import Ceremony from '../media/Ceremony.jsx'
+import Thumb from '../media/Thumb.jsx'
 import '../../styles/album-admin.css'
 
 const CHUNK = 15 // matches the server cap per delete call
@@ -177,7 +178,7 @@ export default function AlbumManager({ token, mediaKey, onReset }) {
               <ol>
                 {ranking[cat].slice(0, 3).map((it, i) => (
                   <li key={it.id}>
-                    <a href={it.src} target="_blank" rel="noopener noreferrer" className="aa-award-thumb" title="Abrir"><img src={it.thumb} alt="" /></a>
+                    <a href={it.src} target="_blank" rel="noopener noreferrer" className="aa-award-thumb" title="Abrir"><Thumb item={it} compact /></a>
                     <span><b>{i + 1}.</b> {it.votes} {it.votes === 1 ? 'voto' : 'votos'}<br /><span className="aa-who">{uploaders[it.id] ? `Subió: ${uploaders[it.id]}` : 'Sin nombre registrado'}</span></span>
                   </li>
                 ))}
@@ -215,7 +216,7 @@ export default function AlbumManager({ token, mediaKey, onReset }) {
             return (
               <div key={it.id} className={`aa-tile ${on ? 'on' : ''}`}>
                 <button type="button" className="aa-pick" onClick={() => toggle(it.id)} aria-pressed={on} aria-label={`${on ? 'Quitar' : 'Seleccionar'} ${it.name}`}>
-                  <img src={it.thumb} alt="" loading="lazy" />
+                  <Thumb item={it} compact />
                   <span className="aa-check" aria-hidden="true">{on ? '✓' : ''}</span>
                   {it.type === 'video' && <span className="aa-kind">▶ video</span>}
                   {counts[it.id] > 0 && <span className="aa-votes">♥ {counts[it.id]}</span>}
