@@ -6,6 +6,12 @@ export const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'ju
 export const DIAS = ['lun', 'mar', 'mié', 'jue', 'vie', 'sáb', 'dom']
 export const ESTADOS = { pendiente: 'Pendiente', en_curso: 'En curso', listo: 'Listo' }
 
+// Priority of a task. Plans saved before priorities existed have none: they count as "media".
+export const PRIORIDADES = { alta: 'Alta', media: 'Media', baja: 'Baja' }
+export const ORDEN_PRIO = ['alta', 'media', 'baja']
+export const prio = h => (PRIORIDADES[h.prioridad] ? h.prioridad : 'media')
+const PRIO_ICS = { alta: 1, media: 5, baja: 9 }
+
 const pad = n => String(n).padStart(2, '0')
 export const toISO = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
 export const parse = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d) }
@@ -24,7 +30,7 @@ export function semilla() {
   const A = ['andres'], AP = ['andres', 'pareja']
   const h = (titulo, fecha, eventoId, categoria, responsables, extra = {}) => ({
     id: uid(), titulo, fecha, fechaFin: null, hora: null, tipo: 'tarea', eventoId, categoria,
-    responsables, estado: 'pendiente', notas: '', sugerido: false, updatedAt: '2026-10-15T00:00:00.000Z', ...extra,
+    responsables, estado: 'pendiente', prioridad: 'media', notas: '', sugerido: false, updatedAt: '2026-10-15T00:00:00.000Z', ...extra,
   })
   return {
     version: 1,
@@ -44,33 +50,33 @@ export function semilla() {
     categorias: ['Música', 'Invitados', 'Banquete', 'Ceremonia', 'Decoración', 'Proveedores', 'Vestuario', 'Trámites', 'Viaje', 'Otros'],
     hitos: [
       h('Definir música final y dinámicas (Thunderstruck, Shrek, etc.)', '2026-09-29', 'simbolico', 'Música', AP, { notas: 'Llevar la lista cerrada a la reunión con el DJ del 29 de octubre.' }),
-      h('Sacar licencia internacional de conducir', '2026-09-30', 'luna', 'Viaje', A, { notas: 'Deadline fines de septiembre.' }),
-      h('Contratar seguros de viaje y ponerse las vacunas', '2026-09-30', 'luna', 'Viaje', AP, { notas: 'Deadline fines de septiembre. El seguro debe cubrir del 9 nov al 6 dic.' }),
-      h('Confirmar invitados final', '2026-10-01', 'simbolico', 'Invitados', AP),
-      h('Armar mesas', '2026-10-01', 'simbolico', 'Invitados', AP, { fechaFin: '2026-10-07', notas: 'Primera semana de octubre.' }),
+      h('Sacar licencia internacional de conducir', '2026-09-30', 'luna', 'Viaje', A, { notas: 'Deadline fines de septiembre.', prioridad: 'alta' }),
+      h('Contratar seguros de viaje y ponerse las vacunas', '2026-09-30', 'luna', 'Viaje', AP, { notas: 'Deadline fines de septiembre. El seguro debe cubrir del 9 nov al 6 dic.', prioridad: 'alta' }),
+      h('Confirmar invitados final', '2026-10-01', 'simbolico', 'Invitados', AP, { prioridad: 'alta' }),
+      h('Armar mesas', '2026-10-01', 'simbolico', 'Invitados', AP, { fechaFin: '2026-10-07', notas: 'Primera semana de octubre.', prioridad: 'alta' }),
       h('Degustación', '2026-10-02', 'simbolico', 'Banquete', AP),
-      h('Definir menú post degustación', '2026-10-02', 'simbolico', 'Banquete', AP),
+      h('Definir menú post degustación', '2026-10-02', 'simbolico', 'Banquete', AP, { prioridad: 'alta' }),
       h('Definir estructura de la ceremonia', '2026-10-09', 'simbolico', 'Ceremonia', AP, { notas: 'Plazo.' }),
-      h('Manifestación en el Registro Civil', '2026-10-14', 'civil', 'Trámites', AP),
+      h('Manifestación en el Registro Civil', '2026-10-14', 'civil', 'Trámites', AP, { prioridad: 'alta' }),
       h('Preparar documentos de participación en los gananciales', '2026-10-14', 'civil', 'Trámites', AP),
-      h('Coordinar testigos', '2026-10-14', 'civil', 'Trámites', AP),
+      h('Coordinar testigos', '2026-10-14', 'civil', 'Trámites', AP, { prioridad: 'alta' }),
       h('Pedirse el día en el trabajo', '2026-10-14', 'civil', 'Trámites', AP),
       h('Reunión con videógrafos', '2026-10-15', 'simbolico', 'Proveedores', AP),
-      h('Ceremonia civil', '2026-10-17', 'civil', 'Ceremonia', AP, { tipo: 'clave', notas: 'Laguna de Aculeo.' }),
-      h('Pedir certificado de matrimonio en línea', '2026-10-19', 'civil', 'Trámites', A, { sugerido: true, notas: 'Gratis en registrocivil.cl. Guardarlo en PDF para el viaje.' }),
-      h('Revisar vigencia de pasaportes', '2026-10-20', 'luna', 'Viaje', AP, { sugerido: true, notas: 'Deben estar vigentes al menos 6 meses después del 6 de diciembre.' }),
+      h('Ceremonia civil', '2026-10-17', 'civil', 'Ceremonia', AP, { tipo: 'clave', notas: 'Laguna de Aculeo.', prioridad: 'alta' }),
+      h('Pedir certificado de matrimonio en línea', '2026-10-19', 'civil', 'Trámites', A, { sugerido: true, prioridad: 'baja', notas: 'Gratis en registrocivil.cl. Guardarlo en PDF para el viaje.' }),
+      h('Revisar vigencia de pasaportes', '2026-10-20', 'luna', 'Viaje', AP, { sugerido: true, prioridad: 'baja', notas: 'Deben estar vigentes al menos 6 meses después del 6 de diciembre.' }),
       h('Reunión con DJ', '2026-10-29', 'simbolico', 'Música', AP, { notas: 'Repasar música final y dinámicas.' }),
-      h('Sacar permiso de viaje a Seychelles', '2026-10-30', 'luna', 'Viaje', AP, { notas: 'Sacarlo el 30 de octubre.' }),
-      h('Prueba final de vestido y traje', '2026-10-31', 'simbolico', 'Vestuario', AP, { sugerido: true }),
-      h('Escribir los votos', '2026-10-31', 'simbolico', 'Ceremonia', AP, { sugerido: true }),
-      h('Timeline del día hora a hora y compartirlo con proveedores', '2026-11-01', 'simbolico', 'Proveedores', AP, { sugerido: true }),
+      h('Sacar permiso de viaje a Seychelles', '2026-10-30', 'luna', 'Viaje', AP, { notas: 'Sacarlo el 30 de octubre.', prioridad: 'alta' }),
+      h('Prueba final de vestido y traje', '2026-10-31', 'simbolico', 'Vestuario', AP, { sugerido: true, prioridad: 'baja' }),
+      h('Escribir los votos', '2026-10-31', 'simbolico', 'Ceremonia', AP, { sugerido: true, prioridad: 'baja' }),
+      h('Timeline del día hora a hora y compartirlo con proveedores', '2026-11-01', 'simbolico', 'Proveedores', AP, { sugerido: true, prioridad: 'baja' }),
       h('Definir extras de la ceremonia: arco completo o no', '2026-11-02', 'simbolico', 'Decoración', AP, { notas: 'Plazo.' }),
       h('Definir luces del cóctel: solas o con pelotitas', '2026-11-02', 'simbolico', 'Decoración', AP, { notas: 'Plazo.' }),
-      h('Pagos finales a proveedores y sobres de propina', '2026-11-04', 'simbolico', 'Proveedores', AP, { sugerido: true }),
-      h('Armar maletas de la luna de miel', '2026-11-05', 'luna', 'Viaje', AP, { sugerido: true, notas: 'Antes del simbólico, para no correr el fin de semana.' }),
-      h('Matrimonio simbólico', '2026-11-06', 'simbolico', 'Ceremonia', AP, { tipo: 'clave', notas: 'Altos del Paico.' }),
-      h('Check-in online de los vuelos', '2026-11-08', 'luna', 'Viaje', AP, { sugerido: true }),
-      h('Luna de miel en Seychelles', '2026-11-09', 'luna', 'Viaje', AP, { tipo: 'clave', fechaFin: '2026-12-06' }),
+      h('Pagos finales a proveedores y sobres de propina', '2026-11-04', 'simbolico', 'Proveedores', AP, { sugerido: true, prioridad: 'alta' }),
+      h('Armar maletas de la luna de miel', '2026-11-05', 'luna', 'Viaje', AP, { sugerido: true, prioridad: 'baja', notas: 'Antes del simbólico, para no correr el fin de semana.' }),
+      h('Matrimonio simbólico', '2026-11-06', 'simbolico', 'Ceremonia', AP, { tipo: 'clave', notas: 'Altos del Paico.', prioridad: 'alta' }),
+      h('Check-in online de los vuelos', '2026-11-08', 'luna', 'Viaje', AP, { sugerido: true, prioridad: 'baja' }),
+      h('Luna de miel en Seychelles', '2026-11-09', 'luna', 'Viaje', AP, { tipo: 'clave', fechaFin: '2026-12-06', prioridad: 'alta' }),
       h('Última reunión con la banquetera', null, 'simbolico', 'Banquete', AP, { notas: 'Explicarles lo que escribimos en el Excel.' }),
       h('Reunión con la fotógrafa', null, 'simbolico', 'Proveedores', AP),
       h('Cotizar extras (cervezas, vinos, cotillón, etc.)', null, 'simbolico', 'Banquete', AP),
@@ -120,7 +126,7 @@ function rangoHora(h) {
 function descripcion(h, doc) {
   const resp = h.responsables.map(id => (doc.responsables.find(r => r.id === id) || {}).nombre).filter(Boolean).join(', ')
   const ev = doc.eventos.find(e => e.id === h.eventoId)
-  return [h.notas, resp && 'Responsables: ' + resp, ev && 'Evento: ' + ev.nombre, 'Estado: ' + ESTADOS[h.estado]].filter(Boolean).join('\n')
+  return [h.notas, resp && 'Responsables: ' + resp, ev && 'Evento: ' + ev.nombre, 'Estado: ' + ESTADOS[h.estado], 'Prioridad: ' + PRIORIDADES[prio(h)]].filter(Boolean).join('\n')
 }
 
 function lugar(h, doc) {
@@ -163,6 +169,7 @@ export function generarICS(hitos, doc, nombreCal) {
     else L.push('DTSTART;VALUE=DATE:' + ymd(h.fecha), 'DTEND;VALUE=DATE:' + ymd(addDays(h.fechaFin || h.fecha, 1)))
     L.push('SUMMARY:' + e((h.estado === 'listo' ? '✓ ' : '') + h.titulo), 'DESCRIPTION:' + e(descripcion(h, doc)))
     const l = lugar(h, doc); if (l) L.push('LOCATION:' + e(l))
+    L.push('PRIORITY:' + PRIO_ICS[prio(h)])
     if (h.tipo === 'tarea' && h.estado !== 'listo') L.push('BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:' + e(h.titulo), 'TRIGGER:-PT15H', 'END:VALARM')
     L.push('END:VEVENT')
   }

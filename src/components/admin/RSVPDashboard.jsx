@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useApp } from '../../context/AppContext'
 import { downloadXLSX } from '../../utils/spreadsheet.js'
 import { totalInvitedHeadcount, invitedHeadcount } from '../../utils/inviteCount.js'
 import { useInvitationFilters, compareByResponseRecency } from '../../hooks/useInvitationFilters.js'
 import InvitationFilterBar from './InvitationFilterBar.jsx'
+import RsvpEditor from './RsvpEditor.jsx'
 
 const answered = i => i.attending !== null && i.attending !== undefined
 
@@ -51,12 +52,16 @@ export default function RSVPDashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
-  useEffect(() => {
-    fetch('/api/admin/invitations', { headers: { 'X-Invite-Token': token } })
+  // Invitation being edited by hand (confirm / cancel on someone's behalf).
+  const [editing, setEditing] = useState(null)
+
+  const load = useCallback(() => {
+    return fetch('/api/admin/invitations', { headers: { 'X-Invite-Token': token } })
       .then(r => r.json())
       .then(d => { setInvitations(Array.isArray(d) ? d : []); setLoading(false) })
       .catch(() => { setError('Error al cargar.'); setLoading(false) })
   }, [token])
+  useEffect(() => { load() }, [load])
 
   // Default order here is response recency (most recent first, no-response
   // last) — not the shared "preserve server order" InvitationsManager uses
@@ -144,6 +149,14 @@ export default function RSVPDashboard() {
         </button>
       </div>
 
+      {editing && (
+        <RsvpEditor
+          invitation={editing} token={token}
+          onClose={() => setEditing(null)}
+          onSaved={() => { setEditing(null); load() }}
+        />
+      )}
+
       <div className="admin-table-wrap">
         <table className="admin-table">
           <thead>
@@ -155,6 +168,7 @@ export default function RSVPDashboard() {
               <th>Mensaje</th>
               <th>Restricción dieta</th>
               <th>Respondido</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
@@ -174,6 +188,9 @@ export default function RSVPDashboard() {
                 <td style={{ opacity: 0.75 }}>{i.dietary_restriction || '—'}</td>
                 <td style={{ opacity: 0.55, fontSize: '0.8rem', whiteSpace: 'nowrap' }}>
                   {i.submitted_at ? new Date(i.submitted_at).toLocaleDateString('es-CL') : '—'}
+                </td>
+                <td>
+                  <button className="btn btn-ghost" style={{ fontSize: '0.8rem' }} onClick={() => setEditing(i)}>Editar</button>
                 </td>
               </tr>
             ))}

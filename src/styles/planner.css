@@ -208,3 +208,15 @@
   .wp-filters select, .wp-filters input { flex: 1 1 140px; }
 }
 @media (prefers-reduced-motion: reduce) { .wp-root * { transition: none !important; } }
+
+/* Priority */
+.wp-prio { border: 0; border-radius: 99px; padding: 2px 9px; font: inherit; font-size: 11.5px; font-weight: 700; letter-spacing: .02em; cursor: pointer; background: color-mix(in srgb, var(--pc) 15%, transparent); color: var(--pc); }
+.wp-prio:hover { background: color-mix(in srgb, var(--pc) 28%, transparent); }
+.wp-prio-alta { --pc: var(--wp-danger); }
+.wp-prio-media { --pc: var(--color-accent-700, var(--color-accent)); }
+.wp-prio-baja { --pc: var(--wp-muted); }
+.wp-prio-title { display: flex; align-items: center; gap: 10px; }
+.wp-prio-title i { width: 10px; height: 10px; border-radius: 50%; background: var(--pc); }
+.wp-prio-title.wp-prio-alta, .wp-prio-title.wp-prio-media, .wp-prio-title.wp-prio-baja { color: var(--color-accent); }
+.wp-switch { display: inline-flex; align-items: center; gap: 7px; font-size: 14px; padding: 0 4px; cursor: pointer; white-space: nowrap; }
+.wp-grp-prio .wp-rows { gap: 8px; }

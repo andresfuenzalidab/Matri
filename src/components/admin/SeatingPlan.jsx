@@ -39,10 +39,6 @@ function Icon({ name, size = 20 }) {
       return <svg {...p}><circle cx="12" cy="12" r="8" /></svg>
     case 'pencil':
       return <svg {...p}><path d="M4 20l1-4 11-11 3 3L8 19z" /></svg>
-    case 'rectangle':
-      return <svg {...p}><rect x="3.5" y="6.5" width="17" height="11" rx="1.5" /></svg>
-    case 'circle':
-      return <svg {...p}><circle cx="12" cy="12" r="8" /></svg>
     case 'undo':
       return <svg {...p}><path d="M9 14 4 9l5-5" /><path d="M4 9h10a6 6 0 0 1 0 12h-3" /></svg>
     case 'redo':
@@ -65,6 +61,10 @@ function Icon({ name, size = 20 }) {
       return <svg {...p}><path d="M5 19c0-9 5-14 14-14 0 9-5 14-14 14z" /><path d="M5 19 13 11" /></svg>
     case 'close':
       return <svg {...p}><path d="M6 6l12 12M18 6 6 18" /></svg>
+    case 'tools':
+      return <svg {...p}><rect x="3.5" y="4.5" width="7" height="7" rx="1.5" /><rect x="13.5" y="4.5" width="7" height="7" rx="1.5" /><rect x="3.5" y="14.5" width="7" height="5" rx="1.5" /><circle cx="17" cy="17" r="3" /></svg>
+    case 'panel':
+      return <svg {...p}><rect x="3.5" y="4.5" width="17" height="15" rx="2" /><path d="M14.5 4.5v15M17 9h.01M17 12.5h.01M17 16h.01" /></svg>
     default:
       return null
   }
@@ -137,6 +137,10 @@ function Segmented({ value, options, onChange }) {
   )
 }
 
+function readPanelPref(key) {
+  try { return localStorage.getItem(`sp-hide-${key}`) !== '1' } catch { return true }
+}
+
 // ── Main ─────────────────────────────────────────────────────────────────
 
 export default function SeatingPlan({ onClose }) {
@@ -173,6 +177,14 @@ export default function SeatingPlan({ onClose }) {
   const toastTimer = useRef(null)
 
   const [sideOpen, setSideOpen] = useState(() => typeof window === 'undefined' || window.innerWidth > 820)
+  // The add-tables toolbar and the right-hand panel (table summary / selected-table
+  // actions) can be hidden to see more of the floor. Remembered between visits.
+  const [paletteOpen, setPaletteOpen] = useState(() => readPanelPref('palette'))
+  const [inspectorOpen, setInspectorOpen] = useState(() => readPanelPref('inspector'))
+  const togglePanel = (key, set) => set(open => {
+    try { localStorage.setItem(`sp-hide-${key}`, open ? '1' : '0') } catch { /* storage blocked */ }
+    return !open
+  })
   const [query, setQuery] = useState('')
   const [mode, setMode] = useState('all') // all | pending | seated
   const [includePending, setIncludePending] = useState(false)
@@ -889,6 +901,13 @@ export default function SeatingPlan({ onClose }) {
             <Icon name="people" size={18} />
           </button>
 
+          <button type="button" className={`sp-side-toggle sp-toggle-2 ${paletteOpen ? '' : 'is-off'}`} onClick={() => togglePanel('palette', setPaletteOpen)} aria-pressed={paletteOpen} aria-label={paletteOpen ? 'Ocultar barra de herramientas' : 'Mostrar barra de herramientas'} title={paletteOpen ? 'Ocultar mesas y figuras' : 'Mostrar mesas y figuras'}>
+            <Icon name="tools" size={18} />
+          </button>
+          <button type="button" className={`sp-side-toggle sp-toggle-right ${inspectorOpen ? '' : 'is-off'}`} onClick={() => togglePanel('inspector', setInspectorOpen)} aria-pressed={inspectorOpen} aria-label={inspectorOpen ? 'Ocultar panel de mesas' : 'Mostrar panel de mesas'} title={inspectorOpen ? 'Ocultar resumen y opciones' : 'Mostrar resumen y opciones'}>
+            <Icon name="panel" size={18} />
+          </button>
+
           <div
             ref={viewportRef}
             className="sp-viewport"
@@ -1016,7 +1035,7 @@ export default function SeatingPlan({ onClose }) {
           </div>
 
           {/* Palette */}
-          <div className="sp-palette" role="toolbar" aria-label="Agregar al plano">
+          {paletteOpen && <div className="sp-palette" role="toolbar" aria-label="Agregar al plano">
             <div className="sp-palette-group">
               <span className="sp-palette-label">Mesas</span>
               <button type="button" className="sp-add" onPointerDown={e => startPayloadDrag(e, { kind: 'new', spec: { type: 'table', shape: 'round' }, label: 'Mesa redonda', color: 'var(--color-accent)', count: 0, onClick: () => addElement({ type: 'table', shape: 'round' }) })}>
@@ -1046,7 +1065,7 @@ export default function SeatingPlan({ onClose }) {
                 <Icon name="circle" /> <span>Círculo</span>
               </button>
             </div>
-          </div>
+          </div>}
 
           {/* Zoom */}
           <div className="sp-zoom">
@@ -1060,7 +1079,7 @@ export default function SeatingPlan({ onClose }) {
           <p className="sp-hint">Rueda: zoom · Arrastra el fondo: mover · Clic en un invitado sentado: opciones · Supr: borrar mesa</p>
 
           {/* Inspector */}
-          <aside className="sp-inspector">
+          {inspectorOpen && <aside className="sp-inspector">
             {!selectedEl ? (
               <>
                 <h3>Resumen de mesas</h3>
@@ -1119,7 +1138,7 @@ export default function SeatingPlan({ onClose }) {
                 onClose={() => setSelected(null)}
               />
             )}
-          </aside>
+          </aside>}
 
           {toast && (
             <div className="sp-toast" role="status">

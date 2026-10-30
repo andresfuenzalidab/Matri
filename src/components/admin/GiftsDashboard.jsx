@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useApp } from '../../context/AppContext'
 import { normalizeImageUrl } from '../../utils/imageUrl.js'
 import { downloadXLSX, parseXLSXFile, cell } from '../../utils/spreadsheet.js'
+import GiftRecords from './GiftRecords.jsx'
 
 function formatCLP(n) {
   if (n == null) return '—'
@@ -57,8 +58,9 @@ export default function GiftsDashboard() {
   const [importing, setImporting] = useState(false)
   const [importResult, setImportResult] = useState(null)
 
-  async function load() {
-    setLoading(true)
+  // `silent` refreshes in place (no full-screen "Cargando"), so open panels keep their state.
+  async function load(silent = false) {
+    if (!silent) setLoading(true)
     try {
       const [giftsRes, invRes] = await Promise.all([
         fetch('/api/admin/gifts', { headers: { 'X-Invite-Token': token } }),
@@ -399,6 +401,8 @@ export default function GiftsDashboard() {
           </div>
         </div>
       )}
+
+      <GiftRecords token={token} trips={trips} invitations={invitations} onChanged={() => load(true)} />
 
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem', gap: '0.75rem', flexWrap: 'wrap' }}>
         <button className="btn btn-ghost" onClick={exportGifts}>

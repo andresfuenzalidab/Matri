@@ -1,15 +1,18 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback, createContext, useContext } from 'react'
 import { useApp } from '../../context/AppContext'
 import {
-  MESES, DIAS, ESTADOS, toISO, parse, addDays, diffDays, hoyISO, diaSemana, fechaCorta,
+  MESES, DIAS, ESTADOS, PRIORIDADES, ORDEN_PRIO, prio, toISO, parse, addDays, diffDays, hoyISO, diaSemana, fechaCorta,
   uid, ahora, clone, iniciales, semilla, esPlanValido, fusionar,
   linkGoogle, linkOutlook, generarICS,
 } from '../../utils/planner.js'
 import '../../styles/planner.css'
 
+// Lets any task chip cycle its priority without threading a callback through every view.
+const PrioCtx = createContext(null)
+
 const SAVE_DELAY = 700
 const POLL_MS = 20000
-const VISTAS = [['timeline', 'Timeline'], ['calendario', 'Calendario'], ['lista', 'Lista'], ['ajustes', 'Ajustes']]
+const VISTAS = [['prioridad', 'Prioridad'], ['timeline', 'Timeline'], ['calendario', 'Calendario'], ['lista', 'Lista'], ['ajustes', 'Ajustes']]
 
 function descargar(texto, archivo, mime) {
   const url = URL.createObjectURL(new Blob([texto], { type: mime }))
@@ -38,6 +41,8 @@ function cuando(h) {
 const atrasado = h => h.tipo === 'tarea' && h.estado !== 'listo' && h.fecha && (h.fechaFin || h.fecha) < hoyISO()
 
 function Meta({ doc, h, conFecha }) {
+  const onPrio = useContext(PrioCtx)
+  const p = prio(h)
   const ev = doc.eventos.find(e => e.id === h.eventoId) || { nombre: 'Sin evento', color: '#8A8C78' }
   const hoy = hoyISO()
   let rel = null
@@ -49,6 +54,11 @@ function Meta({ doc, h, conFecha }) {
   return (
     <div className="wp-meta">
       <Avatars doc={doc} h={h} />
+      {h.tipo === 'tarea' && (
+        <button type="button" className={`wp-prio wp-prio-${p}`} onClick={() => onPrio?.(h.id)} title="Cambiar prioridad" aria-label={`Prioridad ${PRIORIDADES[p]}. Cambiar`}>
+          {PRIORIDADES[p]}
+        </button>
+      )}
       <span className="wp-chip" style={{ '--c': ev.color }}><i />{ev.nombre}</span>
       {h.categoria && <span className="wp-chip wp-plain">{h.categoria}</span>}
       {conFecha
@@ -90,6 +100,29 @@ function Fila({ doc, h, onToggle, onEdit, drag }) {
 }
 
 // ── Views ────────────────────────────────────────────────────────────────
+
+// Main view: what still has to be done, most important first. Within a
+// priority, overdue tasks come first, then by date (undated last).
+function PorPrioridad({ doc, items, onToggle, onEdit, soloPend }) {
+  const orden = (a, b) =>
+    (atrasado(b) ? 1 : 0) - (atrasado(a) ? 1 : 0) ||
+    (a.fecha || '9999').localeCompare(b.fecha || '9999') ||
+    a.titulo.localeCompare(b.titulo)
+  // Key milestones (ceremonies, trip) aren't tasks to tick off — leave them out here.
+  const tareas = items.filter(h => h.tipo === 'tarea')
+  const grupos = ORDEN_PRIO.map(p => ({ p, hs: tareas.filter(h => prio(h) === p).sort(orden) })).filter(g => g.hs.length)
+  if (!grupos.length) {
+    return <p className="wp-empty">{soloPend ? '¡Todo al día! No quedan tareas pendientes con estos filtros.' : 'No hay tareas con estos filtros.'}</p>
+  }
+  return grupos.map(g => (
+    <section key={g.p} className="wp-grp wp-grp-prio">
+      <h2 className={`wp-prio-title wp-prio-${g.p}`}>
+        <i />{PRIORIDADES[g.p]} prioridad <small>{g.hs.filter(h => h.estado === 'listo').length}/{g.hs.length}</small>
+      </h2>
+      <div className="wp-rows">{g.hs.map(h => <Fila key={h.id} doc={doc} h={h} onToggle={onToggle} onEdit={onEdit} />)}</div>
+    </section>
+  ))
+}
 
 function Timeline({ doc, items, onToggle, onEdit }) {
   if (!items.length) return <p className="wp-empty">No hay hitos con estos filtros.</p>
@@ -254,6 +287,7 @@ function Lista({ doc, items, ui, setUi, onToggle, onEdit }) {
     grupos = doc.responsables.map(r => ({ t: r.nombre, c: r.color, hs: items.filter(h => h.responsables.includes(r.id)) }))
     grupos.push({ t: 'Sin responsable', hs: items.filter(h => !h.responsables.length) })
   } else if (a === 'estado') grupos = Object.entries(ESTADOS).map(([k, v]) => ({ t: v, hs: items.filter(h => h.estado === k) }))
+  else if (a === 'prioridad') grupos = ORDEN_PRIO.map(p => ({ t: `Prioridad ${PRIORIDADES[p].toLowerCase()}`, hs: items.filter(h => prio(h) === p) }))
   else if (a === 'categoria') {
     const cats = [...new Set([...doc.categorias, ...items.map(h => h.categoria)])]
     grupos = cats.map(c => ({ t: c || 'Sin categoría', hs: items.filter(h => h.categoria === c) }))
@@ -265,7 +299,7 @@ function Lista({ doc, items, ui, setUi, onToggle, onEdit }) {
       <div className="wp-list-head">
         <label className="wp-hint" htmlFor="wp-agrupar">Agrupar por</label>
         <select id="wp-agrupar" className="wp-field" style={{ width: 'auto' }} value={a} onChange={e => setUi(u => ({ ...u, agrupar: e.target.value }))}>
-          <option value="evento">Evento</option><option value="responsable">Responsable</option><option value="estado">Estado</option>
+          <option value="evento">Evento</option><option value="responsable">Responsable</option><option value="estado">Estado</option><option value="prioridad">Prioridad</option>
           <option value="categoria">Categoría</option><option value="nada">Sin agrupar</option>
         </select>
       </div>
@@ -388,8 +422,8 @@ function Ajustes({ doc, mutate, adapterName, onExportICS, onExportJSON, onImport
 
 function HitoModal({ doc, hito, fecha, filtros, onSave, onDelete, onClose }) {
   const nuevo = !hito
-  const [f, setF] = useState(() => hito ? { ...hito, sinFecha: !hito.fecha } : {
-    titulo: '', fecha: fecha || '', fechaFin: '', hora: '', tipo: 'tarea', estado: 'pendiente', sinFecha: false,
+  const [f, setF] = useState(() => hito ? { ...hito, prioridad: prio(hito), sinFecha: !hito.fecha } : {
+    titulo: '', fecha: fecha || '', fechaFin: '', hora: '', tipo: 'tarea', estado: 'pendiente', prioridad: 'media', sinFecha: false,
     eventoId: filtros.fEvento || doc.eventos[0]?.id || '', categoria: doc.categorias[0] || '',
     responsables: filtros.fResp && filtros.fResp !== '_sin' ? [filtros.fResp] : doc.responsables.map(r => r.id), notas: '',
   })
@@ -407,7 +441,7 @@ function HitoModal({ doc, hito, fecha, filtros, onSave, onDelete, onClose }) {
     if (!f.sinFecha && !fechaOk) return setError('Elige una fecha o marca «Fecha por definir».')
     if (fin && fin < fechaOk) return setError('La fecha «hasta» no puede ser anterior a la de inicio.')
     onSave({
-      titulo, fecha: fechaOk, fechaFin: fin, hora: fechaOk && f.hora ? f.hora : null, tipo: f.tipo, estado: f.estado,
+      titulo, fecha: fechaOk, fechaFin: fin, hora: fechaOk && f.hora ? f.hora : null, tipo: f.tipo, estado: f.estado, prioridad: f.prioridad,
       eventoId: f.eventoId, categoria: f.categoria, responsables: f.responsables, notas: (f.notas || '').trim(),
     })
   }
@@ -427,6 +461,10 @@ function HitoModal({ doc, hito, fecha, filtros, onSave, onDelete, onClose }) {
           <label>Estado
             <select value={f.estado} onChange={e => set('estado', e.target.value)}>
               {Object.entries(ESTADOS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+            </select></label>
+          <label className="wp-full">Prioridad
+            <select value={f.prioridad} onChange={e => set('prioridad', e.target.value)}>
+              {ORDEN_PRIO.map(p => <option key={p} value={p}>{PRIORIDADES[p]}</option>)}
             </select></label>
           <label>Fecha<input type="date" value={f.fecha || ''} disabled={f.sinFecha} onChange={e => set('fecha', e.target.value)} /></label>
           <label>Hasta (opcional)<input type="date" value={f.fechaFin || ''} disabled={f.sinFecha} onChange={e => set('fechaFin', e.target.value)} /></label>
@@ -483,9 +521,14 @@ export default function WeddingPlanner({ onClose }) {
   const [modal, setModal] = useState(null) // { id?, fecha? }
   const [ui, setUi] = useState(() => {
     const h = new Date()
-    let vista = 'timeline'
-    try { vista = localStorage.getItem('wp-vista') || vista } catch { /* storage blocked */ }
-    return { vista, fResp: '', fEvento: '', fEstado: '', q: '', agrupar: 'evento', mes: `${h.getFullYear()}-${String(h.getMonth() + 1).padStart(2, '0')}-01`, dia: null }
+    // "Prioridad" is the home view. (New storage key: the old one held the
+    // previous default, 'timeline', for everyone who had opened the planner.)
+    let vista = 'prioridad', soloPend = true
+    try {
+      vista = localStorage.getItem('wp-vista-v2') || vista
+      soloPend = localStorage.getItem('wp-solo-pend') !== '0'
+    } catch { /* storage blocked */ }
+    return { vista, soloPend, fResp: '', fEvento: '', fEstado: '', fPrio: '', q: '', agrupar: 'evento', mes: `${h.getFullYear()}-${String(h.getMonth() + 1).padStart(2, '0')}-01`, dia: null }
   })
 
   const docRef = useRef(null)
@@ -602,9 +645,11 @@ export default function WeddingPlanner({ onClose }) {
 
   const visibles = useMemo(() => {
     if (!doc) return []
-    const { fResp, fEvento, fEstado, q } = ui
+    const { fResp, fEvento, fEstado, fPrio, soloPend, q } = ui
     const qq = q.trim().toLowerCase()
     return doc.hitos.filter(h => !h.deleted).filter(h =>
+      (!soloPend || fEstado === 'listo' || h.estado !== 'listo') &&
+      (!fPrio || prio(h) === fPrio) &&
       (!fResp || (fResp === '_sin' ? !h.responsables.length : h.responsables.includes(fResp))) &&
       (!fEvento || h.eventoId === fEvento) &&
       (!fEstado || (fEstado === 'atrasado' ? atrasado(h) : h.estado === fEstado)) &&
@@ -667,8 +712,21 @@ export default function WeddingPlanner({ onClose }) {
 
   const cambiarVista = v => {
     setUi(u => ({ ...u, vista: v }))
-    try { localStorage.setItem('wp-vista', v) } catch { /* storage blocked */ }
+    try { localStorage.setItem('wp-vista-v2', v) } catch { /* storage blocked */ }
   }
+  const toggleSoloPend = v => {
+    setUi(u => ({ ...u, soloPend: v }))
+    try { localStorage.setItem('wp-solo-pend', v ? '1' : '0') } catch { /* storage blocked */ }
+  }
+  // Clicking a priority chip cycles alta → media → baja → alta.
+  const onPrio = useCallback(id => {
+    mutate(d => {
+      const h = d.hitos.find(x => x.id === id)
+      if (!h) return
+      h.prioridad = ORDEN_PRIO[(ORDEN_PRIO.indexOf(prio(h)) + 1) % ORDEN_PRIO.length]
+      h.updatedAt = ahora()
+    })
+  }, [mutate])
 
   if (loadError) {
     return (
@@ -747,17 +805,27 @@ export default function WeddingPlanner({ onClose }) {
                   {Object.entries(ESTADOS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                   <option value="atrasado">Atrasados</option>
                 </select>
+                <select aria-label="Prioridad" value={ui.fPrio} onChange={e => setUi(u => ({ ...u, fPrio: e.target.value }))}>
+                  <option value="">Toda prioridad</option>
+                  {ORDEN_PRIO.map(p => <option key={p} value={p}>Prioridad {PRIORIDADES[p].toLowerCase()}</option>)}
+                </select>
                 <input type="search" placeholder="Buscar…" aria-label="Buscar" value={ui.q} onChange={e => setUi(u => ({ ...u, q: e.target.value }))} />
+                <label className="wp-switch">
+                  <input type="checkbox" checked={ui.soloPend} onChange={e => toggleSoloPend(e.target.checked)} /> Solo pendientes
+                </label>
               </div>
             )}
           </div>
 
+          <PrioCtx.Provider value={onPrio}>
           <div className="wp-view">
+            {ui.vista === 'prioridad' && <PorPrioridad doc={doc} items={visibles} soloPend={ui.soloPend} onToggle={onToggle} onEdit={id => setModal({ id })} />}
             {ui.vista === 'timeline' && <Timeline doc={doc} items={visibles} onToggle={onToggle} onEdit={id => setModal({ id })} />}
             {ui.vista === 'calendario' && <Calendario doc={doc} items={visibles} ui={ui} setUi={setUi} onToggle={onToggle} onEdit={id => setModal({ id })} onNew={fecha => setModal({ fecha })} onMove={onMove} />}
             {ui.vista === 'lista' && <Lista doc={doc} items={visibles} ui={ui} setUi={setUi} onToggle={onToggle} onEdit={id => setModal({ id })} />}
             {ui.vista === 'ajustes' && <Ajustes doc={doc} mutate={mutate} adapterName="la base de datos del sitio (compartida)" onExportICS={exportICS} onExportJSON={exportJSON} onImport={importar} onReset={restaurar} />}
           </div>
+          </PrioCtx.Provider>
         </div>
       </div>
 

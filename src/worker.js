@@ -25,6 +25,7 @@ import * as adminStoryPhotos from '../functions/api/admin/story-photos.js'
 import * as adminResetRsvp from '../functions/api/admin/reset-rsvp.js'
 import * as adminResetGifts from '../functions/api/admin/reset-gifts.js'
 import * as adminUpload from '../functions/api/admin/upload.js'
+import * as adminGiftReservations from '../functions/api/admin/gift-reservations.js'
 import * as adminPlanner from '../functions/api/admin/planner.js'
 import * as mediaModule from '../functions/api/media.js'
 import * as mediaThumb from '../functions/api/media/thumb.js'
@@ -93,6 +94,8 @@ export default {
         response = await dispatch(adminRsvp, method, request, env)
       } else if (path === '/api/admin/seating') {
         response = await dispatch(adminSeating, method, request, env)
+      } else if (path === '/api/admin/gift-reservations') {
+        response = await dispatch(adminGiftReservations, method, request, env)
       } else if (path === '/api/admin/planner') {
         response = await dispatch(adminPlanner, method, request, env)
       } else if (path === '/api/media') {

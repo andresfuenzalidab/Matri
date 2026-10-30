@@ -455,3 +455,12 @@
 }
 .sp-seat-menu:hover { background: #a4343a; color: #fdf9f0; }
 @keyframes sp-pop { from { opacity: 0; } }
+
+/* Hide/show the toolbar and the right-hand panel */
+.sp-toggle-2 { left: 60px; }
+.sp-toggle-right { left: auto; right: 14px; }
+.sp-side-toggle.is-off { opacity: 0.6; background: transparent; }
+@media (max-width: 820px) {
+  .sp-toggle-right { top: auto; bottom: 14px; right: auto; left: 14px; }
+  .sp-toggle-2 { left: 60px; }
+}
