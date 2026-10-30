@@ -17,6 +17,8 @@ export default function AlbumManager({ token, mediaKey }) {
   const [loadingMore, setLoadingMore] = useState(false)
   const [counts, setCounts] = useState({})
   const [totals, setTotals] = useState({ image: 0, video: 0 })
+  const [uploaders, setUploaders] = useState({}) // fileId -> who uploaded it (private)
+  const [ranking, setRanking] = useState({ image: [], video: [] })
   const [filter, setFilter] = useState('all')
   const [selected, setSelected] = useState(() => new Set())
   const [busy, setBusy] = useState('') // message while deleting
@@ -32,11 +34,14 @@ export default function AlbumManager({ token, mediaKey }) {
 
   const loadCounts = useCallback(async () => {
     try {
-      const res = await fetch('/api/admin/media', { headers })
+      const res = await fetch(`/api/admin/media${mediaKey ? `?k=${encodeURIComponent(mediaKey)}` : ''}`, { headers })
       const d = await res.json().catch(() => ({}))
-      if (res.ok) { setCounts(d.counts || {}); setTotals(d.totals || { image: 0, video: 0 }) }
+      if (res.ok) {
+        setCounts(d.counts || {}); setTotals(d.totals || { image: 0, video: 0 })
+        setUploaders(d.uploaders || {}); setRanking(d.ranking || { image: [], video: [] })
+      }
     } catch { /* counts are optional decoration */ }
-  }, [headers])
+  }, [headers, mediaKey])
 
   const loadFirst = useCallback(async () => {
     setStatus('loading'); setError('')
@@ -117,6 +122,25 @@ export default function AlbumManager({ token, mediaKey }) {
         Votos hasta ahora: <strong>{totals.image}</strong> en fotos · <strong>{totals.video}</strong> en videos.
       </p>
 
+      <div className="aa-awards">
+        <div className="aa-awards-title">Premiación (ranking actual)</div>
+        {[['image', 'Mejores fotos'], ['video', 'Mejores videos']].map(([cat, title]) => (
+          <div key={cat} className="aa-award">
+            <strong>{title}</strong>
+            {ranking[cat].length === 0 ? <span style={{ opacity: 0.55, fontSize: '0.82rem' }}>Aún sin votos</span> : (
+              <ol>
+                {ranking[cat].slice(0, 3).map((it, i) => (
+                  <li key={it.id}>
+                    <a href={it.src} target="_blank" rel="noopener noreferrer" className="aa-award-thumb" title="Abrir"><img src={it.thumb} alt="" /></a>
+                    <span><b>{i + 1}.</b> {it.votes} {it.votes === 1 ? 'voto' : 'votos'}<br /><span className="aa-who">{uploaders[it.id] ? `Subió: ${uploaders[it.id]}` : 'Sin nombre registrado'}</span></span>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </div>
+        ))}
+      </div>
+
       <div className="aa-toolbar">
         <div className="aa-seg" role="tablist">
           {[['all', 'Todo'], ['photos', 'Fotos'], ['videos', 'Videos']].map(([k, label]) => (
@@ -149,6 +173,7 @@ export default function AlbumManager({ token, mediaKey }) {
                   <span className="aa-check" aria-hidden="true">{on ? '✓' : ''}</span>
                   {it.type === 'video' && <span className="aa-kind">▶ video</span>}
                   {counts[it.id] > 0 && <span className="aa-votes">♥ {counts[it.id]}</span>}
+                  {uploaders[it.id] && <span className="aa-name" title={`Subió: ${uploaders[it.id]}`}>{uploaders[it.id]}</span>}
                 </button>
                 <a className="aa-open" href={it.src} target="_blank" rel="noopener noreferrer" aria-label="Abrir en pestaña nueva" title="Abrir">↗</a>
               </div>

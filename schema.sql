@@ -95,12 +95,13 @@ CREATE TABLE IF NOT EXISTS wedding_plan (
 
 CREATE TABLE IF NOT EXISTS media_votes (
   voter_id TEXT NOT NULL,
-  category TEXT NOT NULL CHECK (category IN ('image', 'video')),
   file_id TEXT NOT NULL,
+  category TEXT NOT NULL CHECK (category IN ('image', 'video')),
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (voter_id, category)
+  PRIMARY KEY (voter_id, file_id)
 );
 CREATE INDEX IF NOT EXISTS idx_media_votes_file ON media_votes(file_id);
+CREATE INDEX IF NOT EXISTS idx_media_votes_voter_cat ON media_votes(voter_id, category);
 
 CREATE TABLE IF NOT EXISTS media_files (
   file_id TEXT PRIMARY KEY,

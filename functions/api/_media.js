@@ -2,7 +2,7 @@
  * Shared bits of the guest album: how a Drive file becomes an album item, the
  * stored album settings, and the voting tallies. See media.js / media/*.js.
  */
-import { withAlbumDefaults, ALBUM_KEYS } from '../../src/utils/albumConfig.js'
+import { withAlbumDefaults, ALBUM_KEYS, votesLimit } from '../../src/utils/albumConfig.js'
 
 export const FILE_FIELDS = 'id,name,mimeType,size,createdTime,imageMediaMetadata(width,height,rotation),videoMediaMetadata(width,height,durationMillis)'
 
@@ -50,6 +50,7 @@ export async function readAlbumConfig(env) {
 }
 
 export const votingOpen = cfg => cfg.album_voting_open !== '0'
+export { votesLimit }
 
 const TOP = 10
 const VOTER_RE = /^[\w-]{16,64}$/
@@ -63,8 +64,8 @@ export function cookieVoterId(request) {
 
 export const voterCookie = id => `mv=${id}; Path=/; Max-Age=31536000; SameSite=Lax; Secure; HttpOnly`
 
-/** Live ranking per category, this voter's own picks, and overall totals. */
-export async function votePayload(env, voterId, k = '') {
+/** Live ranking per category, this voter's own picks (a list per category), and overall totals. */
+export async function votePayload(env, voterId, k = '', limit = 3) {
   const rank = async category => {
     const rows = await env.DB.prepare(`
       SELECT v.file_id, COUNT(*) AS votes, f.meta
@@ -84,11 +85,11 @@ export async function votePayload(env, voterId, k = '') {
     voterId ? env.DB.prepare('SELECT category, file_id FROM media_votes WHERE voter_id = ?').bind(voterId).all() : { results: [] },
     env.DB.prepare('SELECT category, COUNT(*) AS n FROM media_votes GROUP BY category').all(),
   ])
-  const mine = { image: null, video: null }
-  for (const r of mineRows.results) mine[r.category] = r.file_id
+  const mine = { image: [], video: [] }
+  for (const r of mineRows.results) mine[r.category].push(r.file_id)
   const totals = { image: 0, video: 0 }
   for (const r of totalRows.results) totals[r.category] = r.n
-  return { ranking: { image, video }, mine, totals }
+  return { ranking: { image, video }, mine, totals, limit }
 }
 
 /** Removes votes (and the cached snapshot) for deleted files. */

@@ -1,24 +1,52 @@
 import { requireAdmin, json, err, handleAuthError } from '../_auth.js'
 import { driveFetch, driveConfigured, albumFile, notConfigured } from '../_drive.js'
-import { purgeVotes, missingVotesTable } from '../_media.js'
+import { purgeVotes, missingVotesTable, votePayload, keyParam, readAlbumConfig, votesLimit } from '../_media.js'
 
 const MAX_IDS_PER_CALL = 15 // each file costs two Drive calls; stay under the Worker's subrequest cap
 
-// GET → vote count of every voted file, plus totals (for the admin manager).
+// Who uploaded each file (private Drive metadata — guests never get this).
+async function uploaderNames(env) {
+  const names = {}
+  if (!driveConfigured(env)) return names
+  let pageToken = ''
+  for (let page = 0; page < 5; page++) { // up to 5000 files
+    const p = new URLSearchParams({
+      q: `'${env.DRIVE_FOLDER_ID}' in parents and trashed = false`,
+      pageSize: '1000', supportsAllDrives: 'true', includeItemsFromAllDrives: 'true',
+      fields: 'nextPageToken,files(id,appProperties)',
+    })
+    if (pageToken) p.set('pageToken', pageToken)
+    const res = await driveFetch(env, `/files?${p}`)
+    if (!res.ok) break
+    const d = await res.json()
+    for (const f of d.files || []) if (f.appProperties?.uploader) names[f.id] = f.appProperties.uploader
+    pageToken = d.nextPageToken
+    if (!pageToken) break
+  }
+  return names
+}
+
+// GET → vote count of every voted file, totals, the provisional ranking, and who
+// uploaded each file (for the admin manager and the awards). Pass ?k= if MEDIA_KEY
+// is set, so the thumbnails in the ranking carry it.
 export async function onRequestGet({ request, env }) {
   try {
     await requireAdmin(request, env)
-    const [rows, voters] = await Promise.all([
-      env.DB.prepare('SELECT file_id, COUNT(*) AS votes FROM media_votes GROUP BY file_id').all(),
-      env.DB.prepare('SELECT category, COUNT(*) AS n FROM media_votes GROUP BY category').all(),
-    ])
-    const counts = {}
-    for (const r of rows.results) counts[r.file_id] = r.votes
-    const totals = { image: 0, video: 0 }
-    for (const r of voters.results) totals[r.category] = r.n
-    return json({ counts, totals })
+    const uploaders = await uploaderNames(env).catch(() => ({}))
+    try {
+      const [rows, cfg] = await Promise.all([
+        env.DB.prepare('SELECT file_id, COUNT(*) AS votes FROM media_votes GROUP BY file_id').all(),
+        readAlbumConfig(env),
+      ])
+      const counts = {}
+      for (const r of rows.results) counts[r.file_id] = r.votes
+      const { ranking, totals } = await votePayload(env, null, keyParam(env, request), votesLimit(cfg))
+      return json({ counts, totals, ranking, uploaders })
+    } catch (e) {
+      if (missingVotesTable(e)) return json({ counts: {}, totals: { image: 0, video: 0 }, ranking: { image: [], video: [] }, uploaders, missing: true })
+      throw e
+    }
   } catch (e) {
-    if (missingVotesTable(e)) return json({ counts: {}, totals: { image: 0, video: 0 }, missing: true })
     return handleAuthError(e) || err('Error interno.', 500)
   }
 }

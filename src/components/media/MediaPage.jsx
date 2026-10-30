@@ -11,6 +11,7 @@ const POLL_MS = 30000
 const RANK_POLL_MS = 8000
 const MAX_PARALLEL = 3
 const VOTER_STORAGE = 'matri-voter'
+const NAME_STORAGE = 'matri-uploader'
 const FONT_HREF = 'https://fonts.googleapis.com/css2?family=Pinyon+Script&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&display=swap'
 
 const qs = (extra = '') => {
@@ -121,11 +122,11 @@ function putFile(uploadUrl, file, onProgress) {
   })
 }
 
-async function uploadOne(file, onProgress) {
+async function uploadOne(file, uploader, onProgress) {
   const { uploadUrl } = await apiJson(`/api/media/upload-session${qs()}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name: file.name, mimeType: file.type, size: file.size }),
+    body: JSON.stringify({ name: file.name, mimeType: file.type, size: file.size, uploader }),
   })
   await putFile(uploadUrl, file, onProgress)
 }
@@ -159,9 +160,11 @@ function UploadTray({ queue, onRetry, onDismiss }) {
 
 // ── Voting pieces ────────────────────────────────────────────────────────
 
+const catWord = (type, plural) => (type === 'video' ? (plural ? 'videos' : 'video') : (plural ? 'fotos' : 'foto'))
+
 function VoteButton({ item, mine, open, onVote, big }) {
   if (!open) return null
-  const voted = mine[item.type] === item.id
+  const voted = mine[item.type].includes(item.id)
   return (
     <button
       type="button"
@@ -177,7 +180,7 @@ function VoteButton({ item, mine, open, onVote, big }) {
   )
 }
 
-function Ranking({ votes, cat, setCat, onOpen, mine }) {
+function Ranking({ votes, cat, setCat, onOpen, mine, hasPrize, onPrize }) {
   const list = (votes?.ranking?.[cat] || []).slice(0, 5)
   const top = list[0]?.votes || 1
   const closed = votes && !votes.open
@@ -187,6 +190,11 @@ function Ranking({ votes, cat, setCat, onOpen, mine }) {
         <h2 id="mp-rank-title"><Icon d={ICONS.trophy} size={22} /> {closed ? 'Ganadores' : 'Ranking en vivo'}</h2>
         {!closed && <span className="mp-live"><i />En vivo</span>}
       </div>
+      {hasPrize(cat) && (
+        <button type="button" className="mp-prize-link" onClick={() => onPrize(cat)}>
+          <Icon d={ICONS.trophy} size={16} /> Ver el premio a {cat === 'image' ? 'la mejor foto' : 'el mejor video'}
+        </button>
+      )}
       <div className="mp-rank-tabs" role="tablist">
         {[['image', 'Fotos'], ['video', 'Videos']].map(([k, label]) => (
           <button key={k} role="tab" aria-selected={cat === k} className={cat === k ? 'on' : ''} onClick={() => setCat(k)}>
@@ -204,7 +212,7 @@ function Ranking({ votes, cat, setCat, onOpen, mine }) {
                 <span className="mp-rank-pos">{i + 1}</span>
                 <span className="mp-rank-thumb"><img src={it.thumb} alt="" loading="lazy" />{it.type === 'video' && <em><Icon d={ICONS.play} size={12} /></em>}</span>
                 <span className="mp-rank-info">
-                  <b>{it.votes} {it.votes === 1 ? 'voto' : 'votos'}{mine[it.type] === it.id && <span className="mp-yours"> · tu voto</span>}</b>
+                  <b>{it.votes} {it.votes === 1 ? 'voto' : 'votos'}{mine[it.type].includes(it.id) && <span className="mp-yours"> · tu voto</span>}</b>
                   <span className="mp-rank-bar"><i style={{ width: `${Math.max(6, (it.votes / top) * 100)}%` }} /></span>
                 </span>
               </button>
@@ -275,6 +283,66 @@ function Lightbox({ items, index, onIndex, onClose, isAdmin, onDelete, mine, ope
   )
 }
 
+// ── Dialogs ──────────────────────────────────────────────────────────────
+
+function Dialog({ label, onClose, children }) {
+  useEffect(() => {
+    const onKey = e => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
+  return (
+    <div className="mp-modal-wrap" onMouseDown={e => { if (e.target === e.currentTarget) onClose() }}>
+      <div className="mp-modal" role="dialog" aria-modal="true" aria-label={label}>{children}</div>
+    </div>
+  )
+}
+
+function PrizeDialog({ cat, cfg, onClose }) {
+  const isPhoto = cat === 'image'
+  const name = isPhoto ? cfg.album_prize_photo : cfg.album_prize_video
+  const detail = isPhoto ? cfg.album_prize_photo_detail : cfg.album_prize_video_detail
+  return (
+    <Dialog label={`Premio a ${isPhoto ? 'la mejor foto' : 'el mejor video'}`} onClose={onClose}>
+      <div className="mp-modal-icon"><Icon d={ICONS.trophy} size={30} /></div>
+      <small className="mp-modal-kicker">{isPhoto ? 'Premio a la mejor foto' : 'Premio al mejor video'}</small>
+      {name && <h2>{name}</h2>}
+      {detail ? <p className="mp-modal-detail">{detail}</p> : !name && <p className="mp-modal-detail">Pronto sabrás más.</p>}
+      <button className="mp-cta" onClick={onClose}>Entendido</button>
+    </Dialog>
+  )
+}
+
+// Asked before every upload: the name is for the awards only — it is stored
+// privately with the file and never shown to other guests.
+function NameDialog({ count, initial, onConfirm, onClose }) {
+  const [name, setName] = useState(initial)
+  const [error, setError] = useState('')
+  function submit(e) {
+    e.preventDefault()
+    const v = name.replace(/\s+/g, ' ').trim()
+    if (v.length < 2) { setError('Escribe tu nombre para continuar.'); return }
+    onConfirm(v)
+  }
+  return (
+    <Dialog label="¿Quién sube esto?" onClose={onClose}>
+      <form onSubmit={submit}>
+        <h2>¿Quién sube {count === 1 ? 'este archivo' : `estos ${count} archivos`}?</h2>
+        <p className="mp-modal-detail">Solo lo usamos para entregar el premio a la mejor foto y video. No se muestra a otros invitados.</p>
+        <input
+          className="mp-input" autoFocus value={name} onChange={e => { setName(e.target.value); setError('') }}
+          placeholder="Tu nombre y apellido" maxLength={60} autoComplete="name" aria-label="Tu nombre"
+        />
+        {error && <p className="mp-modal-error" role="alert">{error}</p>}
+        <div className="mp-modal-actions">
+          <button type="button" className="mp-cta mp-cta-alt" onClick={onClose}>Cancelar</button>
+          <button type="submit" className="mp-cta">Subir {count === 1 ? '' : `(${count})`}</button>
+        </div>
+      </form>
+    </Dialog>
+  )
+}
+
 // ── Page ─────────────────────────────────────────────────────────────────
 
 export default function MediaPage() {
@@ -289,7 +357,9 @@ export default function MediaPage() {
   const [dragging, setDragging] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
   const [cfg, setCfg] = useState(ALBUM_DEFAULTS)
-  const [votes, setVotes] = useState(null) // { open, ranking, mine, totals }
+  const [votes, setVotes] = useState(null) // { open, ranking, mine: {image:[ids], video:[ids]}, totals, limit }
+  const [prizeOpen, setPrizeOpen] = useState(null) // 'image' | 'video' | null
+  const [pendingFiles, setPendingFiles] = useState(null) // files waiting for the uploader's name
   const [rankCat, setRankCat] = useState('image')
   const [toast, setToast] = useState('')
   const inputRef = useRef(null)
@@ -343,15 +413,22 @@ export default function MediaPage() {
     return () => clearInterval(t)
   }, [loadVotes])
 
-  const mine = votes?.mine || { image: null, video: null }
+  const mine = votes?.mine || { image: [], video: [] }
   const votingOpen = votes ? votes.open : true
+  const limit = votes?.limit || 3
+  const hasPrize = cat => !!(cat === 'image' ? cfg.album_prize_photo || cfg.album_prize_photo_detail : cfg.album_prize_video || cfg.album_prize_video_detail)
+  const left = { image: Math.max(0, limit - mine.image.length), video: Math.max(0, limit - mine.video.length) }
 
   async function vote(item) {
     if (!votingOpen) { say('Las votaciones están cerradas.'); return }
-    const same = mine[item.type] === item.id
+    const same = mine[item.type].includes(item.id)
+    if (!same && mine[item.type].length >= limit) {
+      say(`Ya usaste tus ${limit} votos de ${catWord(item.type, true)}. Quita uno para votar otro.`)
+      return
+    }
     const before = votes
     // Optimistic: the heart responds instantly, the server answer then replaces it.
-    setVotes(v => v && { ...v, mine: { ...v.mine, [item.type]: same ? null : item.id } })
+    setVotes(v => v && { ...v, mine: { ...v.mine, [item.type]: same ? v.mine[item.type].filter(id => id !== item.id) : [...v.mine[item.type], item.id] } })
     try {
       const d = await apiJson(`/api/media/vote${qs()}`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -362,7 +439,8 @@ export default function MediaPage() {
         try { localStorage.setItem(VOTER_STORAGE, d.voterId) } catch { /* storage blocked */ }
       }
       setVotes(d)
-      say(same ? 'Voto retirado' : `¡Voto registrado para tu ${item.type === 'video' ? 'video' : 'foto'} favorita!`)
+      const rest = Math.max(0, (d.limit || limit) - d.mine[item.type].length)
+      say(same ? 'Voto retirado' : rest ? `¡Voto registrado! Te quedan ${rest} de ${catWord(item.type, true)}.` : `¡Voto registrado! Ya usaste todos tus votos de ${catWord(item.type, true)}.`)
     } catch (e) { setVotes(before); say(e.message) }
   }
 
@@ -418,7 +496,7 @@ export default function MediaPage() {
       if (runningRef.current >= MAX_PARALLEL) break
       runningRef.current++
       patch(w.id, { state: 'uploading' })
-      uploadOne(filesRef.current.get(w.id), p => patch(w.id, { progress: p }))
+      uploadOne(filesRef.current.get(w.id), w.uploader, p => patch(w.id, { progress: p }))
         .then(() => { filesRef.current.delete(w.id); patch(w.id, { state: 'done', progress: 1 }) })
         .catch(e => patch(w.id, { state: 'error', error: e.message })) // file kept for "Reintentar"
         .finally(() => { runningRef.current--; pump() })
@@ -433,17 +511,24 @@ export default function MediaPage() {
     wasWorking.current = working
   }, [queue, loadFirst])
 
+  // Picking or dropping files only stages them: the uploader's name is asked first.
   const addFiles = useCallback(fileList => {
     const files = [...fileList].filter(f => /^(image|video)\//.test(f.type))
     if (!files.length) { say('Solo se pueden subir fotos y videos.'); return }
-    const entries = files.map(f => {
+    setPendingFiles(files)
+  }, [say])
+
+  const startUpload = useCallback(uploader => {
+    try { localStorage.setItem(NAME_STORAGE, uploader) } catch { /* storage blocked */ }
+    const entries = pendingFiles.map(f => {
       const id = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
       filesRef.current.set(id, f)
-      return { id, name: f.name, state: 'queued', progress: 0, error: '', preview: f.type.startsWith('image/') && f.size < 25 * 1024 ** 2 ? URL.createObjectURL(f) : null }
+      return { id, name: f.name, uploader, state: 'queued', progress: 0, error: '', preview: f.type.startsWith('image/') && f.size < 25 * 1024 ** 2 ? URL.createObjectURL(f) : null }
     })
+    setPendingFiles(null)
     setQ(q => [...q.filter(x => x.state !== 'done'), ...entries])
     pump()
-  }, [pump, setQ, say])
+  }, [pendingFiles, pump, setQ])
 
   const retry = id => {
     patch(id, { state: 'queued', progress: 0, error: '' })
@@ -491,7 +576,6 @@ export default function MediaPage() {
   }, [shown, nCols])
   const nPhotos = items.filter(i => i.type === 'image').length
   const nVideos = items.length - nPhotos
-  const picked = ['image', 'video'].filter(c => mine[c]).length
 
   const pick = ref => e => { addFiles(e.target.files); e.target.value = '' }
 
@@ -516,13 +600,20 @@ export default function MediaPage() {
           <input ref={inputRef} type="file" accept="image/*,video/*" multiple hidden onChange={pick()} />
         </div>
 
-        {(cfg.album_note || cfg.album_prize_photo || cfg.album_prize_video) && (
+        {(cfg.album_note || hasPrize('image') || hasPrize('video')) && (
           <div className="mp-prizes">
             {cfg.album_note && <p className="mp-pd"><span>Pd:</span> {cfg.album_note}</p>}
-            {(cfg.album_prize_photo || cfg.album_prize_video) && (
+            {(hasPrize('image') || hasPrize('video')) && (
               <div className="mp-prize-cards">
-                {cfg.album_prize_photo && <div className="mp-prize"><Icon d={ICONS.trophy} size={20} /><small>Mejor foto</small><b>{cfg.album_prize_photo}</b></div>}
-                {cfg.album_prize_video && <div className="mp-prize"><Icon d={ICONS.trophy} size={20} /><small>Mejor video</small><b>{cfg.album_prize_video}</b></div>}
+                {[['image', 'Mejor foto', cfg.album_prize_photo, cfg.album_prize_photo_detail], ['video', 'Mejor video', cfg.album_prize_video, cfg.album_prize_video_detail]]
+                  .filter(([cat]) => hasPrize(cat))
+                  .map(([cat, label, name, detail]) => (
+                    <div key={cat} className="mp-prize">
+                      <Icon d={ICONS.trophy} size={20} /><small>{label}</small>
+                      {name && <b>{name}</b>}
+                      {detail && <button type="button" className="mp-prize-btn" onClick={() => setPrizeOpen(cat)}>Ver detalle del premio</button>}
+                    </div>
+                  ))}
               </div>
             )}
           </div>
@@ -530,12 +621,15 @@ export default function MediaPage() {
       </header>
 
       <main className="mp-main">
-        <Ranking votes={votes} cat={rankCat} setCat={setRankCat} mine={mine} onOpen={(list, index) => setViewer({ list, index })} />
+        <Ranking votes={votes} cat={rankCat} setCat={setRankCat} mine={mine} onOpen={(list, index) => setViewer({ list, index })} hasPrize={hasPrize} onPrize={setPrizeOpen} />
 
         {votingOpen && (
           <p className="mp-howto">
-            Toca el <span aria-hidden="true">♡</span> de tu foto y de tu video favoritos para votar: un voto por categoría.
-            {picked > 0 && <b> Ya votaste por {picked === 2 ? 'tu foto y tu video' : mine.image ? 'una foto' : 'un video'}.</b>}
+            Toca el <span aria-hidden="true">♡</span> para votar por tus favoritos: hasta <b>{limit}</b> fotos y, aparte, hasta <b>{limit}</b> videos.
+            <span className="mp-left">
+              <span className={left.image ? '' : 'out'}>Fotos: te {left.image === 1 ? 'queda' : 'quedan'} {left.image}</span>
+              <span className={left.video ? '' : 'out'}>Videos: te {left.video === 1 ? 'queda' : 'quedan'} {left.video}</span>
+            </span>
           </p>
         )}
 
@@ -583,6 +677,14 @@ export default function MediaPage() {
           onIndex={fn => setViewer(v => v && { ...v, index: typeof fn === 'function' ? fn(v.index) : fn })}
           onClose={() => setViewer(null)} isAdmin={isAdmin} onDelete={remove}
           mine={mine} open={votingOpen} onVote={vote}
+        />
+      )}
+      {prizeOpen && <PrizeDialog cat={prizeOpen} cfg={cfg} onClose={() => setPrizeOpen(null)} />}
+      {pendingFiles && (
+        <NameDialog
+          count={pendingFiles.length}
+          initial={(() => { try { return localStorage.getItem(NAME_STORAGE) || '' } catch { return '' } })()}
+          onConfirm={startUpload} onClose={() => setPendingFiles(null)}
         />
       )}
       <div className={`mp-toast ${toast ? 'on' : ''}`} role="status" aria-live="polite">{toast}</div>

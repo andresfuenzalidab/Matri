@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { ALBUM_DEFAULTS, ALBUM_MAX_LEN } from '../../utils/albumConfig.js'
+import { ALBUM_DEFAULTS, ALBUM_MAX_LEN, ALBUM_DETAIL_MAX_LEN, VOTES_LIMIT_MAX } from '../../utils/albumConfig.js'
 
 const FIELDS = [
   { key: 'album_eyebrow', label: 'Línea superior', hint: 'Pequeña, arriba del título (nombres y fecha).' },
@@ -7,7 +7,9 @@ const FIELDS = [
   { key: 'album_subtitle', label: 'Mensaje principal', hint: 'Ej: Escanea el QR y comparte tus fotos y videos.' },
   { key: 'album_note', label: 'Nota (Pd)', hint: 'Ej: ¡La mejor foto y el mejor video ganan un premio!' },
   { key: 'album_prize_photo', label: 'Premio a la mejor foto', hint: 'Déjalo vacío para no mostrarlo. Ej: Una cena para dos.' },
+  { key: 'album_prize_photo_detail', label: 'Detalle del premio a la mejor foto', hint: 'Se abre con el botón «Ver detalle del premio». Puedes escribir varias líneas: qué incluye, cuándo se entrega, etc.', multiline: true },
   { key: 'album_prize_video', label: 'Premio al mejor video', hint: 'Déjalo vacío para no mostrarlo.' },
+  { key: 'album_prize_video_detail', label: 'Detalle del premio al mejor video', hint: 'Igual que el anterior, para el video.', multiline: true },
 ]
 
 /** Texts, prizes and the voting switch shown on the guest album page. */
@@ -53,10 +55,19 @@ export default function AlbumConfig({ token }) {
       {FIELDS.map(f => (
         <div key={f.key}>
           <label className="form-label" htmlFor={f.key}>{f.label}</label>
-          <input id={f.key} className="input" maxLength={ALBUM_MAX_LEN} value={values[f.key]} onChange={e => set(f.key, e.target.value)} />
+          {f.multiline
+            ? <textarea id={f.key} className="input" rows={3} maxLength={ALBUM_DETAIL_MAX_LEN} value={values[f.key]} onChange={e => set(f.key, e.target.value)} />
+            : <input id={f.key} className="input" maxLength={ALBUM_MAX_LEN} value={values[f.key]} onChange={e => set(f.key, e.target.value)} />}
           <div style={{ fontSize: '0.74rem', opacity: 0.6, marginTop: 3 }}>{f.hint}</div>
         </div>
       ))}
+
+      <div>
+        <label className="form-label" htmlFor="album_votes_limit">Votos por persona (en fotos, y aparte en videos)</label>
+        <input id="album_votes_limit" className="input" type="number" min="1" max={VOTES_LIMIT_MAX} style={{ width: 100 }}
+          value={values.album_votes_limit} onChange={e => set('album_votes_limit', e.target.value)} />
+        <div style={{ fontSize: '0.74rem', opacity: 0.6, marginTop: 3 }}>Cada invitado puede votar por esta cantidad de fotos distintas y la misma cantidad de videos distintos (máx. {VOTES_LIMIT_MAX}).</div>
+      </div>
 
       <label style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start', cursor: 'pointer' }}>
         <input type="checkbox" style={{ marginTop: 4 }} checked={values.album_voting_open !== '0'} onChange={e => set('album_voting_open', e.target.checked ? '1' : '0')} />

@@ -1,7 +1,7 @@
 import { requireAdmin, json, err, handleAuthError } from '../_auth.js'
 import { checkMediaKey } from '../_drive.js'
 import { readAlbumConfig } from '../_media.js'
-import { ALBUM_KEYS, ALBUM_MAX_LEN } from '../../../src/utils/albumConfig.js'
+import { ALBUM_KEYS, albumMaxLen, votesLimit } from '../../../src/utils/albumConfig.js'
 
 // GET /api/media/config → the album's texts and switches (guests, key-checked).
 export async function onRequestGet({ request, env }) {
@@ -28,7 +28,8 @@ export async function onRequestPut({ request, env }) {
     for (const key of ALBUM_KEYS) {
       if (!(key in values)) continue
       const v = key === 'album_voting_open' ? (values[key] === '0' || values[key] === false ? '0' : '1')
-        : String(values[key] ?? '').trim().slice(0, ALBUM_MAX_LEN)
+        : key === 'album_votes_limit' ? String(votesLimit({ album_votes_limit: values[key] }))
+        : String(values[key] ?? '').trim().slice(0, albumMaxLen(key))
       stmts.push(env.DB.prepare(
         'INSERT INTO site_content (key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = CURRENT_TIMESTAMP'
       ).bind(key, v))
