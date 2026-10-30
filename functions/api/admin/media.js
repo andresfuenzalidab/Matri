@@ -2,6 +2,7 @@ import { requireAdmin, json, err, handleAuthError } from '../_auth.js'
 import { driveFetch, driveConfigured, albumFile, notConfigured } from '../_drive.js'
 import { purgeVotes, missingVotesTable, votePayload, keyParam, readAlbumConfig, votesLimit } from '../_media.js'
 
+const TRASH_BATCH = 20
 const MAX_IDS_PER_CALL = 15 // each file costs two Drive calls; stay under the Worker's subrequest cap
 
 // Who uploaded each file (private Drive metadata — guests never get this).
@@ -40,7 +41,7 @@ export async function onRequestGet({ request, env }) {
       ])
       const counts = {}
       for (const r of rows.results) counts[r.file_id] = r.votes
-      const { ranking, totals } = await votePayload(env, null, keyParam(env, request), votesLimit(cfg))
+      const { ranking, totals } = await votePayload(env, null, keyParam(env, request), votesLimit(cfg), true)
       return json({ counts, totals, ranking, uploaders })
     } catch (e) {
       if (missingVotesTable(e)) return json({ counts: {}, totals: { image: 0, video: 0 }, ranking: { image: [], video: [] }, uploaders, missing: true })
@@ -52,6 +53,7 @@ export async function onRequestGet({ request, env }) {
 }
 
 // POST { action: 'delete', ids: [...] }  → moves files to the Drive trash and drops their votes.
+// POST { action: 'trash-batch' } → trashes up to 20 album files (call until remaining is false).
 // POST { action: 'reset-votes', category?: 'image' | 'video' } → clears the ranking.
 export async function onRequestPost({ request, env }) {
   try {
@@ -76,6 +78,25 @@ export async function onRequestPost({ request, env }) {
       }
       await purgeVotes(env, deleted).catch(() => {})
       return json({ deleted, failed })
+    }
+
+    // Contest reset, step 1: trash up to TRASH_BATCH files at a time. The page calls
+    // this in a loop until `remaining` is false, so no single request gets too long.
+    if (body?.action === 'trash-batch') {
+      if (!driveConfigured(env)) return notConfigured()
+      const p = new URLSearchParams({
+        q: `'${env.DRIVE_FOLDER_ID}' in parents and trashed = false and (mimeType contains 'image/' or mimeType contains 'video/')`,
+        pageSize: String(TRASH_BATCH), supportsAllDrives: 'true', includeItemsFromAllDrives: 'true', fields: 'files(id)',
+      })
+      const list = await driveFetch(env, `/files?${p}`)
+      if (!list.ok) return err('No se pudo leer el álbum.', 502)
+      const ids = ((await list.json()).files || []).map(x => x.id)
+      const results = await Promise.all(ids.map(id => driveFetch(env, `/files/${id}?supportsAllDrives=true`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ trashed: true }),
+      }).then(r => (r.ok ? id : null)).catch(() => null)))
+      const deleted = results.filter(Boolean)
+      await purgeVotes(env, deleted).catch(() => {})
+      return json({ deleted: deleted.length, remaining: ids.length === TRASH_BATCH && deleted.length > 0 })
     }
 
     if (body?.action === 'reset-votes') {

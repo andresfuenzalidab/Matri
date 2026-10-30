@@ -2,9 +2,9 @@
  * Shared bits of the guest album: how a Drive file becomes an album item, the
  * stored album settings, and the voting tallies. See media.js / media/*.js.
  */
-import { withAlbumDefaults, ALBUM_KEYS, votesLimit } from '../../src/utils/albumConfig.js'
+import { withAlbumDefaults, ALBUM_KEYS, votesLimit, isVotingOpen, deadlineMs } from '../../src/utils/albumConfig.js'
 
-export const FILE_FIELDS = 'id,name,mimeType,size,createdTime,imageMediaMetadata(width,height,rotation),videoMediaMetadata(width,height,durationMillis)'
+export const FILE_FIELDS = 'id,name,mimeType,size,createdTime,imageMediaMetadata(width,height,rotation),videoMediaMetadata(width,height,durationMillis),appProperties'
 
 export const categoryOf = mime => (String(mime).startsWith('video/') ? 'video' : 'image')
 
@@ -23,6 +23,8 @@ export function metaFromFile(f) {
     width: (sideways ? m.height : m.width) || null,
     height: (sideways ? m.width : m.height) || null,
     duration: f.videoMediaMetadata?.durationMillis ? Number(f.videoMediaMetadata.durationMillis) : null,
+    // Private: kept in the stored snapshot for the awards, stripped by buildItem unless asked for.
+    uploader: f.appProperties?.uploader || null,
   }
 }
 
@@ -32,9 +34,11 @@ export function keyParam(env, request) {
   return `&k=${encodeURIComponent(new URL(request.url).searchParams.get('k') || '')}`
 }
 
-export function buildItem(meta, k = '') {
+export function buildItem(meta, k = '', withUploader = false) {
+  const { uploader, ...rest } = meta
   return {
-    ...meta,
+    ...rest,
+    ...(withUploader && uploader ? { uploader } : {}),
     thumb: `/api/media/thumb?id=${meta.id}${k}`,
     src: `/api/media/file?id=${meta.id}${k}`,
     download: `/api/media/file?id=${meta.id}&download=1${k}`,
@@ -49,8 +53,8 @@ export async function readAlbumConfig(env) {
   return withAlbumDefaults(stored)
 }
 
-export const votingOpen = cfg => cfg.album_voting_open !== '0'
-export { votesLimit }
+export const votingOpen = cfg => isVotingOpen(cfg)
+export { votesLimit, deadlineMs }
 
 const TOP = 10
 const VOTER_RE = /^[\w-]{16,64}$/
@@ -65,7 +69,7 @@ export function cookieVoterId(request) {
 export const voterCookie = id => `mv=${id}; Path=/; Max-Age=31536000; SameSite=Lax; Secure; HttpOnly`
 
 /** Live ranking per category, this voter's own picks (a list per category), and overall totals. */
-export async function votePayload(env, voterId, k = '', limit = 3) {
+export async function votePayload(env, voterId, k = '', limit = 0, withUploader = false) {
   const rank = async category => {
     const rows = await env.DB.prepare(`
       SELECT v.file_id, COUNT(*) AS votes, f.meta
@@ -76,7 +80,7 @@ export async function votePayload(env, voterId, k = '', limit = 3) {
       LIMIT ${TOP}
     `).bind(category).all()
     return rows.results.flatMap(r => {
-      try { return [{ ...buildItem(JSON.parse(r.meta), k), votes: r.votes }] } catch { return [] }
+      try { return [{ ...buildItem(JSON.parse(r.meta), k, withUploader), votes: r.votes }] } catch { return [] }
     })
   }
   const [image, video, mineRows, totalRows] = await Promise.all([

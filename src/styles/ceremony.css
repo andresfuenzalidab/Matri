@@ -1,0 +1,87 @@
+/* Awards ceremony (components/media/Ceremony.jsx). Self-contained: it is also
+   rendered from the admin panel, outside the guest page's .mp-root variables. */
+
+.cer {
+  --cer-gold: #d9b25f;
+  --cer-gold-deep: #b68235;
+  --cer-rose: #c2415a;
+  --cer-script: 'Pinyon Script', 'Snell Roundhand', cursive;
+  --cer-serif: 'Cormorant Garamond', Georgia, serif;
+  position: fixed; inset: 0; z-index: 900; overflow-y: auto; overflow-x: hidden;
+  background:
+    radial-gradient(900px 520px at 50% 18%, rgb(217 178 95 / .22), transparent 70%),
+    radial-gradient(700px 500px at 50% 110%, rgb(194 65 90 / .16), transparent 70%),
+    #181715;
+  color: #fff; font-family: var(--cer-serif);
+  animation: cer-fade .35s ease;
+}
+.cer *, .cer *::before, .cer *::after { box-sizing: border-box; }
+.cer button { font: inherit; cursor: pointer; }
+.cer-close { position: fixed; top: max(12px, env(safe-area-inset-top)); right: 12px; z-index: 3; width: 42px; height: 42px; border-radius: 50%; border: 0; display: grid; place-items: center; color: #fff; background: rgb(255 255 255 / .1); }
+.cer-close:hover { background: rgb(255 255 255 / .2); }
+.cer-progress { position: fixed; top: 0; left: 0; right: 0; height: 3px; background: rgb(255 255 255 / .08); z-index: 3; }
+.cer-progress i { display: block; height: 100%; background: linear-gradient(90deg, var(--cer-gold-deep), var(--cer-gold)); transition: width .5s ease; }
+
+.cer-stage { min-height: 100%; display: grid; place-items: center; padding: 70px 18px 40px; }
+.cer-step { position: relative; width: min(560px, 100%); display: grid; justify-items: center; gap: 12px; text-align: center; animation: cer-rise .5s ease both; }
+.cer-reveal { animation-name: cer-pop; }
+
+.cer-kicker { font-size: 12px; letter-spacing: .26em; text-transform: uppercase; font-weight: 600; color: var(--cer-gold); }
+.cer-script { font-family: var(--cer-script); font-weight: 400; font-size: clamp(44px, 12vw, 72px); line-height: 1; margin: 0; }
+.cer-title { font-weight: 700; font-size: clamp(26px, 6vw, 34px); letter-spacing: .04em; text-transform: uppercase; margin: 0; }
+.cer-lead { font-size: 20px; line-height: 1.45; margin: 0; max-width: 28ch; color: rgb(255 255 255 / .85); }
+.cer-lead b { color: var(--cer-gold); font-weight: 700; }
+.cer-hint { font-size: 15px; font-style: italic; margin: 0; color: rgb(255 255 255 / .6); }
+.cer-trophy { width: 84px; height: 84px; border-radius: 50%; display: grid; place-items: center; color: var(--cer-gold); border: 1.5px solid rgb(217 178 95 / .5); background: rgb(217 178 95 / .08); animation: cer-glow 2.4s ease-in-out infinite; }
+
+.cer-btn { margin-top: 10px; padding: 13px 34px; border-radius: 999px; border: 0; font-family: var(--cer-serif); font-weight: 700; font-size: 17px; letter-spacing: .08em; text-transform: uppercase; color: #231f17; background: linear-gradient(180deg, #ecca7a, var(--cer-gold)); box-shadow: 0 10px 26px -10px rgb(217 178 95 / .7); transition: transform .15s; }
+.cer-btn:hover { transform: translateY(-1px); }
+
+/* Wax-seal button */
+.cer-seal { width: 168px; height: 168px; margin: 8px 0; border-radius: 50%; border: 0; display: grid; place-items: center; color: #fff6dd; font-family: var(--cer-script); font-size: 66px; background: radial-gradient(circle at 35% 30%, #e0657b, var(--cer-rose) 55%, #7d2336); box-shadow: 0 0 0 7px rgb(194 65 90 / .22), 0 18px 40px -10px rgb(0 0 0 / .6); animation: cer-beat 1.8s ease-in-out infinite; transition: transform .2s; }
+.cer-seal:hover { transform: scale(1.06); }
+.cer-seal-1 { background: radial-gradient(circle at 35% 30%, #f3d98f, var(--cer-gold) 55%, #8a621f); box-shadow: 0 0 0 7px rgb(217 178 95 / .25), 0 18px 40px -10px rgb(0 0 0 / .6); color: #3b2a0c; }
+.cer-seal span { transform: translateY(-4px); }
+
+.cer-count { font-family: var(--cer-script); font-size: 130px; line-height: 1; color: var(--cer-gold); animation: cer-count .75s ease both; min-height: 170px; display: grid; place-items: center; }
+
+/* Winner / place card */
+.cer-card { width: 100%; background: #fff; color: #2b2a28; border-radius: 22px; overflow: hidden; box-shadow: 0 30px 70px -20px rgb(0 0 0 / .7); border: 3px solid transparent; }
+.cer-card-1 { border-color: var(--cer-gold); box-shadow: 0 0 0 6px rgb(217 178 95 / .22), 0 30px 80px -18px rgb(217 178 95 / .55); }
+.cer-card-2 { border-color: #c8ccd2; }
+.cer-card-3 { border-color: #c98b58; }
+.cer-media { background: #0e0d0c; display: grid; place-items: center; max-height: 56vh; }
+.cer-media img, .cer-media video { display: block; width: 100%; max-height: 56vh; object-fit: contain; }
+.cer-card-info { display: grid; gap: 4px; padding: 14px 16px 16px; }
+.cer-votes { font-size: 24px; font-weight: 700; }
+.cer-who { font-size: 17px; color: rgb(43 42 40 / .75); }
+.cer-prize { display: inline-flex; align-items: center; justify-content: center; gap: 6px; margin-top: 6px; font-weight: 700; color: var(--cer-gold-deep); font-size: 18px; }
+
+/* Final podium */
+.cer-podium { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; width: 100%; margin: 6px 0; }
+.cer-pod { display: grid; gap: 8px; justify-items: center; align-content: start; padding: 12px 8px; border-radius: 16px; background: rgb(255 255 255 / .06); }
+.cer-pod ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; width: 100%; }
+.cer-pod li { display: grid; grid-template-columns: 24px 48px 1fr; gap: 8px; align-items: center; text-align: left; font-size: 14px; }
+.cer-pod img { width: 48px; height: 48px; object-fit: cover; border-radius: 8px; }
+.cer-pod-n { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 13px; background: var(--cer-gold); color: #2b1d07; }
+
+/* Confetti */
+.cer-confetti { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 1; }
+.cer-confetti i { position: absolute; top: -20px; display: block; opacity: 0; animation-name: cer-fall; animation-timing-function: linear; animation-iteration-count: 2; }
+
+@keyframes cer-fade { from { opacity: 0; } }
+@keyframes cer-rise { from { opacity: 0; transform: translateY(18px); } }
+@keyframes cer-pop { 0% { opacity: 0; transform: scale(.88) translateY(14px); } 60% { transform: scale(1.03); } 100% { opacity: 1; transform: none; } }
+@keyframes cer-beat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+@keyframes cer-glow { 50% { box-shadow: 0 0 34px 2px rgb(217 178 95 / .35); } }
+@keyframes cer-count { 0% { opacity: 0; transform: scale(2.2); } 35% { opacity: 1; } 100% { opacity: 1; transform: scale(1); } }
+@keyframes cer-fall { 0% { opacity: 1; transform: translateY(0) rotate(0); } 100% { opacity: 1; transform: translateY(110vh) rotate(720deg); } }
+
+@media (max-width: 480px) {
+  .cer-seal { width: 148px; height: 148px; font-size: 58px; }
+  .cer-podium { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cer, .cer * { animation: none !important; transition: none !important; }
+  .cer-confetti { display: none; }
+}

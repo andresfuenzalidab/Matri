@@ -28,3 +28,5 @@
 .aa-name { position: absolute; left: 0; right: 0; bottom: 0; padding: 14px 6px 4px; font-size: 10.5px; color: #fff; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: linear-gradient(transparent, rgb(0 0 0 / .65)); }
 .aa-kind { bottom: 22px; }
 .aa-votes { bottom: 22px; }
+
+.aa-test { display: grid; gap: 10px; justify-items: start; padding: 12px 14px; border: 1px dashed var(--color-divider); border-radius: 10px; }

@@ -1,18 +1,29 @@
 import { useState, useEffect, useMemo } from 'react'
-import { ALBUM_DEFAULTS, ALBUM_MAX_LEN, ALBUM_DETAIL_MAX_LEN, VOTES_LIMIT_MAX } from '../../utils/albumConfig.js'
+import { ALBUM_DEFAULTS, ALBUM_MAX_LEN, ALBUM_DETAIL_MAX_LEN, VOTES_MAX_LIMIT } from '../../utils/albumConfig.js'
 
-const FIELDS = [
+const TEXT_FIELDS = [
   { key: 'album_eyebrow', label: 'Línea superior', hint: 'Pequeña, arriba del título (nombres y fecha).' },
   { key: 'album_title', label: 'Título', hint: 'Se ve en letra cursiva grande, como en la tarjeta.' },
   { key: 'album_subtitle', label: 'Mensaje principal', hint: 'Ej: Escanea el QR y comparte tus fotos y videos.' },
   { key: 'album_note', label: 'Nota (Pd)', hint: 'Ej: ¡La mejor foto y el mejor video ganan un premio!' },
-  { key: 'album_prize_photo', label: 'Premio a la mejor foto', hint: 'Déjalo vacío para no mostrarlo. Ej: Una cena para dos.' },
-  { key: 'album_prize_photo_detail', label: 'Detalle del premio a la mejor foto', hint: 'Se abre con el botón «Ver detalle del premio». Puedes escribir varias líneas: qué incluye, cuándo se entrega, etc.', multiline: true },
-  { key: 'album_prize_video', label: 'Premio al mejor video', hint: 'Déjalo vacío para no mostrarlo.' },
+]
+const PRIZE_FIELDS = [
+  { key: 'album_prize_photo', label: 'Premio a la mejor foto', hint: 'Ej: Una cena para dos.' },
+  { key: 'album_prize_photo_detail', label: 'Detalle del premio a la mejor foto', hint: 'Se abre con «Ver los premios». Puedes escribir varias líneas: qué incluye, cuándo se entrega, etc.', multiline: true },
+  { key: 'album_prize_video', label: 'Premio al mejor video', hint: 'Ej: Un fin de semana en la playa.' },
   { key: 'album_prize_video_detail', label: 'Detalle del premio al mejor video', hint: 'Igual que el anterior, para el video.', multiline: true },
 ]
 
-/** Texts, prizes and the voting switch shown on the guest album page. */
+const pad = n => String(n).padStart(2, '0')
+// ISO (UTC) -> value for <input type="datetime-local"> in this computer's timezone
+function toLocalInput(iso) {
+  const d = new Date(iso)
+  if (!iso || Number.isNaN(d.getTime())) return ''
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+const fromLocalInput = v => (v ? new Date(v).toISOString() : '')
+
+/** Texts, prizes, voting rules and deadline of the guest album page. */
 export default function AlbumConfig({ token }) {
   const headers = useMemo(() => ({ 'X-Invite-Token': token, 'Content-Type': 'application/json' }), [token])
   const [values, setValues] = useState(null)
@@ -45,28 +56,45 @@ export default function AlbumConfig({ token }) {
     } catch (e) { setError(e.message); setState('error') }
   }
 
+  const field = f => (
+    <div key={f.key}>
+      <label className="form-label" htmlFor={f.key}>{f.label}</label>
+      {f.multiline
+        ? <textarea id={f.key} className="input" rows={3} maxLength={ALBUM_DETAIL_MAX_LEN} value={values[f.key]} onChange={e => set(f.key, e.target.value)} />
+        : <input id={f.key} className="input" maxLength={ALBUM_MAX_LEN} value={values[f.key]} onChange={e => set(f.key, e.target.value)} />}
+      <div style={{ fontSize: '0.74rem', opacity: 0.6, marginTop: 3 }}>{f.hint}</div>
+    </div>
+  )
+  const sub = text => <div style={{ fontSize: '0.7rem', letterSpacing: '0.12em', textTransform: 'uppercase', opacity: 0.6, marginTop: '0.4rem' }}>{text}</div>
+
+  const deadlineLocal = toLocalInput(values.album_voting_deadline)
+  const deadlinePassed = values.album_voting_deadline && Date.parse(values.album_voting_deadline) <= Date.now()
+
   return (
     <div className="create-form" style={{ display: 'grid', gap: '0.9rem' }}>
-      <div className="create-form-title">Mensaje y premios del álbum</div>
+      <div className="create-form-title">Mensaje, premios y votaciones</div>
       <p style={{ margin: 0, fontSize: '0.82rem', opacity: 0.7 }}>
         Es lo que ven los invitados al escanear el QR. Los cambios aparecen en el álbum en menos de un minuto.
       </p>
 
-      {FIELDS.map(f => (
-        <div key={f.key}>
-          <label className="form-label" htmlFor={f.key}>{f.label}</label>
-          {f.multiline
-            ? <textarea id={f.key} className="input" rows={3} maxLength={ALBUM_DETAIL_MAX_LEN} value={values[f.key]} onChange={e => set(f.key, e.target.value)} />
-            : <input id={f.key} className="input" maxLength={ALBUM_MAX_LEN} value={values[f.key]} onChange={e => set(f.key, e.target.value)} />}
-          <div style={{ fontSize: '0.74rem', opacity: 0.6, marginTop: 3 }}>{f.hint}</div>
-        </div>
-      ))}
+      {sub('Textos')}
+      {TEXT_FIELDS.map(field)}
 
+      {sub('Premios')}
+      {PRIZE_FIELDS.map(field)}
+
+      {sub('Votaciones')}
       <div>
-        <label className="form-label" htmlFor="album_votes_limit">Votos por persona (en fotos, y aparte en videos)</label>
-        <input id="album_votes_limit" className="input" type="number" min="1" max={VOTES_LIMIT_MAX} style={{ width: 100 }}
-          value={values.album_votes_limit} onChange={e => set('album_votes_limit', e.target.value)} />
-        <div style={{ fontSize: '0.74rem', opacity: 0.6, marginTop: 3 }}>Cada invitado puede votar por esta cantidad de fotos distintas y la misma cantidad de videos distintos (máx. {VOTES_LIMIT_MAX}).</div>
+        <label className="form-label" htmlFor="album_voting_deadline">Cierre de las votaciones</label>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+          <input id="album_voting_deadline" className="input" type="datetime-local" style={{ maxWidth: 240 }}
+            value={deadlineLocal} onChange={e => set('album_voting_deadline', fromLocalInput(e.target.value))} />
+          {deadlineLocal && <button type="button" className="btn btn-secondary" onClick={() => set('album_voting_deadline', '')}>Quitar plazo</button>}
+        </div>
+        <div style={{ fontSize: '0.74rem', opacity: 0.6, marginTop: 3 }}>
+          Los invitados ven una cuenta regresiva hasta esta fecha (hora de tu computador). Al llegar, las votaciones se cierran solas y se abre la premiación.
+          {deadlinePassed && <strong style={{ color: '#b03e2c' }}> Esta fecha ya pasó: las votaciones están cerradas.</strong>}
+        </div>
       </div>
 
       <label style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start', cursor: 'pointer' }}>
@@ -74,7 +102,26 @@ export default function AlbumConfig({ token }) {
         <span>
           <strong>Votaciones abiertas</strong>
           <span style={{ display: 'block', fontSize: '0.78rem', opacity: 0.65 }}>
-            Desmárcalo para cerrar los votos: el ranking queda congelado y se muestra como «Ganadores».
+            Desmárcalo para cerrarlas a mano ahora mismo, sin esperar el plazo. Se abre la premiación.
+          </span>
+        </span>
+      </label>
+
+      <div>
+        <label className="form-label" htmlFor="album_votes_max">Límite de votos por persona</label>
+        <input id="album_votes_max" className="input" type="number" min="0" max={VOTES_MAX_LIMIT} style={{ width: 110 }}
+          value={values.album_votes_max} onChange={e => set('album_votes_max', e.target.value)} />
+        <div style={{ fontSize: '0.74rem', opacity: 0.6, marginTop: 3 }}>
+          0 = ilimitado (cada invitado puede votar todas las fotos y videos que quiera, una vez cada uno). Si pones un número, vale para fotos y, aparte, para videos.
+        </div>
+      </div>
+
+      <label style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start', cursor: 'pointer' }}>
+        <input type="checkbox" style={{ marginTop: 4 }} checked={values.album_reveal_names === '1'} onChange={e => set('album_reveal_names', e.target.checked ? '1' : '0')} />
+        <span>
+          <strong>Mostrar quién subió la foto o el video ganador</strong>
+          <span style={{ display: 'block', fontSize: '0.78rem', opacity: 0.65 }}>
+            Solo en la premiación y solo con las votaciones cerradas. Si lo dejas desmarcado, el nombre lo ves únicamente tú aquí en el admin.
           </span>
         </span>
       </label>

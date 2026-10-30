@@ -8,7 +8,7 @@ import {
 // POST /api/media/vote { voterId, fileId, remove? }
 //
 // Each voter has a limited number of votes per category (photo / video) — the
-// admin sets it, default 3 — on different files: a file can't be voted twice by
+// admin sets it, default unlimited — on different files: a file can't be voted twice by
 // the same person, and past the limit a vote has to be withdrawn first
 // (`remove: true`) before voting another.
 // A voter is a random id kept both in a cookie (this endpoint sets it, and it
@@ -34,7 +34,7 @@ export async function onRequestPost({ request, env }) {
     if (!f) return err('Archivo no encontrado.', 404)
     const category = categoryOf(f.mimeType)
 
-    const limit = votesLimit(cfg)
+    const limit = votesLimit(cfg) // 0 = unlimited
     if (body.remove) {
       await env.DB.prepare('DELETE FROM media_votes WHERE voter_id = ? AND file_id = ?').bind(voterId, f.id).run()
     } else {
@@ -45,7 +45,7 @@ export async function onRequestPost({ request, env }) {
         const ins = await env.DB.prepare(`
           INSERT INTO media_votes (voter_id, file_id, category)
           SELECT ?1, ?2, ?3 WHERE (SELECT COUNT(*) FROM media_votes WHERE voter_id = ?1 AND category = ?3) < ?4
-        `).bind(voterId, f.id, category, limit).run()
+        `).bind(voterId, f.id, category, limit || 1e9).run()
         if (!ins.meta?.changes) {
           return err(`Ya usaste tus ${limit} votos de ${category === 'video' ? 'videos' : 'fotos'}. Quita uno para votar otro.`, 409)
         }
@@ -59,7 +59,12 @@ export async function onRequestPost({ request, env }) {
       headers: { 'Content-Type': 'application/json', 'Set-Cookie': voterCookie(voterId) },
     })
   } catch (e) {
+    console.error('vote failed', e)
     if (missingVotesTable(e)) return err('Faltan las tablas de votos (ejecuta migration12.sql).', 500)
+    // Old table layout (one vote per category): migration13.sql rebuilds it.
+    if (/UNIQUE constraint failed: media_votes.voter_id, media_votes.category/i.test(String(e?.message || ''))) {
+      return err('La base de datos de votos está desactualizada (ejecuta migration13.sql).', 500)
+    }
     return err('No se pudo registrar el voto.', 500)
   }
 }

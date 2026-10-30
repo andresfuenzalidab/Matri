@@ -17,6 +17,7 @@ function readKey() {
  */
 export default function MediaQR() {
   const { token } = useApp()
+  const [configKey, setConfigKey] = useState(0) // bumped after a contest reset so the form reloads its values
   const [key, setKey] = useState(readKey)
   const [qr, setQr] = useState('')
   const [copied, setCopied] = useState(false)
@@ -133,8 +134,8 @@ export default function MediaQR() {
           </p>
         </div>
       </div>
-      <AlbumConfig token={token} />
-      <AlbumManager token={token} mediaKey={key.trim()} />
+      <AlbumConfig key={configKey} token={token} />
+      <AlbumManager token={token} mediaKey={key.trim()} onReset={() => setConfigKey(k => k + 1)} />
     </div>
   )
 }

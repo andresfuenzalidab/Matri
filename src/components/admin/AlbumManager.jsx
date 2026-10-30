@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
+import Ceremony from '../media/Ceremony.jsx'
 import '../../styles/album-admin.css'
 
 const CHUNK = 15 // matches the server cap per delete call
@@ -8,7 +9,7 @@ const CHUNK = 15 // matches the server cap per delete call
  * don't want (they go to the Drive trash), and reset the vote ranking.
  * `mediaKey` is only needed to draw thumbnails when MEDIA_KEY is set.
  */
-export default function AlbumManager({ token, mediaKey }) {
+export default function AlbumManager({ token, mediaKey, onReset }) {
   const headers = useMemo(() => ({ 'X-Invite-Token': token, 'Content-Type': 'application/json' }), [token])
   const [items, setItems] = useState([])
   const [next, setNext] = useState(null)
@@ -24,6 +25,9 @@ export default function AlbumManager({ token, mediaKey }) {
   const [busy, setBusy] = useState('') // message while deleting
   const [arm, setArm] = useState('') // two-step confirmations: 'delete' | 'reset-all' | 'reset-image' | 'reset-video'
   const [note, setNote] = useState('')
+  const [preview, setPreview] = useState(null) // { cfg } while the ceremony rehearsal is open
+  const [confirmText, setConfirmText] = useState('')
+  const [resetting, setResetting] = useState('') // progress message while resetting the whole contest
 
   const listUrl = useCallback(pageToken => {
     const p = new URLSearchParams()
@@ -107,6 +111,48 @@ export default function AlbumManager({ token, mediaKey }) {
     } catch (e) { setError(e.message) }
   }
 
+  // Rehearse the awards with the current ranking (works with voting still open).
+  async function openPreview() {
+    setError('')
+    try {
+      const res = await fetch('/api/media/config', { headers })
+      const cfg = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(cfg?.error || 'No se pudo cargar la configuración.')
+      await loadCounts()
+      setPreview({ cfg })
+    } catch (e) { setError(e.message) }
+  }
+
+  // Full reset for dress rehearsals: every file to the Drive trash, every vote gone,
+  // deadline removed, voting reopened. Texts and prizes are kept.
+  async function resetContest() {
+    setError(''); setNote('')
+    const call = async body => {
+      const res = await fetch('/api/admin/media', { method: 'POST', headers, body: JSON.stringify(body) })
+      const d = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(d?.error || 'Error al reiniciar.')
+      return d
+    }
+    try {
+      let total = 0
+      for (let guard = 0; guard < 500; guard++) {
+        setResetting(total ? `Eliminando archivos… (${total})` : 'Eliminando archivos…')
+        const d = await call({ action: 'trash-batch' })
+        total += d.deleted
+        if (!d.remaining) break
+      }
+      setResetting('Reiniciando votos y plazo…')
+      await call({ action: 'reset-votes' })
+      const res = await fetch('/api/media/config', { method: 'PUT', headers, body: JSON.stringify({ values: { album_voting_deadline: '', album_voting_open: '1' } }) })
+      if (!res.ok) throw new Error('Se borró todo, pero no se pudo reabrir las votaciones: revísalo en «Mensaje, premios y votaciones».')
+      setNote(`Concurso reiniciado: ${total} archivo${total === 1 ? '' : 's'} a la papelera de Drive, votos en cero y votaciones abiertas.`)
+      setConfirmText('')
+      onReset?.()
+      await loadFirst()
+    } catch (e) { setError(e.message); loadFirst() }
+    setResetting('')
+  }
+
   const Confirm = ({ id, children, onClick, danger = true, disabled }) => (
     <button className={`btn ${danger ? 'btn-secondary' : 'btn-primary'}`} disabled={disabled} onClick={onClick} onBlur={() => setArm(a => (a === id ? '' : a))}
       style={arm === id ? { background: '#b03e2c', borderColor: '#b03e2c', color: '#fff' } : danger ? { color: '#b03e2c' } : undefined}>
@@ -182,6 +228,29 @@ export default function AlbumManager({ token, mediaKey }) {
         </div>
       )}
       {next && status === 'ready' && <button className="btn btn-secondary" onClick={loadMore} disabled={loadingMore}>{loadingMore ? 'Cargando…' : 'Cargar más'}</button>}
+
+      <div className="aa-test">
+        <div className="aa-awards-title">Pruebas del concurso</div>
+        <p style={{ margin: 0, fontSize: '0.82rem', opacity: 0.75 }}>
+          <strong>Probar la premiación</strong> muestra la ceremonia con el ranking de ahora mismo, sin cerrar nada: úsala para ensayar.
+          Para ver el cierre real, pon un plazo de unos minutos más adelante arriba y espera la cuenta regresiva.
+        </p>
+        <div><button className="btn btn-primary" onClick={openPreview}>Probar la premiación</button></div>
+
+        <hr style={{ border: 0, borderTop: '1px solid var(--color-divider)', width: '100%', margin: '0.25rem 0' }} />
+        <p style={{ margin: 0, fontSize: '0.82rem', opacity: 0.75 }}>
+          <strong style={{ color: '#b03e2c' }}>Reiniciar el concurso</strong> deja todo como nuevo para repetir la prueba: elimina <strong>todas</strong> las fotos y videos
+          (van a la papelera de Drive), borra todos los votos, quita la fecha de cierre y reabre las votaciones. Los textos y premios se mantienen.
+        </p>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+          <input className="input" style={{ maxWidth: 200 }} placeholder="Escribe REINICIAR" value={confirmText} onChange={e => setConfirmText(e.target.value)} disabled={!!resetting} aria-label="Escribe REINICIAR para confirmar" />
+          <button className="btn btn-secondary" style={{ color: '#b03e2c', borderColor: '#b03e2c' }} onClick={resetContest} disabled={confirmText.trim().toUpperCase() !== 'REINICIAR' || !!resetting}>
+            {resetting || 'Limpiar todo y reiniciar'}
+          </button>
+        </div>
+      </div>
+
+      {preview && <Ceremony ranking={ranking} cfg={preview.cfg} names={uploaders} onClose={() => setPreview(null)} />}
     </div>
   )
 }

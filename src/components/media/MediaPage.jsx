@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { ALBUM_DEFAULTS } from '../../utils/albumConfig.js'
+import Ceremony from './Ceremony.jsx'
 import '../../styles/media.css'
 
 // Guest-facing album, opened from the QR code (`/fotos?k=...`). No invitation
@@ -180,7 +181,34 @@ function VoteButton({ item, mine, open, onVote, big }) {
   )
 }
 
-function Ranking({ votes, cat, setCat, onOpen, mine, hasPrize, onPrize }) {
+// Ticks every second towards the voting deadline, following the server's clock.
+function Countdown({ deadline, offset, onDone }) {
+  const [now, setNow] = useState(() => Date.now() + offset)
+  const sawOpen = useRef(false)
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now() + offset), 1000)
+    return () => clearInterval(t)
+  }, [offset])
+  const ms = deadline - now
+  const over = ms <= 0
+  useEffect(() => {
+    if (!over) sawOpen.current = true
+    else if (sawOpen.current) onDone() // only a page that watched it close, not one opened late
+  }, [over, onDone])
+  if (over) return null
+  const s = Math.floor(ms / 1000)
+  const parts = [[Math.floor(s / 86400), 'días'], [Math.floor((s % 86400) / 3600), 'horas'], [Math.floor((s % 3600) / 60), 'min'], [s % 60, 'seg']]
+  return (
+    <div className={`mp-countdown ${s < 3600 ? 'urgent' : ''}`} role="timer" aria-label="Tiempo restante para votar">
+      <small>Las votaciones cierran en</small>
+      <div>
+        {parts.map(([n, label]) => <span key={label}><b>{String(n).padStart(2, '0')}</b><em>{label}</em></span>)}
+      </div>
+    </div>
+  )
+}
+
+function Ranking({ votes, cat, setCat, onOpen, mine, onPrize, countdown, onCeremony }) {
   const list = (votes?.ranking?.[cat] || []).slice(0, 5)
   const top = list[0]?.votes || 1
   const closed = votes && !votes.open
@@ -190,11 +218,16 @@ function Ranking({ votes, cat, setCat, onOpen, mine, hasPrize, onPrize }) {
         <h2 id="mp-rank-title"><Icon d={ICONS.trophy} size={22} /> {closed ? 'Ganadores' : 'Ranking en vivo'}</h2>
         {!closed && <span className="mp-live"><i />En vivo</span>}
       </div>
-      {hasPrize(cat) && (
-        <button type="button" className="mp-prize-link" onClick={() => onPrize(cat)}>
-          <Icon d={ICONS.trophy} size={16} /> Ver el premio a {cat === 'image' ? 'la mejor foto' : 'el mejor video'}
-        </button>
+      {countdown}
+      {closed && (
+        <div className="mp-closed">
+          <p>Las votaciones terminaron. ¡Es hora de conocer a los ganadores!</p>
+          <button type="button" className="mp-cta" onClick={onCeremony}><Icon d={ICONS.trophy} size={20} /> Ver la premiación</button>
+        </div>
       )}
+      <button type="button" className="mp-prize-link" onClick={onPrize}>
+        <Icon d={ICONS.trophy} size={16} /> Ver los premios
+      </button>
       <div className="mp-rank-tabs" role="tablist">
         {[['image', 'Fotos'], ['video', 'Videos']].map(([k, label]) => (
           <button key={k} role="tab" aria-selected={cat === k} className={cat === k ? 'on' : ''} onClick={() => setCat(k)}>
@@ -298,16 +331,28 @@ function Dialog({ label, onClose, children }) {
   )
 }
 
-function PrizeDialog({ cat, cfg, onClose }) {
-  const isPhoto = cat === 'image'
-  const name = isPhoto ? cfg.album_prize_photo : cfg.album_prize_video
-  const detail = isPhoto ? cfg.album_prize_photo_detail : cfg.album_prize_video_detail
+function PrizeDialog({ cfg, onClose }) {
+  const prizes = [
+    ['Mejor foto', cfg.album_prize_photo, cfg.album_prize_photo_detail],
+    ['Mejor video', cfg.album_prize_video, cfg.album_prize_video_detail],
+  ]
   return (
-    <Dialog label={`Premio a ${isPhoto ? 'la mejor foto' : 'el mejor video'}`} onClose={onClose}>
+    <Dialog label="Premios" onClose={onClose}>
       <div className="mp-modal-icon"><Icon d={ICONS.trophy} size={30} /></div>
-      <small className="mp-modal-kicker">{isPhoto ? 'Premio a la mejor foto' : 'Premio al mejor video'}</small>
-      {name && <h2>{name}</h2>}
-      {detail ? <p className="mp-modal-detail">{detail}</p> : !name && <p className="mp-modal-detail">Pronto sabrás más.</p>}
+      <h2>Los premios</h2>
+      <div className="mp-prize-list">
+        {prizes.map(([label, name, detail]) => (
+          <section key={label} className="mp-prize-item">
+            <small className="mp-modal-kicker">{label}</small>
+            {name || detail ? (
+              <>
+                {name && <h3>{name}</h3>}
+                {detail && <p className="mp-modal-detail">{detail}</p>}
+              </>
+            ) : <p className="mp-modal-detail">Lo anunciaremos pronto.</p>}
+          </section>
+        ))}
+      </div>
       <button className="mp-cta" onClick={onClose}>Entendido</button>
     </Dialog>
   )
@@ -358,7 +403,9 @@ export default function MediaPage() {
   const [isAdmin, setIsAdmin] = useState(false)
   const [cfg, setCfg] = useState(ALBUM_DEFAULTS)
   const [votes, setVotes] = useState(null) // { open, ranking, mine: {image:[ids], video:[ids]}, totals, limit }
-  const [prizeOpen, setPrizeOpen] = useState(null) // 'image' | 'video' | null
+  const [prizeOpen, setPrizeOpen] = useState(false)
+  const [ceremonyOpen, setCeremonyOpen] = useState(false)
+  const [closedByClock, setClosedByClock] = useState(false) // the deadline passed while this page was open
   const [pendingFiles, setPendingFiles] = useState(null) // files waiting for the uploader's name
   const [rankCat, setRankCat] = useState('image')
   const [toast, setToast] = useState('')
@@ -414,15 +461,17 @@ export default function MediaPage() {
   }, [loadVotes])
 
   const mine = votes?.mine || { image: [], video: [] }
-  const votingOpen = votes ? votes.open : true
-  const limit = votes?.limit || 3
-  const hasPrize = cat => !!(cat === 'image' ? cfg.album_prize_photo || cfg.album_prize_photo_detail : cfg.album_prize_video || cfg.album_prize_video_detail)
+  const votingOpen = (votes ? votes.open : true) && !closedByClock
+  const limit = votes?.limit || 0 // 0 = unlimited
+  const clockOffset = votes?.now ? votes.now - Date.now() : 0
+  const onDeadline = useCallback(() => { setClosedByClock(true); loadVotes(); setCeremonyOpen(true) }, [loadVotes])
+  const hasPrize = cat => !!(cat === 'image' ? cfg.album_prize_photo : cfg.album_prize_video)
   const left = { image: Math.max(0, limit - mine.image.length), video: Math.max(0, limit - mine.video.length) }
 
   async function vote(item) {
     if (!votingOpen) { say('Las votaciones están cerradas.'); return }
     const same = mine[item.type].includes(item.id)
-    if (!same && mine[item.type].length >= limit) {
+    if (limit > 0 && !same && mine[item.type].length >= limit) {
       say(`Ya usaste tus ${limit} votos de ${catWord(item.type, true)}. Quita uno para votar otro.`)
       return
     }
@@ -439,8 +488,8 @@ export default function MediaPage() {
         try { localStorage.setItem(VOTER_STORAGE, d.voterId) } catch { /* storage blocked */ }
       }
       setVotes(d)
-      const rest = Math.max(0, (d.limit || limit) - d.mine[item.type].length)
-      say(same ? 'Voto retirado' : rest ? `¡Voto registrado! Te quedan ${rest} de ${catWord(item.type, true)}.` : `¡Voto registrado! Ya usaste todos tus votos de ${catWord(item.type, true)}.`)
+      const rest = d.limit > 0 ? Math.max(0, d.limit - d.mine[item.type].length) : null
+      say(same ? 'Voto retirado' : rest === null ? '¡Voto registrado!' : rest ? `¡Voto registrado! Te quedan ${rest} de ${catWord(item.type, true)}.` : `¡Voto registrado! Ya usaste todos tus votos de ${catWord(item.type, true)}.`)
     } catch (e) { setVotes(before); say(e.message) }
   }
 
@@ -600,36 +649,41 @@ export default function MediaPage() {
           <input ref={inputRef} type="file" accept="image/*,video/*" multiple hidden onChange={pick()} />
         </div>
 
-        {(cfg.album_note || hasPrize('image') || hasPrize('video')) && (
-          <div className="mp-prizes">
-            {cfg.album_note && <p className="mp-pd"><span>Pd:</span> {cfg.album_note}</p>}
-            {(hasPrize('image') || hasPrize('video')) && (
-              <div className="mp-prize-cards">
-                {[['image', 'Mejor foto', cfg.album_prize_photo, cfg.album_prize_photo_detail], ['video', 'Mejor video', cfg.album_prize_video, cfg.album_prize_video_detail]]
-                  .filter(([cat]) => hasPrize(cat))
-                  .map(([cat, label, name, detail]) => (
-                    <div key={cat} className="mp-prize">
-                      <Icon d={ICONS.trophy} size={20} /><small>{label}</small>
-                      {name && <b>{name}</b>}
-                      {detail && <button type="button" className="mp-prize-btn" onClick={() => setPrizeOpen(cat)}>Ver detalle del premio</button>}
-                    </div>
-                  ))}
-              </div>
-            )}
-          </div>
-        )}
+        <div className="mp-prizes">
+          {cfg.album_note && <p className="mp-pd"><span>Pd:</span> {cfg.album_note}</p>}
+          {(hasPrize('image') || hasPrize('video')) && (
+            <div className="mp-prize-cards">
+              {[['image', 'Mejor foto', cfg.album_prize_photo], ['video', 'Mejor video', cfg.album_prize_video]]
+                .filter(([cat]) => hasPrize(cat))
+                .map(([cat, label, name]) => (
+                  <div key={cat} className="mp-prize">
+                    <Icon d={ICONS.trophy} size={20} /><small>{label}</small><b>{name}</b>
+                  </div>
+                ))}
+            </div>
+          )}
+          <button type="button" className="mp-prize-btn" onClick={() => setPrizeOpen(true)}><Icon d={ICONS.trophy} size={16} /> Ver los premios</button>
+        </div>
       </header>
 
       <main className="mp-main">
-        <Ranking votes={votes} cat={rankCat} setCat={setRankCat} mine={mine} onOpen={(list, index) => setViewer({ list, index })} hasPrize={hasPrize} onPrize={setPrizeOpen} />
+        <Ranking
+          votes={votes} cat={rankCat} setCat={setRankCat} mine={mine} onOpen={(list, index) => setViewer({ list, index })}
+          onPrize={() => setPrizeOpen(true)} onCeremony={() => setCeremonyOpen(true)}
+          countdown={votingOpen && votes?.deadline ? <Countdown deadline={votes.deadline} offset={clockOffset} onDone={onDeadline} /> : null}
+        />
 
         {votingOpen && (
           <p className="mp-howto">
-            Toca el <span aria-hidden="true">♡</span> para votar por tus favoritos: hasta <b>{limit}</b> fotos y, aparte, hasta <b>{limit}</b> videos.
-            <span className="mp-left">
-              <span className={left.image ? '' : 'out'}>Fotos: te {left.image === 1 ? 'queda' : 'quedan'} {left.image}</span>
-              <span className={left.video ? '' : 'out'}>Videos: te {left.video === 1 ? 'queda' : 'quedan'} {left.video}</span>
-            </span>
+            {limit === 0
+              ? <>Toca el <span aria-hidden="true">♡</span> para votar por todas las fotos y videos que te gusten.</>
+              : <>
+                Toca el <span aria-hidden="true">♡</span> para votar por tus favoritos: hasta <b>{limit}</b> fotos y, aparte, hasta <b>{limit}</b> videos.
+                <span className="mp-left">
+                  <span className={left.image ? '' : 'out'}>Fotos: te {left.image === 1 ? 'queda' : 'quedan'} {left.image}</span>
+                  <span className={left.video ? '' : 'out'}>Videos: te {left.video === 1 ? 'queda' : 'quedan'} {left.video}</span>
+                </span>
+              </>}
           </p>
         )}
 
@@ -679,7 +733,8 @@ export default function MediaPage() {
           mine={mine} open={votingOpen} onVote={vote}
         />
       )}
-      {prizeOpen && <PrizeDialog cat={prizeOpen} cfg={cfg} onClose={() => setPrizeOpen(null)} />}
+      {prizeOpen && <PrizeDialog cfg={cfg} onClose={() => setPrizeOpen(false)} />}
+      {ceremonyOpen && votes && <Ceremony ranking={votes.ranking} cfg={cfg} onClose={() => setCeremonyOpen(false)} />}
       {pendingFiles && (
         <NameDialog
           count={pendingFiles.length}
