@@ -1,5 +1,6 @@
 import { requireAdmin, json, err, handleAuthError } from './_auth.js'
 import { driveFetch, driveConfigured, checkMediaKey, albumFile, notConfigured } from './_drive.js'
+import { FILE_FIELDS, metaFromFile, buildItem, keyParam, purgeVotes } from './_media.js'
 
 const PAGE_SIZE = 60
 
@@ -17,7 +18,7 @@ export async function onRequestGet({ request, env }) {
       orderBy: 'createdTime desc',
       supportsAllDrives: 'true',
       includeItemsFromAllDrives: 'true',
-      fields: 'nextPageToken,files(id,name,mimeType,size,createdTime,imageMediaMetadata(width,height,rotation),videoMediaMetadata(width,height,durationMillis))',
+      fields: `nextPageToken,files(${FILE_FIELDS})`,
     })
     const pageToken = url.searchParams.get('pageToken')
     if (pageToken) params.set('pageToken', pageToken)
@@ -26,26 +27,8 @@ export async function onRequestGet({ request, env }) {
     if (!res.ok) return err('No se pudo leer el álbum.', 502)
     const data = await res.json()
 
-    const k = env.MEDIA_KEY ? `&k=${encodeURIComponent(url.searchParams.get('k') || '')}` : ''
-    const items = (data.files || []).map(f => {
-      const meta = f.imageMediaMetadata || f.videoMediaMetadata || {}
-      // EXIF orientations 5-8 are the sideways ones: the stored width/height are swapped.
-      const sideways = [5, 6, 7, 8].includes(f.imageMediaMetadata?.rotation)
-      return {
-        id: f.id,
-        name: f.name,
-        type: f.mimeType.startsWith('video/') ? 'video' : 'image',
-        mimeType: f.mimeType,
-        size: Number(f.size) || 0,
-        createdAt: f.createdTime,
-        width: (sideways ? meta.height : meta.width) || null,
-        height: (sideways ? meta.width : meta.height) || null,
-        duration: f.videoMediaMetadata?.durationMillis ? Number(f.videoMediaMetadata.durationMillis) : null,
-        thumb: `/api/media/thumb?id=${f.id}${k}`,
-        src: `/api/media/file?id=${f.id}${k}`,
-        download: `/api/media/file?id=${f.id}&download=1${k}`,
-      }
-    })
+    const k = keyParam(env, request)
+    const items = (data.files || []).map(f => buildItem(metaFromFile(f), k))
     return json({ items, nextPageToken: data.nextPageToken || null })
   } catch {
     return err('No se pudo leer el álbum.', 502)
@@ -65,6 +48,7 @@ export async function onRequestDelete({ request, env }) {
       body: JSON.stringify({ trashed: true }),
     })
     if (!res.ok) return err('No se pudo eliminar.', 502)
+    await purgeVotes(env, [id]).catch(() => {}) // votes table may not exist yet
     return json({ ok: true })
   } catch (e) {
     return handleAuthError(e) || err('Error interno.', 500)

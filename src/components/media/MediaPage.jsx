@@ -1,12 +1,17 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import { ALBUM_DEFAULTS } from '../../utils/albumConfig.js'
 import '../../styles/media.css'
 
 // Guest-facing album, opened from the QR code (`/fotos?k=...`). No invitation
 // token needed — access is the optional shared key `k` in the link.
+// Look follows the printed card guests scan it from: ornate frame, script title.
 
 const KEY = new URLSearchParams(window.location.search).get('k') || ''
 const POLL_MS = 30000
+const RANK_POLL_MS = 8000
 const MAX_PARALLEL = 3
+const VOTER_STORAGE = 'matri-voter'
+const FONT_HREF = 'https://fonts.googleapis.com/css2?family=Pinyon+Script&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&display=swap'
 
 const qs = (extra = '') => {
   const p = new URLSearchParams(extra)
@@ -22,6 +27,18 @@ async function apiJson(url, init) {
   return data
 }
 
+// Anonymous voter id, kept in localStorage; the server also pins it to a cookie,
+// so clearing only one of the two doesn't give a second vote.
+function loadVoterId() {
+  try {
+    const cur = localStorage.getItem(VOTER_STORAGE)
+    if (cur && /^[\w-]{16,64}$/.test(cur)) return cur
+    const id = (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}${Math.random().toString(16).slice(2)}${Math.random().toString(16).slice(2)}`).replace(/-/g, '')
+    localStorage.setItem(VOTER_STORAGE, id)
+    return id
+  } catch { return `v${Date.now().toString(16)}${Math.random().toString(16).slice(2, 12)}`.padEnd(16, '0') }
+}
+
 function fmtDuration(ms) {
   if (!ms) return ''
   const s = Math.round(ms / 1000)
@@ -31,20 +48,6 @@ function fmtSize(b) {
   if (b > 1024 ** 3) return `${(b / 1024 ** 3).toFixed(1)} GB`
   if (b > 1024 ** 2) return `${(b / 1024 ** 2).toFixed(1)} MB`
   return `${Math.max(1, Math.round(b / 1024))} KB`
-}
-
-const Icon = ({ d, size = 22 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d} /></svg>
-)
-const ICONS = {
-  upload: 'M12 16V4M7 9l5-5 5 5M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3',
-  close: 'M6 6l12 12M18 6 6 18',
-  prev: 'm15 5-7 7 7 7',
-  next: 'm9 5 7 7-7 7',
-  download: 'M12 4v12M7 11l5 5 5-5M4 20h16',
-  trash: 'M4 7h16M9 7V4h6v3M6.5 7l1 13h9l1-13',
-  play: 'M8 5v14l11-7z',
-  check: 'm5 12 5 5 9-10',
 }
 
 // Width/height, clamped so one very tall panorama can't take over a column.
@@ -59,6 +62,50 @@ function useColumnCount() {
     return () => window.removeEventListener('resize', on)
   }, [])
   return n
+}
+
+// ── Icons & ornaments ────────────────────────────────────────────────────
+
+const Icon = ({ d, size = 22, fill = 'none' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d} /></svg>
+)
+const ICONS = {
+  upload: 'M12 16V4M7 9l5-5 5 5M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3',
+  camera: 'M4 8a1 1 0 0 1 1-1h2.5l1.3-2h6.4l1.3 2H19a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1zM12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8z',
+  video: 'M3.5 7.5a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-10a1 1 0 0 1-1-1zM15.5 10.5l5-3v9l-5-3',
+  close: 'M6 6l12 12M18 6 6 18',
+  prev: 'm15 5-7 7 7 7',
+  next: 'm9 5 7 7-7 7',
+  download: 'M12 4v12M7 11l5 5 5-5M4 20h16',
+  trash: 'M4 7h16M9 7V4h6v3M6.5 7l1 13h9l1-13',
+  play: 'M8 5v14l11-7z',
+  check: 'm5 12 5 5 9-10',
+  heart: 'M12 20.5s-7.5-4.7-7.5-10.4A4.1 4.1 0 0 1 12 7.6a4.1 4.1 0 0 1 7.5 2.5c0 5.7-7.5 10.4-7.5 10.4z',
+  trophy: 'M8 4h8v5a4 4 0 0 1-8 0zM8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8.5 20h7M10 17h4',
+}
+
+/** Little flowering branch for the frame corners. */
+function Sprig({ className }) {
+  const leaf = 'M0 0C-5-7-5-16 0-24C5-16 5-7 0 0Z'
+  const along = [[25, 84, 12], [25, 84, 102], [47, 67, 3], [47, 67, 93], [69, 43, -6], [69, 43, 84]]
+  return (
+    <svg className={className} viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" aria-hidden="true">
+      <path d="M6 94C30 84 62 60 92 10" />
+      {along.map(([x, y, r], i) => <path key={i} d={leaf} transform={`translate(${x} ${y}) rotate(${r})`} fill="currentColor" fillOpacity=".14" />)}
+      {[0, 60, 120, 180, 240, 300].map(r => <path key={r} d={leaf} transform={`translate(92 10) rotate(${r}) scale(.62)`} fill="currentColor" fillOpacity=".14" />)}
+      <circle cx="92" cy="10" r="2" fill="currentColor" />
+    </svg>
+  )
+}
+
+function Divider() {
+  return (
+    <svg className="mp-divider" viewBox="0 0 200 20" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" aria-hidden="true">
+      <path d="M2 10H82M118 10H198" />
+      <path d="M100 3.5 106.5 10 100 16.5 93.5 10Z" fill="currentColor" fillOpacity=".15" />
+      <path d="M86 10c-4-5-9-5-12-2M114 10c4-5 9-5 12-2" />
+    </svg>
+  )
 }
 
 // ── Upload ───────────────────────────────────────────────────────────────
@@ -90,7 +137,7 @@ function UploadTray({ queue, onRetry, onDismiss }) {
   return (
     <div className="mp-tray" role="status" aria-live="polite">
       <div className="mp-tray-head">
-        <b>{working ? `Subiendo ${done + 1 > queue.length ? queue.length : done + 1} de ${queue.length}…` : `${done} de ${queue.length} subidos`}</b>
+        <b>{working ? `Subiendo ${Math.min(done + 1, queue.length)} de ${queue.length}…` : `${done} de ${queue.length} subidos`}</b>
         {!working && <button onClick={onDismiss} aria-label="Cerrar"><Icon d={ICONS.close} size={18} /></button>}
       </div>
       <ul>
@@ -110,9 +157,68 @@ function UploadTray({ queue, onRetry, onDismiss }) {
   )
 }
 
+// ── Voting pieces ────────────────────────────────────────────────────────
+
+function VoteButton({ item, mine, open, onVote, big }) {
+  if (!open) return null
+  const voted = mine[item.type] === item.id
+  return (
+    <button
+      type="button"
+      className={`mp-vote ${voted ? 'on' : ''} ${big ? 'mp-vote-big' : ''}`}
+      onClick={e => { e.stopPropagation(); onVote(item) }}
+      aria-pressed={voted}
+      aria-label={voted ? 'Quitar mi voto' : `Votar esta ${item.type === 'video' ? 'video' : 'foto'}`}
+      title={voted ? 'Tu voto — toca para quitarlo' : 'Votar'}
+    >
+      <Icon d={ICONS.heart} size={big ? 22 : 18} fill={voted ? 'currentColor' : 'none'} />
+      {big && <span>{voted ? 'Tu voto' : `Votar esta ${item.type === 'video' ? 'video' : 'foto'}`}</span>}
+    </button>
+  )
+}
+
+function Ranking({ votes, cat, setCat, onOpen, mine }) {
+  const list = (votes?.ranking?.[cat] || []).slice(0, 5)
+  const top = list[0]?.votes || 1
+  const closed = votes && !votes.open
+  return (
+    <section className="mp-rank" aria-labelledby="mp-rank-title">
+      <div className="mp-rank-head">
+        <h2 id="mp-rank-title"><Icon d={ICONS.trophy} size={22} /> {closed ? 'Ganadores' : 'Ranking en vivo'}</h2>
+        {!closed && <span className="mp-live"><i />En vivo</span>}
+      </div>
+      <div className="mp-rank-tabs" role="tablist">
+        {[['image', 'Fotos'], ['video', 'Videos']].map(([k, label]) => (
+          <button key={k} role="tab" aria-selected={cat === k} className={cat === k ? 'on' : ''} onClick={() => setCat(k)}>
+            {label}{votes && <small>{votes.totals?.[k] || 0} {votes.totals?.[k] === 1 ? 'voto' : 'votos'}</small>}
+          </button>
+        ))}
+      </div>
+      {!votes ? <p className="mp-rank-empty">Cargando…</p> : list.length === 0 ? (
+        <p className="mp-rank-empty">{closed ? 'No hubo votos.' : `Aún no hay votos para ${cat === 'image' ? 'fotos' : 'videos'}. ¡Sé la primera persona en votar!`}</p>
+      ) : (
+        <ol className="mp-rank-list">
+          {list.map((it, i) => (
+            <li key={it.id} className={`mp-rank-item ${i === 0 ? 'first' : ''}`}>
+              <button type="button" className="mp-rank-open" onClick={() => onOpen(list, i)} aria-label={`Abrir puesto ${i + 1}`}>
+                <span className="mp-rank-pos">{i + 1}</span>
+                <span className="mp-rank-thumb"><img src={it.thumb} alt="" loading="lazy" />{it.type === 'video' && <em><Icon d={ICONS.play} size={12} /></em>}</span>
+                <span className="mp-rank-info">
+                  <b>{it.votes} {it.votes === 1 ? 'voto' : 'votos'}{mine[it.type] === it.id && <span className="mp-yours"> · tu voto</span>}</b>
+                  <span className="mp-rank-bar"><i style={{ width: `${Math.max(6, (it.votes / top) * 100)}%` }} /></span>
+                </span>
+              </button>
+            </li>
+          ))}
+        </ol>
+      )}
+    </section>
+  )
+}
+
 // ── Lightbox ─────────────────────────────────────────────────────────────
 
-function Lightbox({ items, index, onIndex, onClose, isAdmin, onDelete }) {
+function Lightbox({ items, index, onIndex, onClose, isAdmin, onDelete, mine, open, onVote }) {
   const item = items[index]
   const touch = useRef(null)
   const go = useCallback(d => onIndex(i => Math.min(items.length - 1, Math.max(0, i + d))), [items.length, onIndex])
@@ -161,7 +267,10 @@ function Lightbox({ items, index, onIndex, onClose, isAdmin, onDelete }) {
       </div>
       {index > 0 && <button className="mp-lb-nav mp-lb-prev" onClick={() => go(-1)} aria-label="Anterior"><Icon d={ICONS.prev} size={28} /></button>}
       {index < items.length - 1 && <button className="mp-lb-nav mp-lb-next" onClick={() => go(1)} aria-label="Siguiente"><Icon d={ICONS.next} size={28} /></button>}
-      <div className="mp-lb-foot">{new Date(item.createdAt).toLocaleString('es-CL', { dateStyle: 'medium', timeStyle: 'short' })} · {fmtSize(item.size)}</div>
+      <div className="mp-lb-foot">
+        <VoteButton item={item} mine={mine} open={open} onVote={onVote} big />
+        <span>{item.votes != null ? `${item.votes} ${item.votes === 1 ? 'voto' : 'votos'} · ` : ''}{new Date(item.createdAt).toLocaleString('es-CL', { dateStyle: 'medium', timeStyle: 'short' })} · {fmtSize(item.size)}</span>
+      </div>
     </div>
   )
 }
@@ -175,15 +284,38 @@ export default function MediaPage() {
   const [error, setError] = useState('')
   const [loadingMore, setLoadingMore] = useState(false)
   const [filter, setFilter] = useState('all')
-  const [open, setOpen] = useState(-1)
+  const [viewer, setViewer] = useState(null) // { list, index }
   const [queue, setQueue] = useState([])
   const [dragging, setDragging] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
+  const [cfg, setCfg] = useState(ALBUM_DEFAULTS)
+  const [votes, setVotes] = useState(null) // { open, ranking, mine, totals }
+  const [rankCat, setRankCat] = useState('image')
+  const [toast, setToast] = useState('')
   const inputRef = useRef(null)
+  const photoRef = useRef(null)
+  const videoRef = useRef(null)
   const sentinel = useRef(null)
   const filesRef = useRef(new Map())
   const runningRef = useRef(0)
   const dragDepth = useRef(0)
+  const toastTimer = useRef(null)
+  const voterRef = useRef(null)
+  if (!voterRef.current) voterRef.current = loadVoterId()
+
+  const say = useCallback(msg => {
+    setToast(msg)
+    clearTimeout(toastTimer.current)
+    toastTimer.current = setTimeout(() => setToast(''), 2800)
+  }, [])
+
+  // Script font for the title (only this page loads it).
+  useEffect(() => {
+    if (document.getElementById('mp-fonts')) return
+    const l = document.createElement('link')
+    l.id = 'mp-fonts'; l.rel = 'stylesheet'; l.href = FONT_HREF
+    document.head.appendChild(l)
+  }, [])
 
   const fetchPage = useCallback(pageToken => apiJson(`/api/media${qs(pageToken ? `pageToken=${encodeURIComponent(pageToken)}` : '')}`), [])
 
@@ -194,6 +326,45 @@ export default function MediaPage() {
     } catch (e) { setError(e.message); setStatus('error') }
   }, [fetchPage])
   useEffect(() => { loadFirst() }, [loadFirst])
+
+  // Texts and prizes the admin set.
+  const loadConfig = useCallback(() => {
+    apiJson(`/api/media/config${qs()}`).then(c => setCfg({ ...ALBUM_DEFAULTS, ...c })).catch(() => {})
+  }, [])
+  useEffect(() => { loadConfig(); const t = setInterval(loadConfig, 60000); return () => clearInterval(t) }, [loadConfig])
+
+  // Live ranking + this voter's picks.
+  const loadVotes = useCallback(() => {
+    apiJson(`/api/media/votes${qs(`voter=${voterRef.current}`)}`).then(setVotes).catch(() => {})
+  }, [])
+  useEffect(() => {
+    loadVotes()
+    const t = setInterval(() => { if (!document.hidden) loadVotes() }, RANK_POLL_MS)
+    return () => clearInterval(t)
+  }, [loadVotes])
+
+  const mine = votes?.mine || { image: null, video: null }
+  const votingOpen = votes ? votes.open : true
+
+  async function vote(item) {
+    if (!votingOpen) { say('Las votaciones están cerradas.'); return }
+    const same = mine[item.type] === item.id
+    const before = votes
+    // Optimistic: the heart responds instantly, the server answer then replaces it.
+    setVotes(v => v && { ...v, mine: { ...v.mine, [item.type]: same ? null : item.id } })
+    try {
+      const d = await apiJson(`/api/media/vote${qs()}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ voterId: voterRef.current, fileId: item.id, remove: same }),
+      })
+      if (d.voterId && d.voterId !== voterRef.current) {
+        voterRef.current = d.voterId
+        try { localStorage.setItem(VOTER_STORAGE, d.voterId) } catch { /* storage blocked */ }
+      }
+      setVotes(d)
+      say(same ? 'Voto retirado' : `¡Voto registrado para tu ${item.type === 'video' ? 'video' : 'foto'} favorita!`)
+    } catch (e) { setVotes(before); say(e.message) }
+  }
 
   const loadMore = useCallback(async () => {
     if (!next || loadingMore) return
@@ -264,8 +435,7 @@ export default function MediaPage() {
 
   const addFiles = useCallback(fileList => {
     const files = [...fileList].filter(f => /^(image|video)\//.test(f.type))
-    if (!files.length) { setError('Solo se pueden subir fotos y videos.'); return }
-    setError('')
+    if (!files.length) { say('Solo se pueden subir fotos y videos.'); return }
     const entries = files.map(f => {
       const id = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
       filesRef.current.set(id, f)
@@ -273,7 +443,7 @@ export default function MediaPage() {
     })
     setQ(q => [...q.filter(x => x.state !== 'done'), ...entries])
     pump()
-  }, [pump, setQ])
+  }, [pump, setQ, say])
 
   const retry = id => {
     patch(id, { state: 'queued', progress: 0, error: '' })
@@ -302,8 +472,9 @@ export default function MediaPage() {
     try {
       await apiJson(`/api/media?id=${item.id}`, { method: 'DELETE', headers: { 'X-Invite-Token': sessionStorage.getItem('inviteToken') || '' } })
       setItems(cur => cur.filter(i => i.id !== item.id))
-      setOpen(-1)
-    } catch (e) { setError(e.message) }
+      setViewer(null)
+      loadVotes()
+    } catch (e) { say(e.message) }
   }
 
   const shown = useMemo(() => (filter === 'all' ? items : items.filter(i => i.type === (filter === 'photos' ? 'image' : 'video'))), [items, filter])
@@ -320,25 +491,60 @@ export default function MediaPage() {
   }, [shown, nCols])
   const nPhotos = items.filter(i => i.type === 'image').length
   const nVideos = items.length - nPhotos
+  const picked = ['image', 'video'].filter(c => mine[c]).length
+
+  const pick = ref => e => { addFiles(e.target.files); e.target.value = '' }
 
   return (
     <div className="mp-root">
       <header className="mp-hero">
-        <div className="mp-eyebrow">Andrés &amp; Catalina · 6 de noviembre de 2026</div>
-        <h1>Nuestro álbum</h1>
-        <p>Cada foto y cada video de hoy es un regalo. Sube los tuyos y mira los de todos los que celebraron con nosotros.</p>
-        <button className="mp-cta" onClick={() => inputRef.current?.click()}><Icon d={ICONS.upload} /> Subir fotos y videos</button>
-        <input ref={inputRef} type="file" accept="image/*,video/*" multiple hidden onChange={e => { addFiles(e.target.files); e.target.value = '' }} />
-        {error && <p className="mp-error" role="alert">{error}</p>}
+        <div className="mp-arch">
+          <Sprig className="mp-sprig mp-sprig-l" />
+          <Sprig className="mp-sprig mp-sprig-r" />
+          {cfg.album_eyebrow && <div className="mp-eyebrow">{cfg.album_eyebrow}</div>}
+          <h1>{cfg.album_title}</h1>
+          {cfg.album_subtitle && <p className="mp-subtitle">{cfg.album_subtitle}</p>}
+          <Divider />
+          <div className="mp-actions">
+            <button className="mp-cta" onClick={() => photoRef.current?.click()}><Icon d={ICONS.camera} /> Tomar foto</button>
+            <button className="mp-cta" onClick={() => videoRef.current?.click()}><Icon d={ICONS.video} /> Grabar video</button>
+            <button className="mp-cta mp-cta-alt" onClick={() => inputRef.current?.click()}><Icon d={ICONS.upload} /> Elegir de la galería</button>
+          </div>
+          {/* `capture` opens the camera directly on phones; desktops ignore it and show the file picker. */}
+          <input ref={photoRef} type="file" accept="image/*" capture="environment" hidden onChange={pick()} />
+          <input ref={videoRef} type="file" accept="video/*" capture="environment" hidden onChange={pick()} />
+          <input ref={inputRef} type="file" accept="image/*,video/*" multiple hidden onChange={pick()} />
+        </div>
+
+        {(cfg.album_note || cfg.album_prize_photo || cfg.album_prize_video) && (
+          <div className="mp-prizes">
+            {cfg.album_note && <p className="mp-pd"><span>Pd:</span> {cfg.album_note}</p>}
+            {(cfg.album_prize_photo || cfg.album_prize_video) && (
+              <div className="mp-prize-cards">
+                {cfg.album_prize_photo && <div className="mp-prize"><Icon d={ICONS.trophy} size={20} /><small>Mejor foto</small><b>{cfg.album_prize_photo}</b></div>}
+                {cfg.album_prize_video && <div className="mp-prize"><Icon d={ICONS.trophy} size={20} /><small>Mejor video</small><b>{cfg.album_prize_video}</b></div>}
+              </div>
+            )}
+          </div>
+        )}
       </header>
 
-      <nav className="mp-filters" aria-label="Filtrar">
-        {[['all', 'Todo', items.length], ['photos', 'Fotos', nPhotos], ['videos', 'Videos', nVideos]].map(([k, label, n]) => (
-          <button key={k} className={filter === k ? 'on' : ''} onClick={() => setFilter(k)}>{label}{status === 'ready' && <small>{n}{next ? '+' : ''}</small>}</button>
-        ))}
-      </nav>
-
       <main className="mp-main">
+        <Ranking votes={votes} cat={rankCat} setCat={setRankCat} mine={mine} onOpen={(list, index) => setViewer({ list, index })} />
+
+        {votingOpen && (
+          <p className="mp-howto">
+            Toca el <span aria-hidden="true">♡</span> de tu foto y de tu video favoritos para votar: un voto por categoría.
+            {picked > 0 && <b> Ya votaste por {picked === 2 ? 'tu foto y tu video' : mine.image ? 'una foto' : 'un video'}.</b>}
+          </p>
+        )}
+
+        <nav className="mp-filters" aria-label="Filtrar">
+          {[['all', 'Todo', items.length], ['photos', 'Fotos', nPhotos], ['videos', 'Videos', nVideos]].map(([k, label, n]) => (
+            <button key={k} className={filter === k ? 'on' : ''} onClick={() => setFilter(k)}>{label}{status === 'ready' && <small>{n}{next ? '+' : ''}</small>}</button>
+          ))}
+        </nav>
+
         {status === 'loading' && <div className="mp-grid">{Array.from({ length: 10 }, (_, i) => <div key={i} className="mp-skel" style={{ aspectRatio: i % 3 === 0 ? '3/4' : i % 3 === 1 ? '1/1' : '4/3' }} />)}</div>}
         {status === 'error' && (
           <div className="mp-state"><p>{error || 'No pudimos cargar el álbum.'}</p><button className="mp-ghost" onClick={() => { setStatus('loading'); loadFirst() }}>Reintentar</button></div>
@@ -354,10 +560,13 @@ export default function MediaPage() {
             {columns.map((col, c) => (
               <div key={c} className="mp-col">
                 {col.map(({ it, i }) => (
-                  <button key={it.id} className="mp-tile" style={{ aspectRatio: ratio(it) }} onClick={() => setOpen(i)} aria-label={`Abrir ${it.type === 'video' ? 'video' : 'foto'} ${i + 1}`}>
-                    <img src={it.thumb} alt="" loading="lazy" decoding="async" />
-                    {it.type === 'video' && <span className="mp-badge"><Icon d={ICONS.play} size={14} />{fmtDuration(it.duration)}</span>}
-                  </button>
+                  <div key={it.id} className="mp-tile-wrap">
+                    <button className="mp-tile" style={{ aspectRatio: ratio(it) }} onClick={() => setViewer({ list: shown, index: i })} aria-label={`Abrir ${it.type === 'video' ? 'video' : 'foto'} ${i + 1}`}>
+                      <img src={it.thumb} alt="" loading="lazy" decoding="async" />
+                      {it.type === 'video' && <span className="mp-badge"><Icon d={ICONS.play} size={14} />{fmtDuration(it.duration)}</span>}
+                    </button>
+                    <VoteButton item={it} mine={mine} open={votingOpen} onVote={vote} />
+                  </div>
                 ))}
               </div>
             ))}
@@ -368,7 +577,15 @@ export default function MediaPage() {
 
       <UploadTray queue={queue} onRetry={retry} onDismiss={dismissTray} />
       {dragging && <div className="mp-drop"><div><Icon d={ICONS.upload} size={40} /><p>Suelta para subir</p></div></div>}
-      {open >= 0 && <Lightbox items={shown} index={open} onIndex={setOpen} onClose={() => setOpen(-1)} isAdmin={isAdmin} onDelete={remove} />}
+      {viewer && (
+        <Lightbox
+          items={viewer.list} index={viewer.index}
+          onIndex={fn => setViewer(v => v && { ...v, index: typeof fn === 'function' ? fn(v.index) : fn })}
+          onClose={() => setViewer(null)} isAdmin={isAdmin} onDelete={remove}
+          mine={mine} open={votingOpen} onVote={vote}
+        />
+      )}
+      <div className={`mp-toast ${toast ? 'on' : ''}`} role="status" aria-live="polite">{toast}</div>
     </div>
   )
 }

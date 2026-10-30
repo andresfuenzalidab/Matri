@@ -1,5 +1,8 @@
 import { useState, useEffect, useMemo } from 'react'
 import QRCode from 'qrcode'
+import { useApp } from '../../context/AppContext'
+import AlbumConfig from './AlbumConfig.jsx'
+import AlbumManager from './AlbumManager.jsx'
 
 const KEY_STORAGE = 'matri-media-key'
 
@@ -13,6 +16,7 @@ function readKey() {
  * in Cloudflare (optional — leave empty if you didn't set one).
  */
 export default function MediaQR() {
+  const { token } = useApp()
   const [key, setKey] = useState(readKey)
   const [qr, setQr] = useState('')
   const [copied, setCopied] = useState(false)
@@ -85,7 +89,7 @@ export default function MediaQR() {
   }[health.state]
 
   return (
-    <div style={{ display: 'grid', gap: '1.5rem', maxWidth: 720 }}>
+    <div style={{ display: 'grid', gap: '1.5rem', maxWidth: 820 }}>
       <div>
         <h3 style={{ margin: '0 0 0.25rem' }}>Álbum de fotos y videos</h3>
         <p style={{ margin: 0, opacity: 0.75 }}>
@@ -125,10 +129,12 @@ export default function MediaQR() {
             <a className="btn btn-secondary" href={link} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>Abrir álbum</a>
           </div>
           <p style={{ margin: 0, fontSize: '0.8rem', opacity: 0.65 }}>
-            Prueba el QR con tu teléfono antes de imprimirlo. Para quitar fotos del álbum, abre el álbum con tu sesión de administrador y usa el ícono de papelera.
+            Prueba el QR con tu teléfono antes de imprimirlo. Para borrar fotos o reiniciar votos usa «Archivos y votos» más abajo.
           </p>
         </div>
       </div>
+      <AlbumConfig token={token} />
+      <AlbumManager token={token} mediaKey={key.trim()} />
     </div>
   )
 }

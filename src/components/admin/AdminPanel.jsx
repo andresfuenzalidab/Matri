@@ -20,7 +20,7 @@ const TABS = [
   { id: 'venue', label: 'Lugar' },
   { id: 'content', label: 'Contenido' },
   { id: 'appearance', label: 'Apariencia' },
-  { id: 'album', label: 'Álbum QR' },
+  { id: 'album', label: 'Álbum' },
 ]
 
 export default function AdminPanel({ onClose }) {

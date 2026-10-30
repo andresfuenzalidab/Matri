@@ -1,0 +1,18 @@
+/* Admin → Álbum: file manager grid (components/admin/AlbumManager.jsx) */
+.aa-toolbar { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+.aa-seg { display: inline-flex; border: 1px solid var(--color-divider); border-radius: var(--radius-md); overflow: hidden; }
+.aa-seg button { border: 0; background: transparent; padding: 0.4rem 0.8rem; font: inherit; font-size: 0.85rem; cursor: pointer; color: inherit; }
+.aa-seg button.on { background: var(--color-accent); color: var(--paper, #fff); }
+.aa-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 8px; max-height: 480px; overflow-y: auto; padding: 2px; }
+.aa-tile { position: relative; aspect-ratio: 1; }
+.aa-pick { position: absolute; inset: 0; padding: 0; border: 2px solid transparent; border-radius: 10px; overflow: hidden; cursor: pointer; background: color-mix(in srgb, var(--color-text) 8%, transparent); }
+.aa-pick img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.aa-tile.on .aa-pick { border-color: var(--color-accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 40%, transparent); }
+.aa-tile.on .aa-pick img { opacity: .75; }
+.aa-check { position: absolute; top: 6px; left: 6px; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; font-weight: 700; color: #fff; background: rgb(0 0 0 / .35); border: 1.5px solid #fff; }
+.aa-tile.on .aa-check { background: var(--color-accent); }
+.aa-kind, .aa-votes { position: absolute; bottom: 6px; padding: 1px 7px; border-radius: 99px; font-size: 11px; color: #fff; background: rgb(0 0 0 / .6); }
+.aa-kind { left: 6px; }
+.aa-votes { right: 6px; background: #c2415a; }
+.aa-open { position: absolute; top: 6px; right: 6px; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; text-decoration: none; font-size: 12px; color: #fff; background: rgb(0 0 0 / .45); }
+.aa-open:hover { background: rgb(0 0 0 / .7); }

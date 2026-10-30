@@ -31,6 +31,10 @@ import * as mediaModule from '../functions/api/media.js'
 import * as mediaThumb from '../functions/api/media/thumb.js'
 import * as mediaFile from '../functions/api/media/file.js'
 import * as mediaUpload from '../functions/api/media/upload-session.js'
+import * as mediaConfig from '../functions/api/media/config.js'
+import * as mediaVotes from '../functions/api/media/votes.js'
+import * as mediaVote from '../functions/api/media/vote.js'
+import * as adminMedia from '../functions/api/admin/media.js'
 import * as imagesHandler from '../functions/api/images/[[path]].js'
 
 const CORS_HEADERS = {
@@ -106,6 +110,14 @@ export default {
         response = await dispatch(mediaFile, method, request, env)
       } else if (path === '/api/media/upload-session') {
         response = await dispatch(mediaUpload, method, request, env)
+      } else if (path === '/api/media/config') {
+        response = await dispatch(mediaConfig, method, request, env)
+      } else if (path === '/api/media/votes') {
+        response = await dispatch(mediaVotes, method, request, env)
+      } else if (path === '/api/media/vote') {
+        response = await dispatch(mediaVote, method, request, env)
+      } else if (path === '/api/admin/media') {
+        response = await dispatch(adminMedia, method, request, env)
       } else if (path === '/api/admin/reset-rsvp') {
         response = await dispatch(adminResetRsvp, method, request, env)
       } else if (path === '/api/admin/gifts') {
