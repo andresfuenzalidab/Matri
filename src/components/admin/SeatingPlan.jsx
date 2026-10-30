@@ -8,6 +8,7 @@ import {
   assignGroupToTable, reflowTable, pruneAssign, downloadPlanPng, printPlan, uid,
 } from '../../utils/seating.js'
 import { collectTags, matchesTags } from '../../utils/tags.js'
+import { venueSheet } from '../../utils/guestList.js'
 import { TagFilter } from './TagControls.jsx'
 import '../../styles/seating.css'
 
@@ -786,6 +787,18 @@ export default function SeatingPlan({ onClose }) {
       setExporting(false)
     }
   }
+  // The venue's sheet: alphabetical "Apellido + Nombre" / "N° mesa", one row per person,
+  // with the head count per table beside it. Only confirmed, seated guests.
+  async function exportGuestList() {
+    const { headers, rows, seated, unseated } = venueSheet(invitations, layoutRef.current)
+    if (!seated) { showToast('Aún no hay invitados sentados en una mesa.'); return }
+    try {
+      const { downloadXLSX } = await import('../../utils/spreadsheet.js')
+      await downloadXLSX('lista-invitados-por-mesa.xlsx', rows, headers)
+      showToast(unseated ? `Lista descargada: ${seated} personas. Faltan ${unseated} confirmados sin mesa.` : `Lista descargada: ${seated} personas.`)
+    } catch { showToast('No se pudo generar el Excel.') }
+  }
+
   function exportPrint() {
     if (!printPlan(layoutRef.current, parties, peopleById, { includePending })) showToast('El navegador bloqueó la ventana de impresión. Permite las ventanas emergentes.')
   }
@@ -827,6 +840,7 @@ export default function SeatingPlan({ onClose }) {
           <span className="sp-sep" />
           <button type="button" className="btn btn-secondary sp-btn" onClick={exportPng} disabled={exporting || !layout.elements.length}><Icon name="image" size={16} /> Imagen</button>
           <button type="button" className="btn btn-secondary sp-btn" onClick={exportPrint} disabled={!layout.elements.length}><Icon name="print" size={16} /> Imprimir / PDF</button>
+          <button type="button" className="btn btn-secondary sp-btn" onClick={exportGuestList} disabled={!layout.elements.length} title="Excel con una fila por persona: Apellido + Nombre y N° de mesa"><Icon name="people" size={16} /> Lista Excel</button>
           <button type="button" className="btn btn-primary sp-btn" onClick={handleClose}>Listo</button>
         </div>
       </header>

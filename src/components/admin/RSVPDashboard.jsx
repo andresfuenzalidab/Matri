@@ -5,6 +5,7 @@ import { totalInvitedHeadcount, invitedHeadcount } from '../../utils/inviteCount
 import { useInvitationFilters, compareByResponseRecency } from '../../hooks/useInvitationFilters.js'
 import InvitationFilterBar from './InvitationFilterBar.jsx'
 import RsvpEditor from './RsvpEditor.jsx'
+import { guestPeople } from '../../utils/guestList.js'
 
 const answered = i => i.attending !== null && i.attending !== undefined
 
@@ -54,6 +55,9 @@ export default function RSVPDashboard() {
 
   // Invitation being edited by hand (confirm / cancel on someone's behalf).
   const [editing, setEditing] = useState(null)
+  // Export one row per person (a confirmation for 2 becomes 2 rows) instead of one per invitation.
+  const [perPerson, setPerPerson] = useState(false)
+  const [exporting, setExporting] = useState(false)
 
   const load = useCallback(() => {
     return fetch('/api/admin/invitations', { headers: { 'X-Invite-Token': token } })
@@ -91,6 +95,22 @@ export default function RSVPDashboard() {
   // the response-recency-first, no-response-last order by default.
   const totalCount = invitations.length
 
+  // "Apellido + Nombre" / "N° mesa" per confirmed person, table taken from the seating plan.
+  async function exportPeople() {
+    setExporting(true)
+    try {
+      let layout = null
+      try {
+        const res = await fetch('/api/admin/seating', { headers: { 'X-Invite-Token': token } })
+        if (res.ok) layout = (await res.json()).layout
+      } catch { /* no seating plan yet: tables stay empty */ }
+      const { people } = guestPeople(invitations, layout)
+      await downloadXLSX('rsvp-por-persona.xlsx',
+        people.map(p => [p.name, p.tableText, p.party, p.dietary]),
+        ['Apellido + Nombre', 'N° mesa', 'Invitación', 'Restricción alimenticia'])
+    } finally { setExporting(false) }
+  }
+
   return (
     <div>
       <div className="stats-row">
@@ -126,9 +146,14 @@ export default function RSVPDashboard() {
         <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>
           {filters.filtersActive ? `${visible.length} de ${totalCount} invitaciones` : `${totalCount} invitaciones`}
         </span>
+        <label style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', fontSize: '0.8rem', marginLeft: 'auto' }}
+          title="Una fila por persona confirmada (si confirma por 2, salen 2 filas), con Apellido + Nombre y N° de mesa">
+          <input type="checkbox" checked={perPerson} onChange={e => setPerPerson(e.target.checked)} /> Una fila por persona
+        </label>
         <button
           className="btn btn-ghost"
-          onClick={() => downloadXLSX('rsvp.xlsx',
+          disabled={exporting}
+          onClick={() => perPerson ? exportPeople() : downloadXLSX('rsvp.xlsx',
             // Full (unfiltered) set, deliberately — same "no accidental
             // partial export" choice as the other admin tabs. Still only
             // actual responses, not every invitation — this export is a
